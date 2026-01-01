@@ -75,3 +75,34 @@ With `--hex`:
   MISO: 04 21
 0.977247075: GetVersion (request) (mode=STBY_RC, reset=extPin, CMD_OK)
 ```
+
+## Multiple SPI Ports
+
+The script automatically detects multiple SPI ports from the `digital.csv` header. It looks for signal names with common suffixes like `_B`, `_C`, `_2`, etc.
+
+For example, with a CSV header:
+```
+Time [s],SCLK,MISO,MOSI,nSS,sclk_b,miso_b,mosi_b,nss_b
+```
+
+The script detects two ports:
+- **SPI**: SCLK, MISO, MOSI, nSS (channels 0-3)
+- **SPI_B**: sclk_b, miso_b, mosi_b, nss_b (channels 4-7)
+
+Each port gets its own HLA instance, and results from all ports are interleaved by timestamp. When multiple ports are present, output lines are prefixed with the port name:
+
+```
+2.108120280: [SPI] SetSleep WARM, 0 (mode=STBY_RC, reset=NA, CMD_OK)
+2.108138498: [SPI_B] SetSleep WARM, 0 (mode=STBY_RC, reset=NA, CMD_OK)
+2.108181213: [SPI] SetStandby STBY_XOSC (mode=SLEEP, reset=NA, CMD_OK)
+2.108198963: [SPI_B] SetStandby STBY_XOSC (mode=SLEEP, reset=NA, CMD_OK)
+```
+
+With `--hex`, the port prefix also appears on the hex lines:
+```
+  [SPI] MOSI: 84 00
+  [SPI] MISO: 00 00
+2.108120280: [SPI] SetSleep WARM, 0 (mode=STBY_RC, reset=NA, CMD_OK)
+```
+
+When only one SPI port is detected, no prefix is shown (backwards compatible).

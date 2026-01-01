@@ -6,6 +6,8 @@ Reads digital_N.bin files (SCLK, MISO, MOSI, nSS) and decodes SPI transactions,
 then feeds them to the HLA SPI parser.
 """
 
+import contextlib
+import heapq
 import struct
 import sys
 import os
@@ -198,22 +200,55 @@ def read_channel_names(directory: str) -> dict:
     except FileNotFoundError:
         return {}
 
-def find_spi_channels(channel_names: dict) -> dict:
-    """Find SPI channel numbers from channel name mapping."""
-    # Common variations of SPI signal names
-    sclk_names = ['SCLK', 'SCK', 'CLK', 'SPI_SCLK', 'SPI_CLK']
-    miso_names = ['MISO', 'SDO', 'DO', 'SPI_MISO', 'DOUT']
-    mosi_names = ['MOSI', 'SDI', 'DI', 'SPI_MOSI', 'DIN']
-    nss_names = ['NSS', 'CS', 'NCS', 'SS', 'SSEL', 'SPI_NSS', 'SPI_CS', 'ENABLE']
+def find_spi_channels(channel_names: dict) -> list:
+    """Find SPI channel numbers from channel name mapping.
 
-    result = {}
-    for signal, names in [('sclk', sclk_names), ('miso', miso_names),
-                          ('mosi', mosi_names), ('nss', nss_names)]:
-        for name in names:
-            if name in channel_names:
-                result[signal] = channel_names[name]
+    Returns a list of dicts, one per SPI port found. Each dict contains:
+    - 'name': port name (e.g., 'SPI', 'SPI_B')
+    - 'sclk', 'miso', 'mosi', 'nss': channel numbers
+    """
+    # Common variations of SPI signal names (base names without suffix)
+    sclk_bases = ['SCLK', 'SCK', 'CLK', 'SPI_SCLK', 'SPI_CLK']
+    miso_bases = ['MISO', 'SDO', 'DO', 'SPI_MISO', 'DOUT']
+    mosi_bases = ['MOSI', 'SDI', 'DI', 'SPI_MOSI', 'DIN']
+    nss_bases = ['NSS', 'CS', 'NCS', 'SS', 'SSEL', 'SPI_NSS', 'SPI_CS', 'ENABLE']
+
+    # Common suffixes for additional SPI ports
+    suffixes = ['', '_B', '_C', '_D', '_2', '_3', '_4', '2', '3', '4', 'B', 'C', 'D']
+
+    ports = []
+    used_channels = set()
+
+    for suffix in suffixes:
+        port = {}
+        port_name = f"SPI{suffix}" if suffix else "SPI"
+
+        for signal, bases in [('sclk', sclk_bases), ('miso', miso_bases),
+                              ('mosi', mosi_bases), ('nss', nss_bases)]:
+            found = False
+            for base in bases:
+                # Try exact suffix match
+                name = f"{base}{suffix}" if suffix else base
+                if name in channel_names and channel_names[name] not in used_channels:
+                    port[signal] = channel_names[name]
+                    found = True
+                    break
+                # Also try lowercase suffix
+                name_lower = f"{base}{suffix.lower()}" if suffix else base
+                if name_lower in channel_names and channel_names[name_lower] not in used_channels:
+                    port[signal] = channel_names[name_lower]
+                    found = True
+                    break
+            if not found:
                 break
-    return result
+
+        # Only add port if all 4 signals were found
+        if len(port) == 4:
+            port['name'] = port_name
+            used_channels.update(port[s] for s in ['sclk', 'miso', 'mosi', 'nss'])
+            ports.append(port)
+
+    return ports
 
 def main():
     import argparse
@@ -245,44 +280,64 @@ def main():
     channel_names = read_channel_names(args.directory)
     if channel_names:
         print(f"Found channel names in digital.csv: {list(channel_names.keys())}", file=sys.stderr)
-        auto_channels = find_spi_channels(channel_names)
+        auto_ports = find_spi_channels(channel_names)
     else:
-        auto_channels = {}
+        auto_ports = []
 
-    # Command-line args override auto-detected values
-    spi_channels = {}
-    missing = []
-    for signal in ['sclk', 'miso', 'mosi', 'nss']:
-        arg_val = getattr(args, signal)
-        if arg_val is not None:
-            spi_channels[signal] = arg_val
-        elif signal in auto_channels:
-            spi_channels[signal] = auto_channels[signal]
-        else:
-            missing.append(signal.upper())
+    # Command-line args override auto-detected values for the primary port
+    spi_ports = []
+    if args.sclk is not None or args.miso is not None or args.mosi is not None or args.nss is not None:
+        # Manual specification - only one port
+        manual_port = {'name': 'SPI'}
+        missing = []
+        for signal in ['sclk', 'miso', 'mosi', 'nss']:
+            arg_val = getattr(args, signal)
+            if arg_val is not None:
+                manual_port[signal] = arg_val
+            elif auto_ports and signal in auto_ports[0]:
+                manual_port[signal] = auto_ports[0][signal]
+            else:
+                missing.append(signal.upper())
 
-    if missing:
-        print(f"Error: Could not find channel numbers for: {', '.join(missing)}", file=sys.stderr)
+        if missing:
+            print(f"Error: Could not find channel numbers for: {', '.join(missing)}", file=sys.stderr)
+            if not channel_names:
+                print(f"No digital.csv found in {args.directory}", file=sys.stderr)
+            else:
+                print(f"Channel names in CSV: {list(channel_names.keys())}", file=sys.stderr)
+                print(f"Could not match SPI signals. Use --sclk, --miso, --mosi, --nss to specify manually.", file=sys.stderr)
+            sys.exit(1)
+        spi_ports = [manual_port]
+    elif auto_ports:
+        spi_ports = auto_ports
+    else:
+        print(f"Error: No SPI channels found", file=sys.stderr)
         if not channel_names:
             print(f"No digital.csv found in {args.directory}", file=sys.stderr)
         else:
             print(f"Channel names in CSV: {list(channel_names.keys())}", file=sys.stderr)
-            print(f"Could not match SPI signals. Use --sclk, --miso, --mosi, --nss to specify manually.", file=sys.stderr)
         sys.exit(1)
 
-    # Load channel data
+    print(f"Detected {len(spi_ports)} SPI port(s): {[p['name'] for p in spi_ports]}", file=sys.stderr)
+
+    # Load channel data for all ports
     print(f"Loading channels from {args.directory}/digital_*.bin ...", file=sys.stderr)
 
-    channels = {}
-    for name, num in spi_channels.items():
-        filepath = os.path.join(args.directory, f"digital_{num}.bin")
-        data = read_saleae_digital(filepath)
-        if data is None:
-            print(f"Failed to load {name} from {filepath}", file=sys.stderr)
-            sys.exit(1)
-        channels[name] = data
-        print(f"  {name} (ch{num}): initial={data.initial_state}, transitions={len(data.timestamps)}",
-              file=sys.stderr)
+    all_port_channels = []
+    for port in spi_ports:
+        channels = {}
+        print(f"  {port['name']}:", file=sys.stderr)
+        for signal in ['sclk', 'miso', 'mosi', 'nss']:
+            num = port[signal]
+            filepath = os.path.join(args.directory, f"digital_{num}.bin")
+            data = read_saleae_digital(filepath)
+            if data is None:
+                print(f"Failed to load {signal} from {filepath}", file=sys.stderr)
+                sys.exit(1)
+            channels[signal] = data
+            print(f"    {signal} (ch{num}): initial={data.initial_state}, transitions={len(data.timestamps)}",
+                  file=sys.stderr)
+        all_port_channels.append((port['name'], channels))
 
     # Load optional logging pins (int-pin, extra-pin)
     log_pins = []  # List of (name, data) tuples
@@ -303,16 +358,20 @@ def main():
                   file=sys.stderr)
             log_pins.append((pin_name, pin_data))
 
-    # Create SPI decoder
-    print("Initializing SPI decoder...", file=sys.stderr)
-    decoder = SPIDecoder(
-        sclk=channels['sclk'],
-        miso=channels['miso'],
-        mosi=channels['mosi'],
-        nss=channels['nss'],
-        cpol=args.cpol,
-        cpha=args.cpha
-    )
+    # Create SPI decoders for all ports
+    print("Initializing SPI decoder(s)...", file=sys.stderr)
+    decoders = []
+    for port_name, channels in all_port_channels:
+        decoder = SPIDecoder(
+            sclk=channels['sclk'],
+            miso=channels['miso'],
+            mosi=channels['mosi'],
+            nss=channels['nss'],
+            cpol=args.cpol,
+            cpha=args.cpha
+        )
+        decoders.append((port_name, decoder))
+        print(f"  {port_name}: initialized", file=sys.stderr)
 
     # Add HLA path to sys.path and import it
     sys.path.insert(0, args.hla_path)
@@ -323,12 +382,12 @@ def main():
         print(f"Failed to import HLA: {e}", file=sys.stderr)
         sys.exit(1)
 
-    # Create HLA instance and process frames
-    hla = Hla()
+    # Create HLA instance for each port
+    hla_instances = {port_name: Hla() for port_name, _ in decoders}
 
-    # Track MOSI/MISO bytes for --hex option
-    mosi_bytes = bytearray()
-    miso_bytes = bytearray()
+    # Track MOSI/MISO bytes for --hex option (per port)
+    mosi_bytes = {port_name: bytearray() for port_name, _ in decoders}
+    miso_bytes = {port_name: bytearray() for port_name, _ in decoders}
 
     # Track logging pin transitions - list of [name, data, index, state]
     pin_trackers = [[name, data, 0, data.initial_state] for name, data in log_pins]
@@ -360,26 +419,47 @@ def main():
             earliest_tracker[2] = idx + 1  # increment index
             earliest_tracker[3] = new_state  # update state
 
-    for frame in decoder.decode():
+    # Collect all decoded results from all ports with timestamps for interleaving
+    # Use a priority queue to interleave results from multiple ports by timestamp
+    # Each entry is (timestamp, port_name, result, mosi_hex, miso_hex)
+    results_heap = []
+
+    # Redirect stdout to stderr during HLA decode to capture any HLA print statements
+    with contextlib.redirect_stdout(sys.stderr):
+        for port_name, decoder in decoders:
+            hla = hla_instances[port_name]
+
+            for frame in decoder.decode():
+                if args.hex:
+                    if frame.type == 'enable':
+                        mosi_bytes[port_name] = bytearray()
+                        miso_bytes[port_name] = bytearray()
+                    elif frame.type == 'result':
+                        mosi_bytes[port_name] += frame.data['mosi']
+                        miso_bytes[port_name] += frame.data['miso']
+
+                result = hla.decode(frame)
+                if result is not None:
+                    mosi_hex = mosi_bytes[port_name].hex(' ') if args.hex else None
+                    miso_hex = miso_bytes[port_name].hex(' ') if args.hex else None
+                    heapq.heappush(results_heap, (result.start_time, port_name, result, mosi_hex, miso_hex))
+
+    # Print results in timestamp order
+    show_port_prefix = len(decoders) > 1
+    while results_heap:
+        timestamp, port_name, result, mosi_hex, miso_hex = heapq.heappop(results_heap)
+
+        # Print any pin transitions before this SPI transaction
+        print_pin_transitions_before(timestamp)
+
+        # Print the decoded message
+        msg = result.data.get('string', '')
         if args.hex:
-            if frame.type == 'enable':
-                mosi_bytes = bytearray()
-                miso_bytes = bytearray()
-            elif frame.type == 'result':
-                mosi_bytes += frame.data['mosi']
-                miso_bytes += frame.data['miso']
-
-        result = hla.decode(frame)
-        if result is not None:
-            # Print any pin transitions before this SPI transaction
-            print_pin_transitions_before(result.start_time)
-
-            # Print the decoded message
-            msg = result.data.get('string', '')
-            if args.hex:
-                print(f"  MOSI: {mosi_bytes.hex(' ')}")
-                print(f"  MISO: {miso_bytes.hex(' ')}")
-            print(f"{result.start_time:.9f}: {msg}")
+            prefix = f"  [{port_name}] " if show_port_prefix else "  "
+            print(f"{prefix}MOSI: {mosi_hex}")
+            print(f"{prefix}MISO: {miso_hex}")
+        port_prefix = f"[{port_name}] " if show_port_prefix else ""
+        print(f"{timestamp:.9f}: {port_prefix}{msg}")
 
     # Print any remaining pin transitions
     print_pin_transitions_before(float('inf'))
