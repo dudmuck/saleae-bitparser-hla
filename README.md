@@ -106,3 +106,24 @@ With `--hex`, the port prefix also appears on the hex lines:
 ```
 
 When only one SPI port is detected, no prefix is shown (backwards compatible).
+
+## Error Handling
+
+If the HLA decoder encounters an error (e.g., malformed data or missing state), the script continues parsing instead of crashing. Errors are reported to both:
+
+- **stderr**: For filtering/debugging
+- **stdout**: Inline with the transaction timeline, so you can see where errors occurred
+
+Example output:
+```
+0.626435320: [SPI] GetAndClearIrqStatus (request) (intActive mode=STBY_RC, reset=extPin, CMD_OK)
+  [SPI_B] MOSI: 02 2a
+  [SPI_B] MISO: 04 24
+0.627117720: [SPI_B] GetLoraPacketStatus (request) (mode=RX, reset=extPin, CMD_OK)
+  [SPI_B] MOSI: 00 01 00 ...
+  [SPI_B] MISO: 04 24 80 ...
+0.627177400: [SPI_B] *** DECODE ERROR: IndexError: index out of range ***
+0.627202680: [SPI] SetTx timeout-disabled (mode=STBY_RC, reset=extPin, CMD_OK)
+```
+
+This allows you to identify problematic captures while still seeing the successfully decoded transactions.

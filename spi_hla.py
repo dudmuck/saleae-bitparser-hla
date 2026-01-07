@@ -438,28 +438,44 @@ def main():
                         mosi_bytes[port_name] += frame.data['mosi']
                         miso_bytes[port_name] += frame.data['miso']
 
-                result = hla.decode(frame)
+                try:
+                    result = hla.decode(frame)
+                except Exception as e:
+                    # Report error to stderr and queue for stdout output
+                    error_msg = f"{type(e).__name__}: {e}"
+                    print(f"Error decoding {port_name} frame at {frame.start_time:.9f}: {error_msg}", file=sys.stderr)
+                    mosi_hex = mosi_bytes[port_name].hex(' ') if args.hex else None
+                    miso_hex = miso_bytes[port_name].hex(' ') if args.hex else None
+                    # Push error as a tuple with None result and error message
+                    heapq.heappush(results_heap, (frame.start_time, port_name, None, mosi_hex, miso_hex, error_msg))
+                    continue
                 if result is not None:
                     mosi_hex = mosi_bytes[port_name].hex(' ') if args.hex else None
                     miso_hex = miso_bytes[port_name].hex(' ') if args.hex else None
-                    heapq.heappush(results_heap, (result.start_time, port_name, result, mosi_hex, miso_hex))
+                    heapq.heappush(results_heap, (result.start_time, port_name, result, mosi_hex, miso_hex, None))
 
     # Print results in timestamp order
     show_port_prefix = len(decoders) > 1
     while results_heap:
-        timestamp, port_name, result, mosi_hex, miso_hex = heapq.heappop(results_heap)
+        timestamp, port_name, result, mosi_hex, miso_hex, error_msg = heapq.heappop(results_heap)
 
         # Print any pin transitions before this SPI transaction
         print_pin_transitions_before(timestamp)
 
-        # Print the decoded message
-        msg = result.data.get('string', '')
+        # Print hex bytes if requested
         if args.hex:
             prefix = f"  [{port_name}] " if show_port_prefix else "  "
             print(f"{prefix}MOSI: {mosi_hex}")
             print(f"{prefix}MISO: {miso_hex}")
+
         port_prefix = f"[{port_name}] " if show_port_prefix else ""
-        print(f"{timestamp:.9f}: {port_prefix}{msg}")
+        if error_msg is not None:
+            # Print error entry
+            print(f"{timestamp:.9f}: {port_prefix}*** DECODE ERROR: {error_msg} ***")
+        else:
+            # Print the decoded message
+            msg = result.data.get('string', '')
+            print(f"{timestamp:.9f}: {port_prefix}{msg}")
 
     # Print any remaining pin transitions
     print_pin_transitions_before(float('inf'))
