@@ -1,4 +1,6 @@
 # spi_hla.py
+> [!NOTE]
+> this is primarily intended to feed captured SPI traffic to AI tools, where you would pipe the output of this script to a text file, then prompt the AI to read this as evidence of what the hardware is **actually** doing, as opposed to printed logs in a terminal which dont always reveal bugs.
 
 SPI decoder for Saleae Logic 2 binary exports that feeds data to a High Level Analyzer.
 
@@ -126,4 +128,4 @@ Example output:
 0.627202680: [SPI] SetTx timeout-disabled (mode=STBY_RC, reset=extPin, CMD_OK)
 ```
 
-This allows you to identify problematic captures while still seeing the successfully decoded transactions.
+This allows you to identify problematic captures while still seeing the successfully decoded transactions.  This might typically occur if the maximum sample rate of logic analyzer is marginal for the SPI CLK frequency.
