@@ -16,6 +16,46 @@ from typing import Iterator, Optional
 
 import numpy as np
 
+# Try to import numba for JIT acceleration
+try:
+    import numba
+    HAVE_NUMBA = True
+except ImportError:
+    HAVE_NUMBA = False
+
+
+def _bits_to_bytes_numpy(mosi_bits: np.ndarray, miso_bits: np.ndarray, n_bytes: int):
+    """Convert bit arrays to byte arrays using NumPy (fallback)."""
+    bits_truncated = n_bytes * 8
+    mosi_bits_2d = mosi_bits[:bits_truncated].reshape(n_bytes, 8)
+    miso_bits_2d = miso_bits[:bits_truncated].reshape(n_bytes, 8)
+    weights = (1 << np.arange(7, -1, -1, dtype=np.uint8))
+    mosi_bytes = (mosi_bits_2d * weights).sum(axis=1).astype(np.uint8)
+    miso_bytes = (miso_bits_2d * weights).sum(axis=1).astype(np.uint8)
+    return mosi_bytes, miso_bytes
+
+
+if HAVE_NUMBA:
+    @numba.jit(nopython=True, cache=True)
+    def _bits_to_bytes_numba(mosi_bits: np.ndarray, miso_bits: np.ndarray, n_bytes: int):
+        """Convert bit arrays to byte arrays using Numba JIT (fast path)."""
+        mosi_bytes = np.empty(n_bytes, dtype=np.uint8)
+        miso_bytes = np.empty(n_bytes, dtype=np.uint8)
+        for b in range(n_bytes):
+            mosi_byte = 0
+            miso_byte = 0
+            base = b * 8
+            for j in range(8):
+                mosi_byte = (mosi_byte << 1) | mosi_bits[base + j]
+                miso_byte = (miso_byte << 1) | miso_bits[base + j]
+            mosi_bytes[b] = mosi_byte
+            miso_bytes[b] = miso_byte
+        return mosi_bytes, miso_bytes
+
+    bits_to_bytes = _bits_to_bytes_numba
+else:
+    bits_to_bytes = _bits_to_bytes_numpy
+
 # Add the mock saleae module to the path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -105,6 +145,12 @@ class SPIDecoder:
         self.sample_edge_indices = np.where(self.sample_edge_mask)[0]
         self.sample_edge_times = sclk.timestamps[self.sample_edge_indices]
 
+        # Pre-compute MISO/MOSI bit values for ALL sample edges (avoids per-transaction searchsorted)
+        miso_indices = np.searchsorted(miso.timestamps, self.sample_edge_times, side='right')
+        mosi_indices = np.searchsorted(mosi.timestamps, self.sample_edge_times, side='right')
+        self.all_miso_bits = ((miso.initial_state + miso_indices) & 1).astype(np.uint8)
+        self.all_mosi_bits = ((mosi.initial_state + mosi_indices) & 1).astype(np.uint8)
+
     def decode(self) -> Iterator[AnalyzerFrame]:
         """Decode SPI transactions and yield AnalyzerFrames."""
         nss = self.nss
@@ -151,33 +197,28 @@ class SPIDecoder:
             if start_idx < end_idx:
                 edge_times = self.sample_edge_times[start_idx:end_idx]
 
-                # Sample MISO and MOSI at each edge using binary search
-                miso_indices = np.searchsorted(self.miso.timestamps, edge_times, side='right')
-                mosi_indices = np.searchsorted(self.mosi.timestamps, edge_times, side='right')
+                # Use pre-computed MISO/MOSI bits (slicing is O(1))
+                miso_bits = self.all_miso_bits[start_idx:end_idx]
+                mosi_bits = self.all_mosi_bits[start_idx:end_idx]
 
-                # State = initial ^ (num_transitions_before & 1)
-                miso_bits = (self.miso.initial_state + miso_indices) & 1
-                mosi_bits = (self.mosi.initial_state + mosi_indices) & 1
-
-                # Group into bytes (8 bits each)
+                # Group into bytes (8 bits each) - vectorized/JIT
                 n_bits = len(edge_times)
                 n_bytes = n_bits // 8
 
-                for b in range(n_bytes):
-                    bit_start = b * 8
-                    bit_end = bit_start + 8
+                if n_bytes > 0:
+                    # Convert bits to bytes using Numba JIT (if available) or NumPy
+                    mosi_byte_array, miso_byte_array = bits_to_bytes(mosi_bits, miso_bits, n_bytes)
 
-                    # Convert 8 bits to byte (MSB first)
-                    mosi_byte = 0
-                    miso_byte = 0
-                    for j in range(8):
-                        mosi_byte = (mosi_byte << 1) | mosi_bits[bit_start + j]
-                        miso_byte = (miso_byte << 1) | miso_bits[bit_start + j]
+                    # Get timestamps for each byte (last bit of each byte)
+                    byte_end_indices = np.arange(8, n_bytes * 8 + 1, 8) - 1
+                    byte_timestamps = edge_times[byte_end_indices]
 
-                    yield AnalyzerFrame('result', edge_times[bit_end - 1], edge_times[bit_end - 1], {
-                        'mosi': bytes([mosi_byte]),
-                        'miso': bytes([miso_byte])
-                    })
+                    # Yield frames for each byte
+                    for b in range(n_bytes):
+                        yield AnalyzerFrame('result', byte_timestamps[b], byte_timestamps[b], {
+                            'mosi': bytes([mosi_byte_array[b]]),
+                            'miso': bytes([miso_byte_array[b]])
+                        })
 
             # Emit 'disable' frame
             yield AnalyzerFrame('disable', ts_rise, ts_rise)
@@ -275,6 +316,16 @@ def main():
     if args.hla_path is None:
         print("Error: --hla-path is required", file=sys.stderr)
         sys.exit(1)
+
+    # Report acceleration status and warm up JIT
+    if HAVE_NUMBA:
+        print("Numba JIT acceleration: enabled (compiling...)", file=sys.stderr, end='', flush=True)
+        # Warmup call to trigger JIT compilation before processing
+        _dummy = bits_to_bytes(np.array([0,1,0,1,0,1,0,1], dtype=np.uint8),
+                               np.array([1,0,1,0,1,0,1,0], dtype=np.uint8), 1)
+        print(" ready", file=sys.stderr)
+    else:
+        print("Numba JIT acceleration: disabled (install numba for faster processing)", file=sys.stderr)
 
     # Try to auto-detect channel numbers from digital.csv
     channel_names = read_channel_names(args.directory)
