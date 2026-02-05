@@ -142,6 +142,22 @@ The script uses several optimizations to handle large captures efficiently:
 
 With Numba installed, processing ~900MB of data (18K transactions across 2 SPI ports) takes approximately 1 second. Without Numba, the same data takes approximately 2-3 seconds.
 
+### RAM Usage
+
+Memory usage scales with input file size. Expect approximately **3-4x the total input file size** in RAM. For example, ~1.1 GB of input files requires ~4 GB of RAM.
+
+The main memory consumers are:
+
+| Component | Approximate Size |
+|-----------|------------------|
+| Memory-mapped input data | 1x input size |
+| Pre-computed sample edge arrays | 1-2x input size |
+| Results heap (all decoded frames) | 0.5-1x input size |
+
+Numba adds minimal overhead (~50-100 MB for the JIT runtime).
+
+For very large captures, ensure your system has sufficient RAM or consider processing smaller time ranges when exporting from Logic.
+
 On startup, the script reports whether Numba acceleration is enabled:
 ```
 Numba JIT acceleration: enabled (compiling...) ready
