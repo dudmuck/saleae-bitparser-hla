@@ -241,12 +241,15 @@ def read_channel_names(directory: str) -> dict:
     except FileNotFoundError:
         return {}
 
-def find_spi_channels(channel_names: dict) -> list:
+def find_spi_channels(channel_names: dict, nss_name: str = None) -> list:
     """Find SPI channel numbers from channel name mapping.
 
     Returns a list of dicts, one per SPI port found. Each dict contains:
     - 'name': port name (e.g., 'SPI', 'SPI_B')
     - 'sclk', 'miso', 'mosi', 'nss': channel numbers
+
+    If nss_name is provided, use that specific channel for the chip select
+    instead of auto-detecting.
     """
     # Common variations of SPI signal names (base names without suffix)
     sclk_bases = ['SCLK', 'SCK', 'CLK', 'SPI_SCLK', 'SPI_CLK']
@@ -266,6 +269,15 @@ def find_spi_channels(channel_names: dict) -> list:
 
         for signal, bases in [('sclk', sclk_bases), ('miso', miso_bases),
                               ('mosi', mosi_bases), ('nss', nss_bases)]:
+            # If nss_name was explicitly provided, use it for nss signal
+            if signal == 'nss' and nss_name and suffix == '':
+                upper = nss_name.upper()
+                if upper in channel_names and channel_names[upper] not in used_channels:
+                    port[signal] = channel_names[upper]
+                    continue
+                else:
+                    break
+
             found = False
             for base in bases:
                 # Try exact suffix match
@@ -280,6 +292,20 @@ def find_spi_channels(channel_names: dict) -> list:
                     port[signal] = channel_names[name_lower]
                     found = True
                     break
+            if found:
+                continue
+
+            # Fallback: find channel names that end with a known base name
+            # This handles names like "TX RADIO NSS" matching the "NSS" base
+            if suffix == '':
+                for base in bases:
+                    candidates = [n for n in channel_names
+                                  if (n.endswith(' ' + base) or n.endswith('_' + base))
+                                  and channel_names[n] not in used_channels]
+                    if len(candidates) == 1:
+                        port[signal] = channel_names[candidates[0]]
+                        found = True
+                        break
             if not found:
                 break
 
@@ -298,10 +324,10 @@ def main():
     parser.add_argument('directory', help='Directory containing digital_N.bin files')
     parser.add_argument('--hla-path', type=str, default=None,
                         help='Path to HLA directory (required)')
-    parser.add_argument('--sclk', type=int, default=None, help='SCLK channel number (auto-detect from CSV if not specified)')
-    parser.add_argument('--miso', type=int, default=None, help='MISO channel number (auto-detect from CSV if not specified)')
-    parser.add_argument('--mosi', type=int, default=None, help='MOSI channel number (auto-detect from CSV if not specified)')
-    parser.add_argument('--nss', type=int, default=None, help='nSS channel number (auto-detect from CSV if not specified)')
+    parser.add_argument('--sclk', type=str, default=None, help='SCLK channel number or name (auto-detect from CSV if not specified)')
+    parser.add_argument('--miso', type=str, default=None, help='MISO channel number or name (auto-detect from CSV if not specified)')
+    parser.add_argument('--mosi', type=str, default=None, help='MOSI channel number or name (auto-detect from CSV if not specified)')
+    parser.add_argument('--nss', type=str, default=None, help='nSS channel number or name (auto-detect from CSV if not specified)')
     parser.add_argument('--cpol', type=int, default=0, choices=[0, 1], help='Clock polarity')
     parser.add_argument('--cpha', type=int, default=0, choices=[0, 1], help='Clock phase')
     parser.add_argument('--hex', action='store_true', help='Print MOSI/MISO bytes in hex before each decoded line')
@@ -331,9 +357,25 @@ def main():
     channel_names = read_channel_names(args.directory)
     if channel_names:
         print(f"Found channel names in digital.csv: {list(channel_names.keys())}", file=sys.stderr)
-        auto_ports = find_spi_channels(channel_names)
+        auto_ports = find_spi_channels(channel_names, nss_name=args.nss)
     else:
         auto_ports = []
+
+    # Resolve a CLI arg (number or channel name) to a channel number
+    def resolve_channel(arg_val, signal_name):
+        """Resolve a channel arg that may be a number or a name."""
+        if arg_val is None:
+            return None
+        try:
+            return int(arg_val)
+        except ValueError:
+            upper = arg_val.upper()
+            if channel_names and upper in channel_names:
+                return channel_names[upper]
+            print(f"Error: --{signal_name} '{arg_val}' not found in CSV channel names", file=sys.stderr)
+            if channel_names:
+                print(f"Available channels: {list(channel_names.keys())}", file=sys.stderr)
+            sys.exit(1)
 
     # Command-line args override auto-detected values for the primary port
     spi_ports = []
@@ -342,7 +384,7 @@ def main():
         manual_port = {'name': 'SPI'}
         missing = []
         for signal in ['sclk', 'miso', 'mosi', 'nss']:
-            arg_val = getattr(args, signal)
+            arg_val = resolve_channel(getattr(args, signal), signal)
             if arg_val is not None:
                 manual_port[signal] = arg_val
             elif auto_ports and signal in auto_ports[0]:

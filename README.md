@@ -4,6 +4,9 @@
 
 SPI decoder for Saleae Logic 2 binary exports that feeds data to a High Level Analyzer.
 
+> [!TIP]
+> For **live capture** directly from USB hardware (no manual export step), see [sigrok_hla_readme.md](sigrok_hla_readme.md) — uses the Saleae Logic 2 automation API or sigrok-cli.
+
 ## Description
 
 In Logic we can get the decoding from high level analyzer using "Export Table" under "Analyzers" with the menu available on the right side of the Data search box. But this script offers additional features, such as logging the activity of another pin alongside the decoder output strings. For example, when a debug pin is asserted or an interrupt pin.
