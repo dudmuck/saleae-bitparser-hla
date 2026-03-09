@@ -8,6 +8,8 @@ then feeds them to the HLA SPI parser.
 
 import contextlib
 import heapq
+import importlib
+import json
 import struct
 import sys
 import os
@@ -60,6 +62,68 @@ else:
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from saleae.analyzers import AnalyzerFrame
+
+
+def _load_hla_class(hla_path):
+    """Load the HLA class from the given directory.
+
+    Reads extension.json to discover the entry point (module.ClassName),
+    falling back to 'HighLevelAnalyzer.Hla' for older HLA layouts.
+    """
+    ext_json = os.path.join(hla_path, 'extension.json')
+    module_name = 'HighLevelAnalyzer'
+    class_name = 'Hla'
+
+    if os.path.isfile(ext_json):
+        with open(ext_json) as f:
+            ext = json.load(f)
+        extensions = ext.get('extensions', {})
+        for _label, info in extensions.items():
+            if info.get('type') == 'HighLevelAnalyzer':
+                entry = info['entryPoint']
+                module_name, class_name = entry.rsplit('.', 1)
+                break
+
+    if hla_path not in sys.path:
+        sys.path.insert(0, hla_path)
+
+    try:
+        mod = importlib.import_module(module_name)
+    except ImportError as e:
+        print(f"Failed to import HLA module '{module_name}' from {hla_path}: {e}",
+              file=sys.stderr)
+        sys.exit(1)
+
+    cls = getattr(mod, class_name, None)
+    if cls is None:
+        print(f"HLA module '{module_name}' has no class '{class_name}'", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"HLA: {module_name}.{class_name}", file=sys.stderr)
+    return cls
+
+
+def _format_hla_result(result):
+    """Format an HLA result frame into a display string.
+
+    Supports HLAs that return a 'string' field (e.g. saleae_lr2021) and
+    HLAs that return 'command_name'/'parsed_params'/'chip_status' fields
+    (e.g. lr20xx-saleae-protocol-analyzer).
+    """
+    data = result.data
+    if 'string' in data and data['string']:
+        return data['string']
+    parts = []
+    if data.get('command_name'):
+        parts.append(data['command_name'])
+    if data.get('parsed_params'):
+        parts.append(data['parsed_params'])
+    if data.get('chip_status'):
+        parts.append(f"[{data['chip_status']}]")
+    if parts:
+        return ' '.join(parts)
+    return ' '.join(str(v) for v in data.values() if v)
+
 
 SALEAE_MAGIC = b'<SALEAE>'
 HEADER_SIZE = 44  # 8 + 4 + 4 + 4 + 8 + 8 + 8
@@ -466,14 +530,8 @@ def main():
         decoders.append((port_name, decoder))
         print(f"  {port_name}: initialized", file=sys.stderr)
 
-    # Add HLA path to sys.path and import it
-    sys.path.insert(0, args.hla_path)
-
-    try:
-        from HighLevelAnalyzer import Hla
-    except ImportError as e:
-        print(f"Failed to import HLA: {e}", file=sys.stderr)
-        sys.exit(1)
+    # Import HLA
+    Hla = _load_hla_class(args.hla_path)
 
     # Create HLA instance for each port
     hla_instances = {port_name: Hla() for port_name, _ in decoders}
@@ -567,7 +625,7 @@ def main():
             print(f"{timestamp:.9f}: {port_prefix}*** DECODE ERROR: {error_msg} ***")
         else:
             # Print the decoded message
-            msg = result.data.get('string', '')
+            msg = _format_hla_result(result)
             print(f"{timestamp:.9f}: {port_prefix}{msg}")
 
     # Print any remaining pin transitions
