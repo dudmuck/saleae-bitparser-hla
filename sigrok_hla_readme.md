@@ -9,9 +9,9 @@ Two capture backends are supported:
 | Backend | Flag | Hardware | How it works |
 |---------|------|----------|--------------|
 | **Saleae** | `--saleae` | Saleae Logic 8, Pro 8, Pro 16 | Connects to Logic 2 app via automation API (gRPC on port 10430) |
-| **sigrok** | `-d DRIVER` | fx2lafw-compatible analyzers | Runs sigrok-cli as subprocess with SPI protocol decoder |
+| **sigrok** | `-d DRIVER` | sigrok-supported analyzers | Runs sigrok-cli as subprocess with SPI protocol decoder |
 
-The **Saleae backend** is the primary one. The Saleae Logic 8 (21a9:1004) is not supported by sigrok, so the automation API is used instead. Logic 2 handles the USB communication and SPI decoding, then the script exports the decoded data and feeds it through the HLA.
+Both backends work with the Saleae Logic 8 (21a9:1004). The **sigrok backend** uses the `saleae-logic-pro` driver (requires libsigrok built from source with Logic 8 support). The **Saleae backend** uses the Logic 2 app's automation API.
 
 ## Prerequisites
 
@@ -23,8 +23,19 @@ The **Saleae backend** is the primary one. The Saleae Logic 8 (21a9:1004) is not
 
 ### sigrok backend
 
-- `sigrok-cli` installed (`sudo apt install sigrok sigrok-firmware-fx2lafw`)
-- Hardware supported by sigrok (fx2lafw, saleae-logic16, etc.)
+- `sigrok-cli` built from source (the Ubuntu/Debian package has a broken `-P` flag)
+- `libsigrok` and `libsigrokdecode` built from source
+- Hardware supported by sigrok (saleae-logic-pro for Logic 8, fx2lafw, saleae-logic16, etc.)
+
+To build from source:
+```bash
+# In your sigrok build directory:
+cd libsigrok && ./autogen.sh && ./configure && make -j$(nproc)
+cd libsigrokdecode && ./autogen.sh && ./configure && make -j$(nproc)
+cd sigrok-cli && ./autogen.sh && PKG_CONFIG_PATH=../libsigrok:../libsigrokdecode ./configure && make -j$(nproc)
+```
+
+Set `LD_LIBRARY_PATH` to include the local `.libs` directories, or add the local `sigrok-cli` to `PATH`.
 
 ### Both backends
 
@@ -91,7 +102,14 @@ The script removes any stale stop file on startup, polls every 250ms, and cleans
 
 ### sigrok backend
 
-Live capture from sigrok-supported device:
+Live capture from Saleae Logic 8:
+```bash
+./sigrok_hla.py --hla-path ~/HLA/saleae_lr2021 -d saleae-logic-pro \
+    -C 0=SCLK,1=MISO,2=MOSI,3=nSS \
+    --spi SCLK,MISO,MOSI,nSS --samplerate 25M --continuous
+```
+
+Live capture from fx2lafw device:
 ```bash
 ./sigrok_hla.py --hla-path ~/HLA/saleae_lr2021 -d fx2lafw \
     -C 0=SCLK,1=MISO,2=MOSI,3=nSS \
@@ -100,10 +118,10 @@ Live capture from sigrok-supported device:
 
 Dual SPI port with sigrok:
 ```bash
-./sigrok_hla.py --hla-path ~/HLA/saleae_lr2021 -d fx2lafw \
+./sigrok_hla.py --hla-path ~/HLA/saleae_lr2021 -d saleae-logic-pro \
     -C 0=SCLK,1=MISO,2=MOSI,3=nSS,4=SCLK_B,5=MISO_B,6=MOSI_B,7=nSS_B \
     --spi SCLK,MISO,MOSI,nSS --spi SCLK_B,MISO_B,MOSI_B,nSS_B \
-    --samplerate 4M --continuous
+    --samplerate 25M --continuous
 ```
 
 From a raw binary file:
@@ -140,7 +158,7 @@ From a raw binary file:
 
 | Option | Description |
 |--------|-------------|
-| `-d DRIVER` | sigrok driver (e.g., `fx2lafw`, `saleae-logic16`) |
+| `-d DRIVER` | sigrok driver (e.g., `saleae-logic-pro`, `fx2lafw`, `saleae-logic16`) |
 | `-i FILE` | Input file instead of live capture |
 | `-I FORMAT` | Input format (e.g., `binary:numchannels=4:samplerate=1000000`) |
 | `-C CHANNELS` | Channel list (e.g., `0=SCLK,1=MISO,2=MOSI,3=nSS`) |

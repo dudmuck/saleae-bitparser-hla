@@ -137,7 +137,13 @@ def _flush_results(results_heap):
     """Print all queued results in timestamp order."""
     while results_heap:
         _, _, _, text = heapq.heappop(results_heap)
-        print(text, flush=True)
+        try:
+            print(text, flush=True)
+        except BrokenPipeError:
+            # Downstream consumer closed (e.g. head, grep -m), exit quietly
+            devnull = os.open(os.devnull, os.O_WRONLY)
+            os.dup2(devnull, sys.stdout.fileno())
+            raise SystemExit(0)
 
 
 # ---------------------------------------------------------------------------
@@ -455,6 +461,11 @@ def parse_sigrok_output(proc, samplerate, hla_instances, port_names, hex_mode):
     """Parse sigrok-cli SPI annotation output and feed to HLA instances."""
     show_port_prefix = len(port_names) > 1
 
+    # Minimum gap (in samples) to consider a new SPI transaction.
+    # Within a transaction, inter-byte gaps are typically 1-20 samples.
+    # Between transactions (nSS high), gaps are 100+ samples.
+    txn_gap_threshold = max(50, int(samplerate * 2e-6))  # 50 samples or 2µs
+
     port_state = {}
     for spi_id in sorted(hla_instances.keys()):
         port_state[spi_id] = {
@@ -504,7 +515,7 @@ def parse_sigrok_output(proc, samplerate, hla_instances, port_names, hex_mode):
         hla = hla_instances[spi_id]
         pname = port_names[spi_id]
 
-        if st['in_transaction'] and start_sample != st['prev_end']:
+        if st['in_transaction'] and (start_sample - st['prev_end']) > txn_gap_threshold:
             disable_time = st['prev_end'] / samplerate
             if hex_mode:
                 prefix = f"  [{pname}] " if show_port_prefix else "  "
