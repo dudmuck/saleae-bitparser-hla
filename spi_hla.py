@@ -9,6 +9,7 @@ then feeds them to the HLA SPI parser.
 import contextlib
 import heapq
 import importlib
+import importlib.util
 import json
 import struct
 import sys
@@ -84,12 +85,22 @@ def _load_hla_class(hla_path):
                 module_name, class_name = entry.rsplit('.', 1)
                 break
 
+    # Add to sys.path so the HLA module can import its own siblings/helpers.
     if hla_path not in sys.path:
         sys.path.insert(0, hla_path)
 
+    # Load by file path under a unique module name so multiple HLAs that all
+    # define `HighLevelAnalyzer.py` don't collide in sys.modules.
+    module_file = os.path.join(hla_path, module_name + '.py')
+    unique_name = f"{module_name}__{abs(hash(os.path.abspath(hla_path)))}"
     try:
-        mod = importlib.import_module(module_name)
-    except ImportError as e:
+        spec = importlib.util.spec_from_file_location(unique_name, module_file)
+        if spec is None or spec.loader is None:
+            raise ImportError(f"could not create spec for {module_file}")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules[unique_name] = mod
+        spec.loader.exec_module(mod)
+    except (ImportError, FileNotFoundError) as e:
         print(f"Failed to import HLA module '{module_name}' from {hla_path}: {e}",
               file=sys.stderr)
         sys.exit(1)
@@ -99,7 +110,7 @@ def _load_hla_class(hla_path):
         print(f"HLA module '{module_name}' has no class '{class_name}'", file=sys.stderr)
         sys.exit(1)
 
-    print(f"HLA: {module_name}.{class_name}", file=sys.stderr)
+    print(f"HLA: {module_name}.{class_name} from {hla_path}", file=sys.stderr)
     return cls
 
 
@@ -386,8 +397,10 @@ def main():
 
     parser = argparse.ArgumentParser(description='Decode SPI from Saleae binary exports and run HLA')
     parser.add_argument('directory', help='Directory containing digital_N.bin files')
-    parser.add_argument('--hla-path', type=str, default=None,
-                        help='Path to HLA directory (required)')
+    parser.add_argument('--hla-path', type=str, default=[], action='append',
+                        help='Path to HLA directory (required). May be repeated: '
+                             'with multiple SPI ports detected, the Nth --hla-path '
+                             'applies to the Nth port; a single path is applied to all ports.')
     parser.add_argument('--sclk', type=str, default=None, help='SCLK channel number or name (auto-detect from CSV if not specified)')
     parser.add_argument('--miso', type=str, default=None, help='MISO channel number or name (auto-detect from CSV if not specified)')
     parser.add_argument('--mosi', type=str, default=None, help='MOSI channel number or name (auto-detect from CSV if not specified)')
@@ -397,13 +410,13 @@ def main():
     parser.add_argument('--hex', action='store_true', help='Print MOSI/MISO bytes in hex before each decoded line')
     parser.add_argument('--int-pin', type=str, default=None, metavar='NAME',
                         help='Log transitions of interrupt pin (e.g., --int-pin int)')
-    parser.add_argument('--extra-pin', type=str, default=None, metavar='NAME',
-                        help='Log transitions of an extra pin (e.g., --extra-pin busy)')
+    parser.add_argument('--extra-pin', type=str, default=[], action='append', metavar='NAME',
+                        help='Log transitions of extra pins (repeatable, e.g., --extra-pin busy --extra-pin debug)')
 
     args = parser.parse_args()
 
     # Check required arguments
-    if args.hla_path is None:
+    if not args.hla_path:
         print("Error: --hla-path is required", file=sys.stderr)
         sys.exit(1)
 
@@ -498,7 +511,7 @@ def main():
 
     # Load optional logging pins (int-pin, extra-pin)
     log_pins = []  # List of (name, data) tuples
-    for pin_arg, pin_label in [(args.int_pin, 'int-pin'), (args.extra_pin, 'extra-pin')]:
+    for pin_arg, pin_label in [(args.int_pin, 'int-pin')] + [(p, 'extra-pin') for p in args.extra_pin]:
         if pin_arg:
             pin_name = pin_arg.upper()
             if pin_name not in channel_names:
@@ -530,11 +543,28 @@ def main():
         decoders.append((port_name, decoder))
         print(f"  {port_name}: initialized", file=sys.stderr)
 
-    # Import HLA
-    Hla = _load_hla_class(args.hla_path)
+    # Map --hla-path to ports. If one path: apply to all. If many: must match port count.
+    if len(args.hla_path) == 1:
+        hla_paths_per_port = [args.hla_path[0]] * len(decoders)
+    elif len(args.hla_path) == len(decoders):
+        hla_paths_per_port = args.hla_path
+    else:
+        print(f"Error: got {len(args.hla_path)} --hla-path values but detected "
+              f"{len(decoders)} SPI port(s). Provide either one --hla-path "
+              f"(shared by all ports) or one per port in order: "
+              f"{[p for p, _ in decoders]}", file=sys.stderr)
+        sys.exit(1)
 
-    # Create HLA instance for each port
-    hla_instances = {port_name: Hla() for port_name, _ in decoders}
+    # Import HLA class for each port (cache by path so identical paths reuse the class)
+    hla_class_cache = {}
+    hla_instances = {}
+    for (port_name, _), hla_path in zip(decoders, hla_paths_per_port):
+        if hla_path not in hla_class_cache:
+            print(f"  {port_name}: loading HLA from {hla_path}", file=sys.stderr)
+            hla_class_cache[hla_path] = _load_hla_class(hla_path)
+        else:
+            print(f"  {port_name}: reusing HLA from {hla_path}", file=sys.stderr)
+        hla_instances[port_name] = hla_class_cache[hla_path]()
 
     # Track MOSI/MISO bytes for --hex option (per port)
     mosi_bytes = {port_name: bytearray() for port_name, _ in decoders}

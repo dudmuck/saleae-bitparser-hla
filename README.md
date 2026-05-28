@@ -37,7 +37,7 @@ python3 spi_hla.py <directory> --hla-path <path-to-hla>
 | Option | Description |
 |--------|-------------|
 | `directory` | Directory containing digital_N.bin files |
-| `--hla-path PATH` | Path to HLA directory (required) |
+| `--hla-path PATH` | Path to HLA directory (required). Repeatable — see [Multiple SPI Ports](#multiple-spi-ports) for per-port HLAs |
 | `--sclk N` | SCLK channel number (auto-detect from CSV if not specified) |
 | `--miso N` | MISO channel number (auto-detect from CSV if not specified) |
 | `--mosi N` | MOSI channel number (auto-detect from CSV if not specified) |
@@ -112,6 +112,22 @@ With `--hex`, the port prefix also appears on the hex lines:
 ```
 
 When only one SPI port is detected, no prefix is shown (backwards compatible).
+
+### Per-Port HLAs
+
+`--hla-path` is repeatable so each detected port can be decoded with a different HLA. The Nth `--hla-path` maps to the Nth detected port, in the order shown by the `Detected N SPI port(s): [...]` line at startup. A single `--hla-path` is shared across all ports (the original behavior).
+
+For the dual-port CSV above (`Detected 2 SPI port(s): ['SPI', 'SPI_B']`):
+
+```
+python3 spi_hla.py capture/ \
+    --hla-path ~/HLA/hla_for_chip_a \
+    --hla-path ~/HLA/hla_for_chip_b
+```
+
+`hla_for_chip_a` decodes `SPI`; `hla_for_chip_b` decodes `SPI_B`. If the number of `--hla-path` values is neither 1 nor equal to the detected port count, the script exits with an error that lists the expected port order.
+
+Two HLA directories that both define `HighLevelAnalyzer.py` are loaded as separate modules, so their classes do not collide.
 
 ## Error Handling
 
