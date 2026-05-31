@@ -302,8 +302,30 @@ class SPIDecoder:
             if (i + 1) % 10000 == 0:
                 print(f"  {i + 1}/{n_transactions} transactions...", file=sys.stderr)
 
+def _available_bin_numbers(directory: str) -> list:
+    """Return sorted list of N for every digital_N.bin file in directory."""
+    nums = []
+    try:
+        entries = os.listdir(directory)
+    except OSError:
+        return nums
+    for entry in entries:
+        if entry.startswith("digital_") and entry.endswith(".bin"):
+            stem = entry[len("digital_"):-len(".bin")]
+            if stem.isdigit():
+                nums.append(int(stem))
+    return sorted(nums)
+
+
 def read_channel_names(directory: str) -> dict:
-    """Read channel names from digital.csv header and return name->index mapping."""
+    """Read channel names from digital.csv header and return name->channel mapping.
+
+    The CSV header lists channels in capture order, but the digital_N.bin files
+    are named by the actual Saleae digital channel number, which need not start
+    at 0 (e.g. a capture of only D3-D7 produces digital_3.bin .. digital_7.bin).
+    Map the Nth CSV column to the Nth available bin file number so name lookups
+    resolve to the correct digital_N.bin regardless of any leading offset.
+    """
     csv_path = os.path.join(directory, "digital.csv")
     try:
         with open(csv_path, 'r') as f:
@@ -311,8 +333,15 @@ def read_channel_names(directory: str) -> dict:
             # Header format: "Time [s],SCLK,MISO,MOSI,nSS,..."
             columns = header.split(',')
             # Skip first column (Time [s]), remaining columns are channel names
-            channel_names = {name.strip().upper(): i for i, name in enumerate(columns[1:])}
-            return channel_names
+            names = [name.strip().upper() for name in columns[1:]]
+
+            bin_numbers = _available_bin_numbers(directory)
+            if len(bin_numbers) == len(names):
+                # Map each channel column to its actual bin file number.
+                return {name: num for name, num in zip(names, bin_numbers)}
+            # Fall back to positional index if the bin files don't line up
+            # one-to-one with the CSV columns (keeps prior behavior).
+            return {name: i for i, name in enumerate(names)}
     except FileNotFoundError:
         return {}
 
