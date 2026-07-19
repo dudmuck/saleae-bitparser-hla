@@ -35,7 +35,17 @@ cd libsigrokdecode && ./autogen.sh && ./configure && make -j$(nproc)
 cd sigrok-cli && ./autogen.sh && PKG_CONFIG_PATH=../libsigrok:../libsigrokdecode ./configure && make -j$(nproc)
 ```
 
-Set `LD_LIBRARY_PATH` to include the local `.libs` directories, or add the local `sigrok-cli` to `PATH`.
+Set `LD_LIBRARY_PATH` to include the local `.libs` directories, or add the local `sigrok-cli` to `PATH`. **Warning:** if the distro's sigrok-cli gets picked up instead, acquisition fails with `g_variant_get_type: assertion 'value != NULL' failed` (ABI mismatch with the local libsigrok).
+
+Better: install the local build to `~/.local/bin` with the library paths baked
+in as rpath, so no `PATH`/`LD_LIBRARY_PATH` is ever needed (and rebuilds of
+libsigrok/libsigrokdecode are picked up automatically):
+
+```bash
+cd sigrok-cli && PKG_CONFIG_PATH=/mnt/foo/libsigrok:/mnt/foo/libsigrokdecode \
+LDFLAGS="-Wl,-rpath,/mnt/foo/libsigrok/.libs -Wl,-rpath,/mnt/foo/libsigrokdecode/.libs" \
+./configure --prefix=$HOME/.local && make -j$(nproc) && make install
+```
 
 ### Both backends
 
@@ -116,10 +126,12 @@ Live capture from fx2lafw device:
     --spi SCLK,MISO,MOSI,nSS --samplerate 4M --continuous
 ```
 
-Dual SPI port with sigrok:
+Dual SPI port with sigrok (with the deglitch transform recommended for
+two 10 MHz buses at 25 MSa/s — see [Deglitch transform](#deglitch-transform-marginal-sample-rates)):
 ```bash
 ./sigrok_hla.py --hla-path ~/HLA/saleae_lr2021 -d saleae-logic-pro \
     -C 0=SCLK,1=MISO,2=MOSI,3=nSS,4=SCLK_B,5=MISO_B,6=MOSI_B,7=nSS_B \
+    -T "deglitch:channels=SCLK,SCLK_B:clock_period=2.5:frame_pulses=8" \
     --spi SCLK,MISO,MOSI,nSS --spi SCLK_B,MISO_B,MOSI_B,nSS_B \
     --samplerate 25M --continuous
 ```
@@ -130,6 +142,42 @@ From a raw binary file:
     -i capture.bin -I binary:numchannels=4:samplerate=1000000 \
     --spi 0,1,2,3
 ```
+
+### High-throughput traffic: capture first, decode after
+
+Live `--continuous` decode is fine for light traffic (status polling), but the
+Python decode pipeline runs roughly 20x slower than real time on saturated
+dual-SPI data. During sustained bursts (e.g. back-to-back 511-byte FIFO
+transfers) the pipeline back-pressures sigrok-cli, USB transfer resubmission
+falls behind, and the FX2 overruns — whole chunks are lost and the channel
+demux rotates, so clock bitstreams land on the wrong channels. The symptom is
+a flood of unparseable `[sigrok] N-N spi-X:` lines (empty CS transfers 1-2
+samples or whole 16384-sample chunks wide). This is a USB/CPU throughput
+limit, not a decode bug, and it happens with or without `-T`.
+
+For burst captures, record raw first — capture-to-file keeps up easily — and
+decode offline:
+
+```bash
+# 1. Capture raw while the burst runs (Logic 8 has no sample limit;
+#    'q' on stdin stops a continuous capture)
+(sleep 20; echo q) | sigrok-cli \
+    -d saleae-logic-pro \
+    -C 0=SCLK,1=MISO,2=MOSI,3=nSS,4=SCLK_B,5=MISO_B,6=MOSI_B,7=nSS_B \
+    --config samplerate=25m --continuous -o burst.bin -O binary
+
+# 2. Decode offline: same sigrok_hla.py command, -i instead of -d
+./sigrok_hla.py --hla-path ~/HLA/saleae_lr2021 \
+    -i burst.bin -I binary:numchannels=8:samplerate=25000000 \
+    -C 0=SCLK,1=MISO,2=MOSI,3=nSS,4=SCLK_B,5=MISO_B,6=MOSI_B,7=nSS_B \
+    -T "deglitch:channels=SCLK,SCLK_B:clock_period=2.5:frame_pulses=8" \
+    --spi SCLK,MISO,MOSI,nSS --spi SCLK_B,MISO_B,MOSI_B,nSS_B \
+    --samplerate 25M
+```
+
+Note: at 25 MSa/s x 8 channels the raw file grows at 25 MB/s (~500 MB per
+20 s). The `-o` capture writes a plain 1-byte-per-sample stream readable by
+`-I binary:numchannels=8`.
 
 ## Options
 
@@ -164,6 +212,7 @@ From a raw binary file:
 | `-C CHANNELS` | Channel list (e.g., `0=SCLK,1=MISO,2=MOSI,3=nSS`) |
 | `--samples N` | Number of samples to capture |
 | `--continuous` | Continuous streaming capture |
+| `-T MODULE[:OPT=VAL...]` | libsigrok transform module applied to the sample stream before decoding (see [Deglitch transform](#deglitch-transform-marginal-sample-rates)) |
 
 ## Sample Output
 
@@ -190,6 +239,51 @@ The sample rate must be high enough to capture the SPI clock. For an 8 MHz SPI S
 | 1 MHz | 4 MSa/s | 4-10 MSa/s |
 | 4 MHz | 10 MSa/s | 10-25 MSa/s |
 | 8 MHz | 25 MSa/s | 25 MSa/s |
+| 10 MHz | 25 MSa/s | 25 MSa/s + `-T deglitch` (see below) |
+
+## Deglitch transform (marginal sample rates)
+
+With both SPI buses captured on the Logic 8, all 8 channels are active and the
+FX2 caps out at 25 MSa/s — only 2.5 samples per 10 MHz SPI clock period. In
+this regime a one-sample clock phase can collapse to zero width whenever the
+signal edges drift into alignment with the sample instants, silently deleting a
+clock cycle and bit-slipping the rest of the transfer (symptoms: empty
+`CMD_FAIL` transactions, `xferLen1`, `dict-error` garbage opcodes, clustered in
+high-throughput bursts). Logic 2 tolerates the same data; sigrok's sample-based
+decoder does not.
+
+The libsigrok `deglitch` transform repairs this before the SPI decoder runs.
+**Recommended options for the dual 10 MHz SPI / 25 MSa/s use case:**
+
+```
+-T "deglitch:channels=SCLK,SCLK_B:clock_period=2.5:frame_pulses=8"
+```
+
+- `channels=SCLK,SCLK_B` — apply only to the two clock lines (names as
+  assigned by `-C`; indices `0,4` also work)
+- `clock_period=2.5` — nominal clock period in samples (25 MSa/s / 10 MHz);
+  enables splitting of merged pulses (a high run longer than one half-period
+  is provably two pulses whose separating low phase collapsed)
+- `frame_pulses=8` — SPI bytes carry 8 clock pulses; pulses are counted
+  between idle gaps and a vanished pulse is re-inserted where the count comes
+  up short of a multiple of 8
+- `min_period=N` (not needed here) — classic glitch suppression for spurious
+  pulses shorter than N samples; only useful at ≥4 samples/period
+
+Validated results: on a worst-case-alignment stream the transform restores
+98.6% of vanished clock edges and cuts protocol-level decode failures by ~95%;
+on a clean capture (128M pulses) its output is byte-identical to its input, so
+it is safe to leave enabled permanently — it only acts when the alignment
+actually degrades.
+
+Requirements: libsigrok with the `deglitch` module (commit `c09d7129`+) and,
+for file-input runs (`-i`), sigrok-cli with the `-T`-on-file-input fix
+(commit `54eaaf5`+). Both are in the local source builds under `/mnt/foo/`.
+Note the transform delays the stream by a small look-ahead window and drops
+its final few samples (≤ ~10) at end of capture.
+
+For sustained burst traffic, decode from a recorded file rather than live —
+see [High-throughput traffic: capture first, decode after](#high-throughput-traffic-capture-first-decode-after).
 
 ## Buffer and Memory
 
@@ -218,9 +312,11 @@ To reduce memory usage:
 
 ### sigrok backend flow
 
-1. Launches `sigrok-cli` as a subprocess with SPI protocol decoder(s)
-2. Streams and parses annotation output line-by-line (MISO/MOSI data with sample numbers)
-3. Pairs MISO/MOSI by sample range, detects CS transaction boundaries from gaps
+1. Launches `sigrok-cli` as a subprocess with SPI protocol decoder(s) (and the
+   `-T` transform, if given, applied to the sample stream before decoding)
+2. Streams and parses the SPI decoder's per-transfer annotations line-by-line
+   (one annotation per real CS#-asserted transfer, with sample numbers)
+3. Pairs MISO/MOSI transfers by sample range
 4. Feeds AnalyzerFrame objects to the HLA in real-time
 5. Prints decoded output interleaved by timestamp
 

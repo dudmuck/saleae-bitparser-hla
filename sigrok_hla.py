@@ -391,6 +391,8 @@ def build_sigrok_cmd(args, spi_ports):
             cmd += ['-I', args.input_format]
     if args.channels:
         cmd += ['-C', args.channels]
+    if args.transform:
+        cmd += ['-T', args.transform]
     if args.samplerate:
         cmd += ['--config', f'samplerate={args.samplerate}']
     if args.samples:
@@ -412,12 +414,21 @@ def build_sigrok_cmd(args, spi_ports):
         cmd += ['-P', 'spi:' + ':'.join(spi_opts)]
 
     cmd += ['--protocol-decoder-samplenum']
-    cmd += ['-A', 'spi=miso-data:mosi-data']
+    # Use the SPI decoder's per-transfer annotations (one annotation per
+    # real CS# assertion, containing the whole byte sequence) rather than
+    # per-byte data annotations. This frames transactions by the actual
+    # nSS line, matching Saleae Logic 2. Reconstructing transactions from
+    # inter-byte timing gaps (the old approach) wrongly split a single
+    # CS#-asserted transfer whenever the firmware paused mid-transfer
+    # (e.g. DMA setup between a WriteRadioTxFifo opcode and its payload).
+    cmd += ['-A', 'spi=miso-transfer:mosi-transfer']
 
     return cmd
 
 
-LINE_RE = re.compile(r'^(\d+)-(\d+)\s+spi-(\d+):\s+([0-9A-Fa-f]+)$')
+# A transfer annotation line: "START-END spi-N: HH HH HH ..." (space-separated
+# hex bytes covering one full CS#-asserted transfer).
+LINE_RE = re.compile(r'^(\d+)-(\d+)\s+spi-(\d+):\s+([0-9A-Fa-f]+(?:\s+[0-9A-Fa-f]+)*)$')
 
 
 def run_sigrok_backend(args, spi_ports, port_name_list):
@@ -458,26 +469,57 @@ def run_sigrok_backend(args, spi_ports, port_name_list):
 
 
 def parse_sigrok_output(proc, samplerate, hla_instances, port_names, hex_mode):
-    """Parse sigrok-cli SPI annotation output and feed to HLA instances."""
+    """Parse sigrok-cli SPI per-transfer annotations and feed to HLA instances.
+
+    The SPI decoder is run with ``-A spi=miso-transfer:mosi-transfer``, so each
+    CS#-asserted transfer yields exactly two annotation lines at the same
+    sample range: the MISO transfer first (annotation class 5), then the MOSI
+    transfer (class 6) -- the SPI decoder emits them in that order. We pair
+    them by (spi_id, start, end) and feed each complete transfer to the HLA as
+    one enable/result/disable sequence. Transactions are thus framed by the
+    real nSS line, exactly like Saleae Logic 2 -- no inter-byte timing-gap
+    heuristic (which used to split a transfer whenever the firmware paused
+    mid-transfer, e.g. between a WriteRadioTxFifo opcode and its payload).
+    """
     show_port_prefix = len(port_names) > 1
 
-    # Minimum gap (in samples) to consider a new SPI transaction.
-    # Within a transaction, inter-byte gaps are typically 1-20 samples.
-    # Between transactions (nSS high), gaps are 100+ samples.
-    txn_gap_threshold = max(50, int(samplerate * 2e-6))  # 50 samples or 2µs
-
-    port_state = {}
-    for spi_id in sorted(hla_instances.keys()):
-        port_state[spi_id] = {
-            'in_transaction': False,
-            'prev_end': None,
-            'mosi_buf': bytearray(),
-            'miso_buf': bytearray(),
-            'pending_miso': None,
-        }
+    # Per port: the first (MISO) half of a transfer awaiting its MOSI half,
+    # keyed by (start_sample, end_sample).
+    pending = {spi_id: {} for spi_id in hla_instances}
 
     results_heap = []
     seq = 0
+
+    def hexbytes(s):
+        return bytes(int(x, 16) for x in s.split())
+
+    def emit_transfer(spi_id, start_sample, end_sample, miso_bytes, mosi_bytes):
+        """Feed one complete CS#-framed transfer to its HLA instance."""
+        nonlocal seq
+        hla = hla_instances[spi_id]
+        pname = port_names[spi_id]
+        start_time = start_sample / samplerate
+        end_time = end_sample / samplerate
+
+        # nSS falling edge: start of transfer.
+        _feed_hla(hla, pname, AnalyzerFrame('enable', start_time, start_time),
+                  results_heap, seq, show_port_prefix)
+        seq += 1
+        # Whole transfer in a single result frame (the HLA accumulates bytes).
+        _feed_hla(hla, pname, AnalyzerFrame('result', start_time, end_time,
+                  {'mosi': mosi_bytes, 'miso': miso_bytes}),
+                  results_heap, seq, show_port_prefix)
+        seq += 1
+        if hex_mode and (mosi_bytes or miso_bytes):
+            prefix = f"  [{pname}] " if show_port_prefix else "  "
+            heapq.heappush(results_heap, (end_time, seq, pname,
+                f"{prefix}MOSI: {mosi_bytes.hex(' ')}\n"
+                f"{prefix}MISO: {miso_bytes.hex(' ')}"))
+            seq += 1
+        # nSS rising edge: end of transfer -> the HLA decodes here.
+        _feed_hla(hla, pname, AnalyzerFrame('disable', end_time, end_time),
+                  results_heap, seq, show_port_prefix)
+        seq += 1
 
     for raw_line in proc.stdout:
         line = raw_line.strip()
@@ -490,81 +532,28 @@ def parse_sigrok_output(proc, samplerate, hla_instances, port_names, hex_mode):
         start_sample = int(m.group(1))
         end_sample = int(m.group(2))
         spi_id = int(m.group(3))
-        hex_val = int(m.group(4), 16)
+        hex_str = m.group(4).strip()
 
-        if spi_id not in port_state:
+        if spi_id not in pending:
             print(f"Warning: unexpected spi-{spi_id} in output", file=sys.stderr)
             continue
 
-        st = port_state[spi_id]
+        key = (start_sample, end_sample)
+        port_pending = pending[spi_id]
+        if key not in port_pending:
+            # First line for this transfer == MISO transfer (emitted first).
+            port_pending[key] = hexbytes(hex_str)
+        else:
+            # Second line == MOSI transfer; the pair is complete.
+            miso_bytes = port_pending.pop(key)
+            emit_transfer(spi_id, start_sample, end_sample,
+                          miso_bytes, hexbytes(hex_str))
 
-        if st['pending_miso'] is None:
-            st['pending_miso'] = (start_sample, end_sample, hex_val)
-            continue
-
-        miso_start, miso_end, miso_val = st['pending_miso']
-        mosi_val = hex_val
-        st['pending_miso'] = None
-
-        if miso_start != start_sample or miso_end != end_sample:
-            print(f"Warning: spi-{spi_id} MISO/MOSI sample range mismatch: "
-                  f"{miso_start}-{miso_end} vs {start_sample}-{end_sample}",
-                  file=sys.stderr)
-
-        byte_time = start_sample / samplerate
-        hla = hla_instances[spi_id]
-        pname = port_names[spi_id]
-
-        if st['in_transaction'] and (start_sample - st['prev_end']) > txn_gap_threshold:
-            disable_time = st['prev_end'] / samplerate
-            if hex_mode:
-                prefix = f"  [{pname}] " if show_port_prefix else "  "
-                heapq.heappush(results_heap, (disable_time, seq, pname,
-                    f"{prefix}MOSI: {st['mosi_buf'].hex(' ')}\n"
-                    f"{prefix}MISO: {st['miso_buf'].hex(' ')}"))
-                seq += 1
-
-            frame = AnalyzerFrame('disable', disable_time, disable_time)
-            _feed_hla(hla, pname, frame, results_heap, seq, show_port_prefix)
-            seq += 1
-            st['in_transaction'] = False
-
-        if not st['in_transaction']:
-            enable_time = start_sample / samplerate
-            frame = AnalyzerFrame('enable', enable_time, enable_time)
-            _feed_hla(hla, pname, frame, results_heap, seq, show_port_prefix)
-            seq += 1
-            st['in_transaction'] = True
-            st['mosi_buf'] = bytearray()
-            st['miso_buf'] = bytearray()
-
-        frame = AnalyzerFrame('result', byte_time, byte_time, {
-            'mosi': bytes([mosi_val]),
-            'miso': bytes([miso_val]),
-        })
-        _feed_hla(hla, pname, frame, results_heap, seq, show_port_prefix)
-        seq += 1
-
-        st['mosi_buf'].append(mosi_val)
-        st['miso_buf'].append(miso_val)
-        st['prev_end'] = end_sample
-
-    for spi_id, st in port_state.items():
-        if st['in_transaction']:
-            pname = port_names[spi_id]
-            hla = hla_instances[spi_id]
-            disable_time = st['prev_end'] / samplerate if st['prev_end'] else 0
-
-            if hex_mode and (st['mosi_buf'] or st['miso_buf']):
-                prefix = f"  [{pname}] " if show_port_prefix else "  "
-                heapq.heappush(results_heap, (disable_time, seq, pname,
-                    f"{prefix}MOSI: {st['mosi_buf'].hex(' ')}\n"
-                    f"{prefix}MISO: {st['miso_buf'].hex(' ')}"))
-                seq += 1
-
-            frame = AnalyzerFrame('disable', disable_time, disable_time)
-            _feed_hla(hla, pname, frame, results_heap, seq, show_port_prefix)
-            seq += 1
+    # Flush transfers that produced only one annotation (e.g. a single-channel
+    # SPI, or a transfer truncated at end-of-capture).
+    for spi_id, port_pending in pending.items():
+        for (start_sample, end_sample), miso_bytes in sorted(port_pending.items()):
+            emit_transfer(spi_id, start_sample, end_sample, miso_bytes, b'')
 
     _flush_results(results_heap)
 
@@ -648,6 +637,10 @@ def main():
                         help='Sample rate (e.g., 4M, 1000000)')
     parser.add_argument('--time', type=str, default=None,
                         help='Capture duration (e.g., 5s, 100ms)')
+    parser.add_argument('-T', '--transform', type=str, default=None,
+                        metavar='MODULE[:OPT=VAL...]',
+                        help='[sigrok] Transform module applied before decoding, '
+                             'e.g. deglitch:channels=SCLK,SCLK_B:clock_period=2.5:frame_pulses=8')
     parser.add_argument('--cpol', type=int, default=0, choices=[0, 1])
     parser.add_argument('--cpha', type=int, default=0, choices=[0, 1])
     parser.add_argument('--hla-path', type=str, required=True,
