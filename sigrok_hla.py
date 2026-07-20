@@ -112,8 +112,15 @@ def _format_hla_result(result):
     return ' '.join(str(v) for v in data.values() if v)
 
 
-def _feed_hla(hla, port_name, frame, results_heap, seq, show_port_prefix):
-    """Feed a frame to the HLA and queue any result for ordered output."""
+def _feed_hla(hla, port_name, frame, results_heap, seq, show_port_prefix,
+              flush=True):
+    """Feed a frame to the HLA and queue any result for ordered output.
+
+    An HLA timestamps its result at the *start* of the transaction but only
+    returns it once the transaction ends, so results are produced slightly
+    out of order. Callers that want chronological output pass flush=False
+    and drain the heap themselves once a batch is complete.
+    """
     try:
         with contextlib.redirect_stdout(sys.stderr):
             result = hla.decode(frame)
@@ -130,7 +137,23 @@ def _feed_hla(hla, port_name, frame, results_heap, seq, show_port_prefix):
         heapq.heappush(results_heap, (result.start_time, seq, port_name,
             f"{result.start_time:.9f}: {port_prefix}{msg}"))
 
-    _flush_results(results_heap)
+    if flush:
+        _flush_results(results_heap)
+
+
+def _flush_results_until(results_heap, watermark):
+    """Print queued results older than ``watermark``, in timestamp order.
+
+    Holding back the newest results lets a transaction that straddles a
+    chunk boundary settle before anything after it is printed, so the
+    output stays chronological across the whole stream.
+    """
+    while results_heap and results_heap[0][0] < watermark:
+        _, _, _, text = heapq.heappop(results_heap)
+        try:
+            print(text, flush=True)
+        except BrokenPipeError:
+            raise
 
 
 def _flush_results(results_heap):
@@ -398,25 +421,39 @@ def resolve_channel_indices(args, spi_ports):
                 if digits:
                     name_to_idx[name.strip()] = int(digits)
 
-    resolved = []
-    for port in spi_ports:
-        entry = {}
-        for role in ('clk', 'miso', 'mosi', 'cs'):
-            val = port[role]
-            if val in name_to_idx:
-                entry[role] = name_to_idx[val]
-            elif val.isdigit():
-                entry[role] = int(val)
+    def to_index(val, what):
+        if val in name_to_idx:
+            idx = name_to_idx[val]
+        elif val.isdigit():
+            idx = int(val)
+        else:
+            # Channel names are matched case-insensitively, like spi_hla.py.
+            for name, i in name_to_idx.items():
+                if name.lower() == val.lower():
+                    idx = i
+                    break
             else:
                 raise SystemExit(
-                    f"--engine numpy: cannot map channel '{val}' to an index. "
-                    f"Give it in -C (e.g. -C 0={val},...) or use a channel number.")
-            if entry[role] > 7:
-                raise SystemExit(
-                    f"--engine numpy: channel index {entry[role]} ('{val}') "
-                    "exceeds 7; the packed sample stream holds 8 channels.")
-        resolved.append(entry)
-    return resolved
+                    f"{what} '{val}': cannot map to a channel index. Name it in "
+                    f"-C (e.g. -C 0={val},...) or give a channel number. "
+                    f"Known: {', '.join(sorted(name_to_idx)) or '(none)'}")
+        if idx > 7:
+            raise SystemExit(
+                f"{what} '{val}': channel index {idx} exceeds 7; the packed "
+                "sample stream holds 8 channels.")
+        return idx
+
+    resolved = []
+    for port in spi_ports:
+        resolved.append({role: to_index(port[role], '--engine numpy')
+                         for role in ('clk', 'miso', 'mosi', 'cs')})
+
+    pins = []
+    for val, what in ([(args.int_pin, '--int-pin')] if args.int_pin else []) + \
+                     [(p, '--extra-pin') for p in args.extra_pin]:
+        pins.append((val, to_index(val, what)))
+
+    return resolved, pins
 
 
 def build_sigrok_cmd(args, spi_ports):
@@ -488,13 +525,18 @@ def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate):
     import queue
     import threading
 
-    from fast_spi import MultiPortDecoder
+    import numpy as np
 
-    chan = resolve_channel_indices(args, spi_ports)
+    from fast_spi import MultiPortDecoder, PinLogger
+
+    chan, log_pins = resolve_channel_indices(args, spi_ports)
     ports = [dict(name=name, **idx) for name, idx in zip(port_name_list, chan)]
     for p in ports:
         print(f"  {p['name']}: bits clk={p['clk']} miso={p['miso']} "
               f"mosi={p['mosi']} cs={p['cs']}", file=sys.stderr)
+    for name, bit in log_pins:
+        print(f"  pin {name}: bit {bit}", file=sys.stderr)
+    pin_logger = PinLogger(log_pins, samplerate) if log_pins else None
 
     Hla = _load_hla_class(args.hla_path)
     hla_map = {name: Hla() for name in port_name_list}
@@ -510,6 +552,10 @@ def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate):
                             bufsize=0)
 
     CHUNK = 1 << 22        # 4 MiB reads
+    # Output is held back this long (in capture seconds) so a transaction
+    # spanning a chunk boundary can finish before later events are printed.
+    # Far longer than any SPI transfer, far shorter than a chunk.
+    HOLD = 0.05
     q = queue.Queue(maxsize=64)
 
     def reader():
@@ -550,8 +596,34 @@ def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate):
                     f"{prefix}MOSI: {buf['mosi'].hex(' ')}\n"
                     f"{prefix}MISO: {buf['miso'].hex(' ')}"))
                 seq += 1
-        _feed_hla(hla_map[name], name, frame, results_heap, seq, show_port_prefix)
+        _feed_hla(hla_map[name], name, frame, results_heap, seq,
+                  show_port_prefix, flush=False)
         seq += 1
+
+    def process(chunk_events):
+        """Emit one chunk's events in timestamp order.
+
+        Each port is decoded over the whole chunk before the next, so the
+        per-port streams have to be merged here to read chronologically --
+        which is also what makes a logged pin edge appear at the point in
+        the traffic where it actually happened.
+        """
+        nonlocal seq
+        chunk_events.sort(key=lambda e: e[0])
+        for _, kind, payload in chunk_events:
+            if kind == 'frame':
+                handle(*payload)
+            else:
+                t, name, edge = payload
+                heapq.heappush(results_heap, (t, seq, name,
+                    f"{t:.9f}: [{name}] {edge}"))
+                seq += 1
+        # Results are queued, not printed, while the chunk is processed.
+        # Everything older than the newest event minus HOLD is now settled:
+        # a transaction still open across the chunk boundary can only carry
+        # a timestamp newer than that.
+        if chunk_events:
+            _flush_results_until(results_heap, chunk_events[-1][0] - HOLD)
 
     try:
         while True:
@@ -565,10 +637,14 @@ def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate):
                     if nl >= 0:
                         buf = buf[nl + 1:]
                 first = False
-            for name, frame in decoder.feed(buf):
-                handle(name, frame)
-        for name, frame in decoder.end():
-            handle(name, frame)
+            chunk = np.frombuffer(buf, dtype=np.uint8)
+            events = [(f.start_time, 'frame', (n, f))
+                      for n, f in decoder.feed(chunk)]
+            if pin_logger is not None:
+                events += [(t, 'pin', (t, name, edge))
+                           for t, name, edge in pin_logger.feed(chunk)]
+            process(events)
+        process([(f.start_time, 'frame', (n, f)) for n, f in decoder.end()])
     except KeyboardInterrupt:
         print("\nInterrupted", file=sys.stderr)
     finally:
@@ -593,6 +669,11 @@ def run_sigrok_backend(args, spi_ports, port_name_list):
     if getattr(args, 'engine', 'srd') == 'numpy':
         run_sigrok_numpy(args, spi_ports, port_name_list, samplerate)
         return
+
+    if args.int_pin or args.extra_pin:
+        raise SystemExit('--int-pin/--extra-pin need the numpy engine '
+                         '(libsigrokdecode only reports decoder output); '
+                         'drop --engine srd.')
 
     # Import HLA
     Hla = _load_hla_class(args.hla_path)
@@ -794,6 +875,13 @@ def main():
                         metavar='MODULE[:OPT=VAL...]',
                         help='[sigrok] Transform module applied before decoding, '
                              'e.g. deglitch:channels=SCLK,SCLK_B:clock_period=2.5:frame_pulses=8')
+    parser.add_argument('--int-pin', type=str, default=None, metavar='NAME',
+                        help='[sigrok] Log transitions of an interrupt pin, '
+                             'interleaved with decoded traffic (e.g. --int-pin int)')
+    parser.add_argument('--extra-pin', type=str, default=[], action='append',
+                        metavar='NAME',
+                        help='[sigrok] Log transitions of an extra pin '
+                             '(repeatable, e.g. --extra-pin busy --extra-pin dbg)')
     parser.add_argument('--engine', choices=['numpy', 'srd'], default='numpy',
                         help='[sigrok] SPI decode engine: "numpy" (default, '
                              'vectorized, keeps up with live capture) or "srd" '

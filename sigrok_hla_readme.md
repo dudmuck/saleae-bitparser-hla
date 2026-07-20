@@ -165,6 +165,37 @@ Use `--engine srd` if you need to cross-check a decode against libsigrokdecode,
 or for a capture the numpy engine cannot describe (>8 channels, non-8-bit
 words, LSB-first).
 
+### Logging interrupt and other pins
+
+Channels that are not part of an SPI port can be followed alongside the
+decoded traffic, so you can see exactly where an interrupt or BUSY line
+asserted relative to the commands around it. A typical use is disconnecting
+one SPI bus and moving those wires to the pins of interest:
+
+```bash
+./sigrok_hla.py --hla-path ~/HLA/saleae_lr2021 -d saleae-logic-pro \
+    -C 0=SCLK,1=MISO,2=MOSI,3=nSS,4=INT,5=BUSY \
+    -T "deglitch:channels=SCLK:clock_period=2.5:frame_pulses=8" \
+    --spi SCLK,MISO,MOSI,nSS --int-pin INT --extra-pin BUSY \
+    --samplerate 25M --continuous
+```
+
+Pin names come from `-C` (case-insensitive); a bare channel number works too.
+`--extra-pin` is repeatable. Output interleaves by timestamp:
+
+```
+0.018671400: GetStatus (mode=RX, reset=extPin, CMD_OK)
+0.018690000: [INT] rising
+0.018712080: GetAndClearIrqStatus (request) (intActive mode=RX, ...)
+```
+
+Both flags need the default `numpy` engine — libsigrokdecode only reports
+protocol-decoder output, so `--engine srd` rejects them.
+
+Note that a pin pointed at a fast signal (e.g. a still-connected second SPI
+clock) emits an edge event per transition and will swamp the output; these
+flags are meant for low-rate control lines.
+
 ### High-throughput traffic
 
 With `--engine srd`, live decode cannot keep up with saturated dual-SPI
@@ -251,6 +282,8 @@ Note: at 25 MSa/s x 8 channels the raw file grows at 25 MB/s (~500 MB per
 | `--continuous` | Continuous streaming capture |
 | `-T MODULE[:OPT=VAL...]` | libsigrok transform module applied to the sample stream before decoding (see [Deglitch transform](#deglitch-transform-marginal-sample-rates)) |
 | `--engine numpy\|srd` | SPI decode engine (default `numpy`, real-time capable; see [Decode engines](#decode-engines---engine-numpy-default-vs---engine-srd)) |
+| `--int-pin NAME` | Log transitions of an interrupt pin, interleaved with decoded traffic (numpy engine only) |
+| `--extra-pin NAME` | Log transitions of an extra pin (repeatable; numpy engine only) |
 
 ## Sample Output
 
@@ -373,5 +406,5 @@ transfer, paired MISO/MOSI by sample range).
 | Input | Saved binary exports | Live USB capture or files |
 | SPI decoding | Custom NumPy/Numba decoder | Saleae or sigrok built-in |
 | Speed | Very fast (vectorized) | Depends on backend |
-| Pin logging | `--int-pin`, `--extra-pin` | Not supported |
+| Pin logging | `--int-pin`, `--extra-pin` | `--int-pin`, `--extra-pin` (numpy engine) |
 | Workflow | Export from Logic, then run | One command, captures and decodes |

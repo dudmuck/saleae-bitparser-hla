@@ -76,6 +76,53 @@ MAX_OPEN_BITS = 8 * 1024 * 1024
 _BYTE = tuple(bytes([i]) for i in range(256))
 
 
+def find_edges(bits, prev_bit):
+    """Indices where ``bits`` differs from the preceding sample."""
+    if prev_bit is None:
+        # No history: the first sample cannot be an edge.
+        return np.flatnonzero(bits[1:] != bits[:-1]) + 1
+    rest = np.flatnonzero(bits[1:] != bits[:-1]) + 1
+    if bits[0] != prev_bit:
+        return np.concatenate((np.array([0], dtype=np.int64), rest))
+    return rest
+
+
+class PinLogger:
+    """Reports edges on logic channels that are not part of an SPI port.
+
+    Used to follow an interrupt or BUSY line alongside the decoded traffic:
+    the events carry timestamps, so the caller can interleave them with
+    decoded transactions and see exactly where a pin asserted.
+    """
+
+    def __init__(self, pins, samplerate):
+        """pins: sequence of (name, channel index) pairs."""
+        self.pins = list(pins)
+        self.samplerate = float(samplerate)
+        self.abs_pos = 0
+        self.prev_sample = None
+
+    def feed(self, chunk):
+        """Return [(time, name, 'rising'|'falling'), ...] for this chunk."""
+        events = []
+        if chunk.size == 0:
+            return events
+        prev = self.prev_sample
+        for name, bit in self.pins:
+            bits = (chunk >> bit) & 1
+            prev_bit = None if prev is None else (prev >> bit) & 1
+            idx = find_edges(bits, prev_bit)
+            if idx.size == 0:
+                continue
+            times = (idx + self.abs_pos) / self.samplerate
+            vals = bits[idx]
+            for t, v in zip(times.tolist(), vals.tolist()):
+                events.append((t, name, 'rising' if v else 'falling'))
+        self.abs_pos += chunk.size
+        self.prev_sample = int(chunk[-1])
+        return events
+
+
 class SpiPortDecoder:
     """Streaming SPI decoder for one port (CLK/MISO/MOSI/CS channel indices).
 
@@ -112,15 +159,7 @@ class SpiPortDecoder:
         return abs_sample / self.samplerate
 
     def _edges(self, bits, prev_bit):
-        """Indices where ``bits`` differs from the preceding sample."""
-        if prev_bit is None:
-            # No history: the first sample cannot be an edge.
-            d = np.flatnonzero(bits[1:] != bits[:-1]) + 1
-            return d
-        first = np.array([0], dtype=np.int64) if bits[0] != prev_bit \
-            else np.empty(0, dtype=np.int64)
-        rest = np.flatnonzero(bits[1:] != bits[:-1]) + 1
-        return np.concatenate((first, rest)) if first.size else rest
+        return find_edges(bits, prev_bit)
 
     def _emit_transaction(self, start_abs, end_abs, frames):
         """Close the open transaction, appending its frames."""
@@ -247,8 +286,9 @@ class MultiPortDecoder:
         ]
 
     def feed(self, raw):
-        """Feed raw bytes; yield (port_name, frame) in per-port order."""
-        chunk = np.frombuffer(raw, dtype=np.uint8)
+        """Feed a chunk (bytes or uint8 array); yield (port_name, frame)."""
+        chunk = raw if isinstance(raw, np.ndarray) \
+            else np.frombuffer(raw, dtype=np.uint8)
         for dec in self.decoders:
             for frame in dec.feed(chunk):
                 yield dec.name, frame
