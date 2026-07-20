@@ -143,20 +143,45 @@ From a raw binary file:
     --spi 0,1,2,3
 ```
 
-### High-throughput traffic: capture first, decode after
+### Decode engines: `--engine numpy` (default) vs `--engine srd`
 
-Live `--continuous` decode is fine for light traffic (status polling), but the
-Python decode pipeline runs roughly 20x slower than real time on saturated
-dual-SPI data. During sustained bursts (e.g. back-to-back 511-byte FIFO
-transfers) the pipeline back-pressures sigrok-cli, USB transfer resubmission
+| Engine | Decoder | Throughput | Use |
+|--------|---------|-----------|-----|
+| `numpy` (default) | `fast_spi.py`, vectorized | ~36 MB/s (1.4x the 25 MB/s live rate) | live capture, large files |
+| `srd` | libsigrokdecode SPI PD | ~1.3 MB/s (~20x slower than real time) | reference / cross-check |
+
+The `numpy` engine reads sigrok-cli's raw sample stream (`-O binary`) and
+decodes SPI with NumPy over whole chunks, so **libsigrokdecode does no work at
+all** — sigrok-cli runs with no protocol decoder. The libsigrok `-T` transform
+is unaffected (it runs in C, upstream of the decode) and should still be used.
+
+The two engines produce the same output, with one deliberate difference: the
+srd path emits a garbage decode for a transfer already in progress at sample 0
+(a fragment with no valid framing, which is where the reference capture's lone
+`dict-error` came from); the numpy engine ignores a transaction with no
+observed CS falling edge.
+
+Use `--engine srd` if you need to cross-check a decode against libsigrokdecode,
+or for a capture the numpy engine cannot describe (>8 channels, non-8-bit
+words, LSB-first).
+
+### High-throughput traffic
+
+With `--engine srd`, live decode cannot keep up with saturated dual-SPI
+traffic: the pipeline back-pressures sigrok-cli, USB transfer resubmission
 falls behind, and the FX2 overruns — whole chunks are lost and the channel
 demux rotates, so clock bitstreams land on the wrong channels. The symptom is
 a flood of unparseable `[sigrok] N-N spi-X:` lines (empty CS transfers 1-2
-samples or whole 16384-sample chunks wide). This is a USB/CPU throughput
-limit, not a decode bug, and it happens with or without `-T`.
+samples or whole 16384-sample chunks wide). This is a throughput limit, not a
+decode bug, and it happens with or without `-T`.
 
-For burst captures, record raw first — capture-to-file keeps up easily — and
-decode offline:
+**The `numpy` engine (the default) is the fix** — it sustains ~36 MB/s against
+the 25 MB/s capture rate, so live `--continuous` decode of burst traffic works
+directly.
+
+The capture-first/decode-after workflow below remains useful when you want to
+archive the raw samples, re-decode with different options, or run on a slower
+machine:
 
 ```bash
 # 1. Capture raw while the burst runs (Logic 8 has no sample limit;
@@ -213,6 +238,7 @@ Note: at 25 MSa/s x 8 channels the raw file grows at 25 MB/s (~500 MB per
 | `--samples N` | Number of samples to capture |
 | `--continuous` | Continuous streaming capture |
 | `-T MODULE[:OPT=VAL...]` | libsigrok transform module applied to the sample stream before decoding (see [Deglitch transform](#deglitch-transform-marginal-sample-rates)) |
+| `--engine numpy\|srd` | SPI decode engine (default `numpy`, real-time capable; see [Decode engines](#decode-engines---engine-numpy-default-vs---engine-srd)) |
 
 ## Sample Output
 
@@ -312,13 +338,21 @@ To reduce memory usage:
 
 ### sigrok backend flow
 
-1. Launches `sigrok-cli` as a subprocess with SPI protocol decoder(s) (and the
-   `-T` transform, if given, applied to the sample stream before decoding)
-2. Streams and parses the SPI decoder's per-transfer annotations line-by-line
-   (one annotation per real CS#-asserted transfer, with sample numbers)
-3. Pairs MISO/MOSI transfers by sample range
-4. Feeds AnalyzerFrame objects to the HLA in real-time
+With `--engine numpy` (default):
+
+1. Launches `sigrok-cli` as a subprocess emitting raw samples (`-O binary`,
+   plus the `-T` transform if given) — no protocol decoder is instantiated
+2. A reader thread feeds 4 MiB chunks through a deep queue, so a GC pause
+   never back-pressures the capture
+3. `fast_spi.py` decodes each chunk with NumPy: nSS edges frame transactions,
+   CPOL/CPHA select the SCLK edges that latch MISO/MOSI, and a Numba kernel
+   packs bits to bytes; state carries across chunk boundaries
+4. Feeds AnalyzerFrame objects to the HLA in real time
 5. Prints decoded output interleaved by timestamp
+
+With `--engine srd`, steps 1-3 are replaced by sigrok-cli's SPI protocol
+decoder and per-transfer annotation parsing (one annotation per CS#-asserted
+transfer, paired MISO/MOSI by sample range).
 
 ## Comparison with spi_hla.py
 
