@@ -177,7 +177,19 @@ decode bug, and it happens with or without `-T`.
 
 **The `numpy` engine (the default) is the fix** — it sustains ~36 MB/s against
 the 25 MB/s capture rate, so live `--continuous` decode of burst traffic works
-directly.
+directly. Measured on 20 s of live iperf3 burst traffic, same command and same
+`-T deglitch` on both:
+
+| | numpy | srd |
+|---|---|---|
+| transactions decoded | 145,313 | 9,207 |
+| timespan covered (of 20 s) | 19.2 s | 1.4 s |
+| 511-byte FIFO transfers | 14,285 | 572 |
+| CMD_FAIL / xferLen1 / dict-error | 0 / 0 / 0 | 551 / 398 / 267 |
+
+numpy's 7,586 transactions/s matches the offline reference rate across the full
+window; srd covered only the first 1.4 s before falling irrecoverably behind,
+and corrupted even that.
 
 The capture-first/decode-after workflow below remains useful when you want to
 archive the raw samples, re-decode with different options, or run on a slower

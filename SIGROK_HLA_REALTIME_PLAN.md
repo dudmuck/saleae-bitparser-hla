@@ -119,3 +119,46 @@ Chunk-boundary handling (the only tricky part):
 Phase 1+2: one focused session (the decode math already exists in
 `spi_hla.py` and in the diagnostic scripts from the deglitch work);
 Phase 3: one session with hardware + iperf3 window.
+
+---
+
+# IMPLEMENTED 2026-07-20
+
+All phases done; `--engine numpy` is the default. Results:
+
+**Equivalence (Phase 3a).** Against the srd engine on `dual_slice_mid.bin`:
+SPI_B byte-identical (11,257 lines); SPI differs by exactly one line — srd's
+garbage decode of the transfer already in progress at sample 0, which the
+numpy engine skips (no observed CS falling edge). That artifact was the
+reference capture's lone dict-error, so numpy yields 0/0/0. With `-T deglitch`
+on the worst-case grid stream both engines give identical counts (28/30/~1085)
+and identical 62.7% agreement with the clean reference.
+
+**Throughput (Phase 3b).** 3 s saturated dual-SPI (75 M samples): 35.9 MB/s
+end-to-end vs the 25 MB/s live rate (1.44x margin), 213% CPU across both
+processes, 166 MB RSS. Pure decode 2.14x real time; AnalyzerFrame construction
+dominates the remainder.
+
+**Live burst A/B (the acceptance test), 20 s of iperf3 traffic, same command,
+same `-T deglitch`:**
+
+| | numpy | srd |
+|---|---|---|
+| transactions decoded | 145,313 | 9,207 |
+| timespan covered (of 20 s) | 19.2 s | 1.4 s |
+| rate within covered span | 7,586/s | 6,705/s |
+| 511-byte FIFO transfers | 14,285 | 572 |
+| CMD_FAIL / xferLen1 / dict-error | 0 / 0 / 0 | 551 / 398 / 267 |
+| unparseable `[sigrok]` lines | 0 | 0 |
+
+numpy's 7,586 txn/s matches the offline reference rate (~7,600/s) across the
+full window: it captured essentially all the traffic with zero failures. srd
+covered only the first 1.4 s before falling irrecoverably behind, and corrupted
+even that. Real-time decode is therefore a correctness fix, not just latency —
+exactly as the plan predicted.
+
+**Deviations from the plan.** Phase 4 (vectorized deglitch in Python,
+multiprocess offline decode) not implemented — unnecessary: the C transform
+covers the live path and single-process throughput already exceeds the capture
+rate. Engine limits: <=8 channels, 8-bit words, MSB-first; `--engine srd`
+remains for anything outside that or for cross-checking.
