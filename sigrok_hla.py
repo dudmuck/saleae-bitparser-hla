@@ -379,6 +379,46 @@ def _process_saleae_csv(csv_path, args, spi_analyzers, port_name_list):
 # sigrok backend
 # ---------------------------------------------------------------------------
 
+def resolve_channel_indices(args, spi_ports):
+    """Map the SPI ports' channel names to logic bit indices.
+
+    The numpy engine reads packed samples where bit N is logic channel N, so
+    it needs indices rather than the names the SPI PD takes. Names come from
+    -C (e.g. "0=SCLK,1=MISO,..."); bare numbers are accepted directly.
+    """
+    name_to_idx = {}
+    if args.channels:
+        for item in args.channels.split(','):
+            item = item.strip()
+            if '=' in item:
+                idx, name = item.split('=', 1)
+                idx = idx.strip()
+                # Accept both "0=SCLK" and driver-native names like "D0=SCLK".
+                digits = ''.join(c for c in idx if c.isdigit())
+                if digits:
+                    name_to_idx[name.strip()] = int(digits)
+
+    resolved = []
+    for port in spi_ports:
+        entry = {}
+        for role in ('clk', 'miso', 'mosi', 'cs'):
+            val = port[role]
+            if val in name_to_idx:
+                entry[role] = name_to_idx[val]
+            elif val.isdigit():
+                entry[role] = int(val)
+            else:
+                raise SystemExit(
+                    f"--engine numpy: cannot map channel '{val}' to an index. "
+                    f"Give it in -C (e.g. -C 0={val},...) or use a channel number.")
+            if entry[role] > 7:
+                raise SystemExit(
+                    f"--engine numpy: channel index {entry[role]} ('{val}') "
+                    "exceeds 7; the packed sample stream holds 8 channels.")
+        resolved.append(entry)
+    return resolved
+
+
 def build_sigrok_cmd(args, spi_ports):
     """Build the sigrok-cli command line from parsed arguments."""
     cmd = ['sigrok-cli']
@@ -401,6 +441,12 @@ def build_sigrok_cmd(args, spi_ports):
         cmd += ['--continuous']
     if args.time:
         cmd += ['--time', args.time]
+
+    if getattr(args, 'engine', 'srd') == 'numpy':
+        # The numpy engine decodes the raw sample stream itself: no protocol
+        # decoder is instantiated, so libsigrokdecode does no work at all.
+        cmd += ['-O', 'binary']
+        return cmd
 
     for port in spi_ports:
         spi_opts = [
@@ -431,6 +477,109 @@ def build_sigrok_cmd(args, spi_ports):
 LINE_RE = re.compile(r'^(\d+)-(\d+)\s+spi-(\d+):\s+([0-9A-Fa-f]+(?:\s+[0-9A-Fa-f]+)*)$')
 
 
+def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate):
+    """Capture via sigrok-cli -O binary and decode with the vectorized engine.
+
+    sigrok-cli is run without any protocol decoder; this reads its raw sample
+    stream and decodes SPI in NumPy, which keeps up with live capture. A
+    reader thread with a deep queue decouples the pipe from decode work so a
+    GC pause never back-pressures sigrok-cli into a USB overrun.
+    """
+    import queue
+    import threading
+
+    from fast_spi import MultiPortDecoder
+
+    chan = resolve_channel_indices(args, spi_ports)
+    ports = [dict(name=name, **idx) for name, idx in zip(port_name_list, chan)]
+    for p in ports:
+        print(f"  {p['name']}: bits clk={p['clk']} miso={p['miso']} "
+              f"mosi={p['mosi']} cs={p['cs']}", file=sys.stderr)
+
+    Hla = _load_hla_class(args.hla_path)
+    hla_map = {name: Hla() for name in port_name_list}
+    show_port_prefix = len(port_name_list) > 1
+    hex_bufs = {name: {'mosi': bytearray(), 'miso': bytearray()}
+                for name in port_name_list}
+
+    decoder = MultiPortDecoder(ports, samplerate, cpol=args.cpol, cpha=args.cpha)
+
+    cmd = build_sigrok_cmd(args, spi_ports)
+    print(f"Running: {' '.join(cmd)}", file=sys.stderr)
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            bufsize=0)
+
+    CHUNK = 1 << 22        # 4 MiB reads
+    q = queue.Queue(maxsize=64)
+
+    def reader():
+        try:
+            while True:
+                buf = proc.stdout.read(CHUNK)
+                if not buf:
+                    break
+                q.put(buf)
+        except Exception as e:                          # pragma: no cover
+            print(f"[reader] {e}", file=sys.stderr)
+        finally:
+            q.put(None)
+
+    t = threading.Thread(target=reader, daemon=True)
+    t.start()
+
+    results_heap = []
+    seq = 0
+    first = True
+
+    want_hex = args.hex
+
+    def handle(name, frame):
+        nonlocal seq
+        if not want_hex:
+            pass
+        elif frame.type == 'enable':
+            hex_bufs[name] = {'mosi': bytearray(), 'miso': bytearray()}
+        elif frame.type == 'result':
+            hex_bufs[name]['mosi'] += frame.data['mosi']
+            hex_bufs[name]['miso'] += frame.data['miso']
+        if frame.type == 'disable' and want_hex:
+            buf = hex_bufs[name]
+            if buf['mosi'] or buf['miso']:
+                prefix = f"  [{name}] " if show_port_prefix else "  "
+                heapq.heappush(results_heap, (frame.start_time, seq, name,
+                    f"{prefix}MOSI: {buf['mosi'].hex(' ')}\n"
+                    f"{prefix}MISO: {buf['miso'].hex(' ')}"))
+                seq += 1
+        _feed_hla(hla_map[name], name, frame, results_heap, seq, show_port_prefix)
+        seq += 1
+
+    try:
+        while True:
+            buf = q.get()
+            if buf is None:
+                break
+            if first:
+                # "-O binary" to a pipe prepends a "META samplerate: N\n" line.
+                if buf.startswith(b'META'):
+                    nl = buf.find(b'\n')
+                    if nl >= 0:
+                        buf = buf[nl + 1:]
+                first = False
+            for name, frame in decoder.feed(buf):
+                handle(name, frame)
+        for name, frame in decoder.end():
+            handle(name, frame)
+    except KeyboardInterrupt:
+        print("\nInterrupted", file=sys.stderr)
+    finally:
+        _flush_results(results_heap)
+        proc.terminate()
+        proc.wait()
+        stderr_out = proc.stderr.read().decode(errors='replace')
+        if stderr_out.strip():
+            print(f"[sigrok stderr] {stderr_out.strip()}", file=sys.stderr)
+
+
 def run_sigrok_backend(args, spi_ports, port_name_list):
     """Run capture and HLA decode using sigrok-cli."""
     samplerate = parse_samplerate(args.samplerate) if args.samplerate else 1e6
@@ -440,6 +589,10 @@ def run_sigrok_backend(args, spi_ports, port_name_list):
                 samplerate = parse_samplerate(part.split('=', 1)[1])
                 break
     print(f"Sample rate: {samplerate:.0f} Hz", file=sys.stderr)
+
+    if getattr(args, 'engine', 'srd') == 'numpy':
+        run_sigrok_numpy(args, spi_ports, port_name_list, samplerate)
+        return
 
     # Import HLA
     Hla = _load_hla_class(args.hla_path)
@@ -641,6 +794,10 @@ def main():
                         metavar='MODULE[:OPT=VAL...]',
                         help='[sigrok] Transform module applied before decoding, '
                              'e.g. deglitch:channels=SCLK,SCLK_B:clock_period=2.5:frame_pulses=8')
+    parser.add_argument('--engine', choices=['numpy', 'srd'], default='numpy',
+                        help='[sigrok] SPI decode engine: "numpy" (default, '
+                             'vectorized, keeps up with live capture) or "srd" '
+                             '(libsigrokdecode SPI PD, ~20x slower, reference)')
     parser.add_argument('--cpol', type=int, default=0, choices=[0, 1])
     parser.add_argument('--cpha', type=int, default=0, choices=[0, 1])
     parser.add_argument('--hla-path', type=str, required=True,

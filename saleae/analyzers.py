@@ -2,6 +2,11 @@
 
 class AnalyzerFrame:
     """Mock AnalyzerFrame that mimics Saleae's SPI analyzer output."""
+
+    # Millions of these are created when decoding a long capture; __slots__
+    # keeps construction cheap and avoids a per-instance dict.
+    __slots__ = ('type', 'start_time', 'end_time', 'data')
+
     def __init__(self, frame_type, start_time, end_time, data=None):
         self.type = frame_type
         self.start_time = start_time
