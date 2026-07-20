@@ -181,20 +181,38 @@ one SPI bus and moving those wires to the pins of interest:
 ```
 
 Pin names come from `-C` (case-insensitive); a bare channel number works too.
-`--extra-pin` is repeatable. Output interleaves by timestamp:
+`--extra-pin` is repeatable. Output interleaves by timestamp, so a whole
+interrupt handshake reads top to bottom (real capture, LR2021 TX path):
 
 ```
-0.018671400: GetStatus (mode=RX, reset=extPin, CMD_OK)
-0.018690000: [INT] rising
-0.018712080: GetAndClearIrqStatus (request) (intActive mode=RX, ...)
+0.934523880: WriteRadioTxFifo 511 bytes (mode=STBY_XOSC, reset=extPin, CMD_OK)
+0.934955440: SetTx timeout-disabled (mode=STBY_XOSC, reset=extPin, CMD_OK)
+0.936766600: [INT] rising
+0.936788880: GetAndClearIrqStatus (request) (intActive mode=FS, reset=extPin, CMD_OK)
+0.936800360: [INT] falling
+0.936809640: GetAndClearIrqStatus (response) (TX_TIMESTAMP | TX_DONE  mode=FS, ...)
 ```
+
+TX is submitted, the IRQ asserts 1.8 ms later, firmware responds 22 us after
+that, the pin drops as the handler reads the status, and the response confirms
+`TX_DONE`. (With a single `--spi` port the `[SPI]` prefix is omitted, as above;
+with two or more, decoded lines carry `[SPI]` / `[SPI_B]` and pin lines carry
+the pin name.)
 
 Both flags need the default `numpy` engine — libsigrokdecode only reports
 protocol-decoder output, so `--engine srd` rejects them.
 
+Output is fully chronological: a chunk's transactions and pin edges are merged
+by timestamp, and printing is held back briefly so a transaction spanning a
+chunk boundary settles first (an HLA timestamps a result at the *start* of a
+transaction but only returns it at the end). Measured 0 out-of-order lines on
+the 3 s reference capture, against 21 for the `srd` engine.
+
 Note that a pin pointed at a fast signal (e.g. a still-connected second SPI
-clock) emits an edge event per transition and will swamp the output; these
-flags are meant for low-rate control lines.
+clock) emits an edge event per transition and will swamp the output — pointing
+`--int-pin` at an SPI clock produced 155,000 events in 12 s. These flags are
+meant for low-rate control lines; a real interrupt line in the same setup gave
+40 edges in 15 s.
 
 ### High-throughput traffic
 
