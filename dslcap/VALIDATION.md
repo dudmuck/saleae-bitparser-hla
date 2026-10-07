@@ -485,3 +485,26 @@ This run saved decoded output, not raw samples. Evidence and hashes:
 Secondopinion tasks `dslcap-radio-pins-20261007` revision 4 and
 `dslcap-radio-pins-cleanup-20261007` revision 3 were consumed and acknowledged.
 No test activity remains. Earlier same-traffic Saleae and 10 MHz limits remain.
+
+## pi134 swapped BUSY / DIO8 leads — 2026-10-07
+
+The user swapped pi134 CH12/CH13: CH13 now connects to BUSY on physical
+pin 12/GPIO18, and CH12 to DIO8 on physical pin 29/GPIO5. The README example
+reflects this current mapping; the preceding PINS1 evidence retains its
+original mapping.
+
+SWAP1 used the same 12 selected channels at 25 MSa/s for 90 seconds. The
+application owner ran exactly 20 read-only GetVersion requests on pi134 only.
+Lead independently verified all 20 request/response pairs: MOSI 0101/00000000,
+MISO 0421/06210118. CH13 logged 40 balanced BUSY pulses, high for 17.04–23.64 us.
+CH12 logged no IRQ edges, as expected for GetVersion. pi133 logged no activity.
+All 120 timestamped events were ordered. The pipeline exited 0 after processing
+2250000000 samples, 4500000026 bytes, ring high-water 3148416, with no overflow.
+
+CH13 demonstrably captures BUSY with the swapped lead. The earlier absent
+IRQ edges therefore do not establish a general CH13 capture failure; pi134
+DIO8 wiring/routing/mask remains unvalidated. No initial static level was
+recorded. No reset, GPIO direction changes, RX/TX, calibration, IRQ clearing,
+configuration changes or service stops were performed. No test remains active.
+Secondopinion task `dslcap-pi134-swap-20261007` revision 4 was consumed and
+acknowledged. Evidence: [PI134_SWAP_VALIDATION.json](PI134_SWAP_VALIDATION.json).

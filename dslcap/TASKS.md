@@ -477,3 +477,16 @@ hashes, cleanup and remaining CH13 limit are in VALIDATION.md and
 RADIO_PINS_VALIDATION.json. No further RX is planned without addressing the
 application's calibration/configuration; no direct GPIO output is permitted
 on these radio-connected pins.
+
+### pi134 swapped-lead follow-up
+
+User swapped CH12/CH13 and authorized using mcp_radio as-is. Lead captured
+25 MSa/s for 90 seconds; existing application owner ran 20 read-only GetVersion
+requests on pi134 only. All returned 0118 and matched decoded SPI bytes.
+CH13 (now BUSY) logged 40 pulse pairs; CH12 (now DIO8) logged no edges.
+This validates CH13 acquisition with BUSY, while IRQ routing/wiring remains
+unproven. No reset, GPIO writes, configuration changes or service stops.
+Task dslcap-pi134-swap-20261007 revision 4 completed and acknowledged.
+Current README mapping updated; prior evidence remains historical.
+See VALIDATION.md and PI134_SWAP_VALIDATION.json. No implementation change
+or additional dependency was needed.
