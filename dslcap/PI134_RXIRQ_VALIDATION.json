@@ -1,0 +1,86 @@
+{
+  "date": "2026-10-07",
+  "capture": {
+    "command": [
+      "python3",
+      "sigrok_hla.py",
+      "--dslogic",
+      "--dslcap",
+      "/tmp/dslcap-lead-review/dslcap",
+      "--spi",
+      "0,1,2,3",
+      "--spi",
+      "8,9,10,11",
+      "--samplerate",
+      "25M",
+      "-C",
+      "4=pi133_busy,5=pi133_dio8,13=pi134_busy,12=pi134_dio8",
+      "--int-pin",
+      "pi133_dio8",
+      "--extra-pin",
+      "pi134_dio8",
+      "--extra-pin",
+      "pi133_busy",
+      "--extra-pin",
+      "pi134_busy",
+      "--time",
+      "90s",
+      "--hla-path",
+      "/home/wroberts/HLA/saleae_lr2021",
+      "--hex",
+      "-vv"
+    ],
+    "exit": 0,
+    "elapsed_s": 91.41700104810297,
+    "stop_reason": "finite_capture"
+  },
+  "mask": "0x3f3f",
+  "samplerate": 25000000,
+  "pi134_busy_channel": 13,
+  "pi134_dio8_channel": 12,
+  "dio8_events": [
+    [
+      29.87869844,
+      "falling"
+    ],
+    [
+      33.66305844,
+      "rising"
+    ],
+    [
+      37.59603172,
+      "falling"
+    ]
+  ],
+  "set_rx_time_s": 33.65276316,
+  "clear_irq_time_s": 37.59600996,
+  "rx_to_irq_ms": 10.29528,
+  "irq_high_s": 3.93297328,
+  "clear_to_fall_us": 21.76,
+  "busy_pulses": 33,
+  "spi_frames": 33,
+  "timestamp_ordered": true,
+  "samples": 2250000000,
+  "output_bytes": 4500000026,
+  "ring_high_water": 1787264,
+  "task": "dslcap-pi134-rxirq-20261007",
+  "revision": 4,
+  "result_sha256": "15a355d589b2931e9d77df317bff01f25621c2b17751652c785e9b79ab65253c",
+  "acknowledged": true,
+  "final_state": {
+    "mode": "STBY_RC",
+    "irq": 0,
+    "errors": 0
+  },
+  "retained_configuration": {
+    "DIO8": "IRQ, pull-up, mask0x006C0000",
+    "radio": "LoRa915MHz SF7 BW125 CR4/5 LDROoff, preamble8 explicit16B CRCenabled standardIQ sync0x12",
+    "calibration": "system blocks111 and frontend915MHz path0",
+    "limit": "Prior write-only settings unknown; not restored. RX counters/host semaphore may change."
+  },
+  "artifacts": {
+    "/tmp/dslcap-pi134-rxirq1.stdout": "20167f9d194ee086b37b2e9df6f53c1d1e6fe2d48a3dadf548052853fb076675",
+    "/tmp/dslcap-pi134-rxirq1.stderr": "edeca04e208ea84211900584db2c9f19b2c31bde6ccf68fc283e8c17e98b2afc",
+    "/tmp/dslcap-pi134-rxirq1.json": "1ebe46b6b7d74ff17e30b74d92d21fba717cc8761da89b783f137bdbb4be9cdb"
+  }
+}

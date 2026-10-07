@@ -490,3 +490,17 @@ Task dslcap-pi134-swap-20261007 revision 4 completed and acknowledged.
 Current README mapping updated; prior evidence remains historical.
 See VALIDATION.md and PI134_SWAP_VALIDATION.json. No implementation change
 or additional dependency was needed.
+
+### pi134 RX-timeout IRQ validation
+
+User requested RX with timeout. Existing application owner established known
+LoRa 915 MHz calibration/configuration and DIO8 IRQ routing using installed APIs.
+Lead captured at 25M with CH12=DIO8/CH13=BUSY: IRQ rose 10.29528 ms after SetRx,
+fell on ClearIrq; 33 SPI frames / 33 BUSY pulses, exit 0/nooverflow. Application
+reported TIMEOUT only and verified final IRQ 0/errors 0/STBY_RC. pi133 untouched.
+Both pi134 status inputs now have physical transition evidence. Calibration,
+LoRa and DIO8 settings remain as explicitly documented in VALIDATION.md;
+unknown prior write-only state was not restored. No TX or GPIO driving.
+Task dslcap-pi134-rxirq-20261007 revision 4 completed and acknowledged.
+PI134_RXIRQ_VALIDATION.json records hashes and timing. No implementation
+change, new dependency or running test remains.

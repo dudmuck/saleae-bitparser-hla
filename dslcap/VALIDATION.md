@@ -508,3 +508,48 @@ recorded. No reset, GPIO direction changes, RX/TX, calibration, IRQ clearing,
 configuration changes or service stops were performed. No test remains active.
 Secondopinion task `dslcap-pi134-swap-20261007` revision 4 was consumed and
 acknowledged. Evidence: [PI134_SWAP_VALIDATION.json](PI134_SWAP_VALIDATION.json).
+
+## pi134 configured RX timeout / DIO8 — 2026-10-07
+
+The user requested an RX-timeout interrupt on pi134. The application owner
+used installed APIs to establish its standard LoRa configuration and explicit
+DIO8 IRQ routing; no new dependencies were needed. Separate status/error
+gates before calibration, after calibration and before RX all returned IRQ 0,
+errors 0 and STBY_RC. pi133 was untouched.
+
+RXIRQ1 captured the existing 12-input mask 0x3f3f at 25 MSa/s for 90 seconds,
+with CH12=DIO8 and CH13=BUSY. It exited 0 with 2250000000 samples,
+4500000026 bytes and ring high-water 1787264, no overflow. All timestamped
+output was ordered; 33 SPI frames matched 33 BUSY pulses.
+
+| Captured event | Time from acquisition start |
+| --- | --- |
+| DIO8 falls during SetDioFunction IRQ configuration | 29.878698440 s |
+| SetRx, requested 10 ms / decoded 9.979 ms | 33.652763160 s |
+| DIO8 rises | 33.663058440 s |
+| ClearIrq TIMEOUT frame starts | 37.596009960 s |
+| DIO8 falls | 37.596031720 s |
+
+The IRQ rose 10.29528 ms after the SetRx frame began and fell 21.76 us after
+ClearIrq began. Its 3.93297328-second high interval includes the application
+round trip used to inspect status before clearing. Chip status reported
+TIMEOUT only, errors 0; cleanup verified IRQ 0/errors 0/STBY_RC. The initial
+fall during DIO configuration shows CH12 was high immediately beforehand;
+the earlier quiet IRQ logs alone did not establish a low level.
+
+This validates physical pi134 DIO8 capture on CH12 and BUSY on CH13 with
+known IRQ routing. It does not distinguish the exact unknown prior DIO
+configuration from any earlier wiring state. Both new status connections
+now have observed transitions under controlled radio activity.
+
+Retained on pi134: DIO8 IRQ function with pull-up and mask 0x006C0000
+(RX_DONE/TX_DONE/TIMEOUT/CRC_ERROR); LoRa 915 MHz, SF7/BW125/CR4-5,
+LDRO off, preamble 8, explicit 16-byte payload, CRC on, standard IQ, sync 0x12;
+system calibration blocks 111 and front-end calibration at 915 MHz/path0.
+Prior write-only configuration was unknown and was not restored. RX counters
+and the host IRQ semaphore may have changed. No TX, reset, PRAM, NVM,
+firmware, GPIO, driver, package or source changes occurred; no activity remains.
+
+Lead independently checked the saved SPI/pin output against the application
+report. Task `dslcap-pi134-rxirq-20261007` revision 4 was consumed and
+acknowledged. Evidence: [PI134_RXIRQ_VALIDATION.json](PI134_RXIRQ_VALIDATION.json).

@@ -129,6 +129,11 @@ log edges interleaved with decoded SPI; `--int-pin` is not a hardware trigger.
 Static levels produce no initial event. The radio application retains GPIO
 ownership; do not run the earlier synthetic GPIO generators on these pins.
 
+Bench validation observed BUSY on both Pis and DIO8 IRQ edges on both Pis.
+For pi134, DIO8 transitions were confirmed after the application configured
+IRQ routing and calibrated a 915 MHz LoRa RX-timeout test. Those radio settings
+remain on pi134; see [validation details](dslcap/VALIDATION.md#pi134-configured-rx-timeout--dio8--2026-10-07).
+
 Named channels and a logged interrupt:
 
 ```bash
