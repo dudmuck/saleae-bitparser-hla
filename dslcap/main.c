@@ -231,7 +231,7 @@ cleanup:
     sr_log = NULL;
     xlog_free(log);
     dsl_control_finish();
-    if (dsl_signal && !rc) rc = 128 + dsl_signal;
+    if (dsl_signal && (!rc || (options.capture && !options.stream))) rc = 128 + dsl_signal;
     if (!rc) {
         if (!options.capture) fprintf(stderr, "dslcap: 2a0e:0034 bring-up complete; driver HDL check passed on reopen\n");
         if (scan && printf("2a0e:0034 DSLogic PLus bus=%u address=%u activated security=pass hdl=checked\n",

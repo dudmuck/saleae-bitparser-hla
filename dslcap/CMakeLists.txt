@@ -67,12 +67,15 @@ if(BUILD_TESTING)
     # Exercise the real frontend with a fake driver, never touching USB.
     # Keep the actual DSView logger so non-NUL-terminated callbacks and
     # errors-only log filtering are tested too.
-    add_executable(dslcap_fake main.c tests/fake_driver.c
+    add_executable(dslcap_fake main.c tests/fake_driver.c ${frontend_sources} driver_config.c
         "${DSVIEW_SRC}/common/log/xlog.c"
         "${DSVIEW_SRC}/libsigrok4DSL/log.c")
     target_include_directories(dslcap_fake PRIVATE
         "${DSVIEW_SRC}/libsigrok4DSL" "${DSVIEW_SRC}/common")
-    target_link_libraries(dslcap_fake PRIVATE dslcap_core dslcap_config)
+    target_include_directories(dslcap_fake PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_compile_definitions(dslcap_fake PRIVATE DSLCAP_TEST_TIME_SCALE=0.02)
+    target_compile_options(dslcap_fake PRIVATE -UNDEBUG -Wno-variadic-macros -Wall -Wextra -Werror -Wpedantic)
+    target_link_libraries(dslcap_fake PRIVATE PkgConfig::GLIB PkgConfig::USB Threads::Threads m)
     target_compile_features(dslcap_fake PRIVATE c_std_11)
     file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/test-firmware")
     file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test-firmware/DSLogicPlus-pgl12-2.bin" "fake bitstream for offline tests only\n")
@@ -80,6 +83,10 @@ if(BUILD_TESTING)
         "-DPROGRAM=$<TARGET_FILE:dslcap_fake>"
         "-DFIRMWARE=${CMAKE_CURRENT_BINARY_DIR}/test-firmware"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/bringup.cmake")
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    add_test(NAME trigger_contract COMMAND "${Python3_EXECUTABLE}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_trigger.py" "$<TARGET_FILE:dslcap_fake>"
+        "${CMAKE_CURRENT_BINARY_DIR}/test-firmware")
     add_test(NAME capture_contract COMMAND ${CMAKE_COMMAND}
         "-DPROGRAM=$<TARGET_FILE:dslcap_fake>"
         "-DFIRMWARE=${CMAKE_CURRENT_BINARY_DIR}/test-firmware"

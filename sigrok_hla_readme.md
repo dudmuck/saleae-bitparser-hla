@@ -59,13 +59,55 @@ DSView before using the analyzer.
 The DSLogic Python backend uses the existing NumPy engine and accepts
 physical channels 0–15. It reads one byte per sample when every captured
 channel is below 8, otherwise two little-endian bytes. Width follows the
-exact SPI/pin channel union passed to dslcap, not unused `-C` name mappings.
+exact SPI/pin/trigger channel union passed to dslcap, not unused `-C` name mappings.
 This wider input applies only to `--dslogic`; sigrok raw behavior remains
 8-bit and Saleae automation is unchanged. `--engine srd`, `-d`, `-i`, `-I`,
 `-T` and `--saleae` cannot be combined
 with `--dslogic`. Select exactly one of `--samples`, `--time`, or
 `--continuous`. The default rate is 25M, threshold 1.6 V; `--vth V` accepts
-0–2.5 V. Impossible hardware rates/channel counts are rejected by dslcap.
+0–2.5 V. Unsupported rates/channel counts are rejected before the producer
+is launched, and dslcap verifies its own configuration and readback.
+
+### DSLogic buffer triggers
+
+Streaming remains the default. Use `--dsl-mode buffer` with an explicit
+`--samples` or `--time` for finite captures at up to 100M on physical lanes
+0..15, 200M on 0..7, or 400M on 0..3. Buffer mode rejects `--continuous`.
+
+```bash
+./sigrok_hla.py --dslogic --dslcap /tmp/dslcap-build/dslcap \
+  --dsl-mode buffer --samplerate 100M --samples 1M \
+  --spi SCLK,MISO,MOSI,nSS -C 0=SCLK,1=MISO,2=MOSI,3=nSS,15=IRQ \
+  --trigger nSS:f,IRQ:h --trigger-pos 10 \
+  --trigger-timeout 5s --on-timeout upload --drain-timeout 30 \
+  --hla-path /path/to/HLA
+```
+
+`--trigger NAME:COND,...` resolves names through `-C`, case insensitively;
+bare physical indices are also accepted. Conditions are rising `r`/`R`,
+falling `f`/`F`, high `1`/`h`, low `0`/`l`, and either edge `e`. Terms are
+ANDed at one sample. Duplicate physical trigger channels and out-of-range
+fast-buffer lanes fail before launch. Trigger inputs join the same channel
+union used for producer selection and sample width; a CH15 trigger alone
+makes low-channel SPI input uint16 even when CH15 is not logged as a pin.
+
+`--trigger-pos` is an integer 0..90 percent, default 10. Without
+`--trigger-timeout` the producer waits until triggered or interrupted.
+Timeout action defaults to `fail` (exit 16, `No trigger within
+--trigger-timeout`); `upload` can return fewer samples after a forced stop.
+The producer uses a nominal 340 ms status observation grace with no hard
+cache-age guarantee. `--drain-timeout` is the buffer output stall limit,
+1..3600 seconds, default 30; progressing decoding can take longer.
+
+Triggered requests parse exactly two bounded META lines, even across
+fragmented reads. Stderr reports `Trigger at sample K (t = K/rate s)`, and
+a trigger marker enters the chronological output heap at that time without
+advancing the decoder's watermark. Timestamps remain relative to capture
+start. An untriggered forced upload reports `Untriggered capture (forced
+upload)` and emits no trigger marker. Producer timeout/signal failures
+retain their exit codes even if the second META line never arrived. A
+successful producer missing that line is a protocol error. Serial triggers
+and trigger-relative `--t0` are not implemented.
 
 ### Common prerequisites
 
@@ -145,7 +187,7 @@ Named channels and a logged interrupt:
 
 `-C/--channels` maps names to physical bits; it is not a dslcap capture list.
 The backend derives a sorted unique producer `--channels` list from the SPI
-roles and `--int-pin`/`--extra-pin` references. Unreferenced named signals
+roles, `--int-pin`/`--extra-pin` references, and resolved trigger conditions. Unreferenced named signals
 are not captured and cannot force two-byte input. Duplicate names, negative
 indices and references above channel 15 fail before
 starting the producer. SPI roles may use numbers or mapped names; name lookup

@@ -10,7 +10,7 @@ are tracked separately in [PLAN.md](PLAN.md) and [TASKS.md](TASKS.md).
 Prerequisites: CMake 3.16+, a C11 compiler, pkg-config, GLib, libusb 1.0,
 zlib, Linux/POSIX threads, and the existing DSView 1.3.2 source tree. The build compiles DSView's
 library and common C sources directly, without modifying or copying them.
-It needs neither Qt nor Python.
+The production binary needs neither Qt nor Python; offline contract tests use Python 3.
 
 ```sh
 cmake -S dslcap -B /tmp/dslcap-build -DDSVIEW_SRC=/home/wroberts/DSView-1.3.2
@@ -40,7 +40,11 @@ do not prove real FPGA loading or USB behavior. Capture tests additionally
 cover 3,192 independent sample-oracle packet-split/trim cases, parser bounds,
 configuration failures/order, samplerate clamping, impossible/unrepresentable
 rates, buffer depth, malformed/truncated packets, overflow/device events,
-broken pipe, bounded writer drain and driver-watchdog/signal cancellation.
+broken pipe, bounded writer drain and driver-watchdog/signal cancellation. Trigger
+contracts compile the real capture/control/ring sources with test-only shorter
+deadlines. They exercise freed header payloads, packet ordering, cache/deadline
+races, forced counts, device/signal/data precedence, and a progressing
+consumer that outlives its watchdog margin. Production timing is unchanged.
 
 ## Capture
 
@@ -69,7 +73,7 @@ raw samples. Strip that line before loading the binary payload. If all
 enabled channels are below 8, each sample is one byte; otherwise it is two
 little-endian bytes. Bit `i` always represents physical channel `i`, and
 unselected bits are zero. Width is derived from the highest selected channel,
-not the enabled count. Finite payloads contain exactly the requested samples.
+not the enabled count. Normal finite payloads contain exactly the requested samples; forced triggered uploads can be shorter.
 Bring-up without capture arguments keeps stdout empty; `--scan` is a
 separate verified-device text mode and cannot be combined with capture flags.
 
@@ -82,7 +86,9 @@ hardware divider (including the fast-buffer packing flags). Samplerate
 readback and enabled-channel limits are also checked. Thus 50M×8, 60M×2 and
 3M×8 fail instead of advertising a wrong timebase. Buffer counts must fit
 the available hardware depth after rounding to 1,024-sample boundaries;
-dslcap trims this padding. Fast 200M/400M buffer capture is unvalidated.
+dslcap trims this padding. Signal comparisons at fast buffer rates are
+recorded in [VALIDATION.md](VALIDATION.md); trigger-specific live checks
+are tracked separately.
 
 `--test-pattern` overrides mode, channels, rate and requested limit. It uses
 16-channel buffer mode at 100M and the driver's 16,777,216-sample depth.
@@ -94,7 +100,9 @@ expected 2/3/5/7 ms sequence plus software timing overhead. These runs do
 not replace a DSView comparison or physically exercise the higher inputs.
 
 The USB callback handles cross-data groups with carry across packet
-boundaries, then enqueues into a 256 MiB ring. A writer drains fd 1 with
+boundaries. Streaming uses a 256 MiB ring; buffer mode allocates enough
+for the requested capture and metadata, with checked arithmetic before
+arming. CH15 alone at full hardware depth requires slightly over 512 MiB. A writer drains fd 1 with
 nonblocking writes; callbacks never wait on downstream output or stop the
 library. Main-thread control handles terminal events and driver joins.
 Ring-full, FPGA overflow, malformed/truncated finite data, device errors
@@ -103,20 +111,82 @@ data emitted since the actual overflow is suspect. A normal finite end
 requires the expected samples, a complete source group and a data-END event.
 
 SIGINT/SIGTERM request driver shutdown in normal thread context and return
-130/143. Broken pipes return 12. Queued output drains for at most two seconds;
-timeouts explicitly report truncation and preserve an earlier failure.
+130/143. Broken pipes return 12. Stream output drains for at most two seconds. Buffer output drains while
+writes make progress, with `--drain-timeout S` (1..3600 seconds, default 30)
+limiting each stall after collection ends. A stalled consumer exits 14;
+SIGINT/SIGTERM or a device error cancels the drain. Truncated output is
+reported and an earlier higher-priority failure is preserved.
 An unconsumed pipe filled the ring at about 10.7 seconds of sample backlog
 and exited 9 in 13.8 seconds including startup and bounded drain; immediate
 reopen succeeded after SIGINT, broken pipe and ring-full tests.
 
 A watchdog bounds startup at 30 seconds, finite capture at requested duration
 plus 30 seconds after the driver-running event, and normal stop/cleanup at
-10 seconds. An interrupt gets a five-second grace period. If inherited
+10 seconds. An interrupt gets a five-second grace period in stream mode and 15 seconds
+in buffer mode. Buffered drain re-arms its watchdog after each successful
+write, so a progressing slow consumer can take longer than two seconds. If inherited
 driver polling or joins cannot cancel, the watchdog terminates the process
 with a clear error so the OS releases USB handles; reopen must then be
 verified. Continuous collection has no overall duration deadline. An
 external `timeout` remains useful for hardware test bounds. The application
 draining dslcap must continuously drain stderr too.
+
+## Simple buffer triggers
+
+Simple AND triggers are supported in buffer mode. This syntax is implemented
+and covered by offline contracts; live validation is tracked by the lead in
+[TRIGGER_PLAN.md](TRIGGER_PLAN.md) and [TRIGGER_TASKS.md](TRIGGER_TASKS.md).
+
+```sh
+/tmp/dslcap-build/dslcap --mode buffer --samplerate 100M --channels 0-7 \
+  --samples 1000000 --trigger 3:f --trigger-pos 10 \
+  --trigger-timeout 5s --on-timeout fail > /tmp/trigger.raw
+```
+
+`--trigger CH:COND[,CH:COND...]` requires captured physical channels. Conditions
+are `r`/`R` (rising), `f`/`F` (falling), `1`/`h` (high), `0`/`l` (low), and
+`e` (either edge). Multiple terms must hold at the same sample. Duplicate
+channels, stream or continuous triggers, and triggers with `--test-pattern`
+are rejected. Trigger channels obey the fast buffer lane limits: 0..15 at
+100M, 0..7 at 200M, and 0..3 at 400M.
+
+`--trigger-pos` is an integer percent from 0 to 90, default 10. The driver
+arms N rounded up to 1024 samples. The effective pre-trigger position uses
+that aligned count, a 64-sample minimum, a 90% channel-depth cap, and rounds
+down to a multiple of 64; stderr logs the effective value. Output is trimmed
+to N, and timestamps still begin at capture start.
+
+Without `--trigger-timeout`, waiting lasts until a trigger or interruption.
+With a timeout, dslcap allows a full nominal 340 ms observation grace and
+reconciles an arrived header or cached trigger hit before acting. Status is
+a driver cache: this grace has no hard freshness guarantee. Read failures
+and the longest interval without an observed count/hit change appear in the
+summary; uncertain decisions say `freshness unknown`. A hit near the deadline
+may win or lose. Once a fail timeout commits, later packets cannot recover
+discarded data. It returns 16 with only the samplerate header.
+
+`--on-timeout upload` requests a forced upload through DSView's existing
+`WAIT_UPLOAD` control. Captures can be shorter than N in 1024-sample steps.
+An empty or malformed capture fails with 13. A false control return is
+reconciled as a possible natural completion; success still needs a header,
+END and the exact emitted count. Metadata always uses the returned header's
+trigger status, so a forced capture can still report a real trigger.
+
+Triggered stdout has exactly two lines before binary samples:
+
+```text
+META samplerate: 100000000
+META trigger: 100032
+```
+
+Line two contains the trigger's zero-based sample index, or `none` for an
+untriggered forced capture. Untriggered requests retain exactly one line.
+Consumers must choose one or two lines from the request, never inspect binary
+samples for another header. Any nonzero exit marks output incomplete,
+including failures after metadata or samples have already been emitted.
+Known terminal conditions use signal > device > data > trigger timeout >
+drain stall precedence. Serial triggers and trigger-relative `--t0` are
+reserved for later phases and are rejected in this implementation.
 
 ## Bring-up
 
@@ -209,6 +279,7 @@ and writes volatile FPGA registers through the existing driver.
 | 13 | Malformed/truncated data or incomplete finite capture |
 | 14 | Output drain timed out; stream truncated |
 | 15 | Driver watchdog timed out |
+| 16 | No trigger within the configured timeout and nominal grace |
 | 130 / 143 | Interrupted by SIGINT / SIGTERM |
 
 After successful initialization, all exit paths call `ds_lib_exit`, then
@@ -220,6 +291,7 @@ that unsafe partial-initialization cleanup is never called.
 
 Device claim/configuration failures leave stdout empty and return nonzero.
 Failures after META or data may leave a partial stream, so consumers must
-check the exit status. Long-duration streaming, forced hardware overflow,
-DSView signal comparison, full SPI traffic comparison, and wide Python
-decoding remain open validation/integration work.
+check the exit status. Completed long streaming, hardware overflow, DSView
+signal comparisons, SPI traffic and wide Python validation are recorded in
+[VALIDATION.md](VALIDATION.md). New buffer-trigger live gates remain tracked
+in [TRIGGER_TASKS.md](TRIGGER_TASKS.md).

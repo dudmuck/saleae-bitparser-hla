@@ -412,7 +412,7 @@ def _process_saleae_csv(csv_path, args, spi_analyzers, port_name_list):
 # sigrok backend
 # ---------------------------------------------------------------------------
 
-def resolve_channel_indices(args, spi_ports):
+def resolve_channel_indices(args, spi_ports, include_triggers=False):
     """Map the SPI ports' channel names to logic bit indices.
 
     The numpy engine reads packed samples where bit N is logic channel N, so
@@ -465,19 +465,34 @@ def resolve_channel_indices(args, spi_ports):
                      [(p, '--extra-pin') for p in args.extra_pin]:
         pins.append((val, to_index(val, what)))
 
+    if include_triggers:
+        triggers = []
+        seen = set()
+        specification = getattr(args, 'trigger', None)
+        if specification:
+            for term in specification.split(','):
+                fields = term.rsplit(':', 1)
+                if len(fields) != 2 or fields[1] not in ('r', 'R', 'f', 'F', '1', 'h', '0', 'l', 'e'):
+                    raise SystemExit('--trigger requires NAME:COND terms (r/f/1/h/0/l/e).')
+                bit = to_index(fields[0], '--trigger')
+                if bit in seen:
+                    raise SystemExit('--trigger contains duplicate physical channels.')
+                seen.add(bit)
+                triggers.append((bit, fields[1]))
+        return resolved, pins, triggers
     return resolved, pins
 
 
-def _used_channel_bits(ports, pins):
+def _used_channel_bits(ports, pins, triggers=()):
     """The exact physical channel union shared by dslcap command and width."""
     return sorted({bit for port in ports for bit in port.values()} |
-                  {bit for _, bit in pins})
+                  {bit for _, bit in pins} | {bit for bit, _ in triggers})
 
 
 def dslcap_sample_unitsize(args, spi_ports):
     """Match dslcap's one/two-byte width from captured channels, not -C labels."""
-    ports, pins = resolve_channel_indices(args, spi_ports)
-    return 2 if any(bit >= 8 for bit in _used_channel_bits(ports, pins)) else 1
+    ports, pins, triggers = resolve_channel_indices(args, spi_ports, include_triggers=True)
+    return 2 if any(bit >= 8 for bit in _used_channel_bits(ports, pins, triggers)) else 1
 
 
 def validate_backend_args(args, spi_ports):
@@ -507,8 +522,11 @@ def validate_backend_args(args, spi_ports):
             if not math.isfinite(number) or number <= 0:
                 raise SystemExit(f'{label} must be finite and positive.')
     if not getattr(args, 'dslogic', False):
-        if getattr(args, 'dslcap_verbose', 0) or getattr(args, 'vth', None) is not None:
-            raise SystemExit('--vth/-v/--dslcap-verbose requires --dslogic.')
+        if (getattr(args, 'dslcap_verbose', 0) or getattr(args, 'vth', None) is not None or
+                getattr(args, 'dsl_mode', 'stream') != 'stream' or
+                any(getattr(args, key, None) is not None for key in
+                    ('trigger', 'trigger_pos', 'trigger_timeout', 'on_timeout', 'drain_timeout'))):
+            raise SystemExit('DSLogic capture options require --dslogic.')
         return
     if args.saleae or args.driver or args.input_file or args.input_format or args.transform:
         raise SystemExit('--dslogic cannot be combined with --saleae, -d, -i, -I or -T.')
@@ -516,7 +534,42 @@ def validate_backend_args(args, spi_ports):
         raise SystemExit('--dslogic supports --engine numpy; the srd pipeline is not implemented.')
     if not any((args.samples, args.time, args.continuous)):
         raise SystemExit('--dslogic requires --samples, --time or --continuous.')
-    resolve_channel_indices(args, spi_ports)
+    mode = getattr(args, 'dsl_mode', 'stream')
+    trigger = getattr(args, 'trigger', None)
+    if trigger is not None and not trigger:
+        raise SystemExit('--trigger must contain at least one term.')
+    if mode not in ('stream', 'buffer'):
+        raise SystemExit('--dsl-mode must be stream or buffer.')
+    if mode == 'buffer' and (args.continuous or not (args.samples or args.time)):
+        raise SystemExit('--dsl-mode buffer requires explicit --samples or --time.')
+    if trigger and mode != 'buffer':
+        raise SystemExit('--trigger requires --dsl-mode buffer.')
+    if not trigger and any(getattr(args, key, None) is not None for key in
+                           ('trigger_pos', 'trigger_timeout', 'on_timeout')):
+        raise SystemExit('Trigger modifiers require --trigger.')
+    position = getattr(args, 'trigger_pos', None)
+    if position is not None and (isinstance(position, bool) or int(position) != position or not 0 <= position <= 90):
+        raise SystemExit('--trigger-pos must be an integer within 0..90.')
+    timeout = getattr(args, 'trigger_timeout', None)
+    if timeout is not None:
+        try:
+            value = parse_duration(timeout)
+        except ValueError:
+            raise SystemExit('Invalid --trigger-timeout.')
+        if not math.isfinite(value) or not 0 <= value <= (2**64 - 1) / 1e9 - 60:
+            raise SystemExit('--trigger-timeout must be finite and nonnegative.')
+    action = getattr(args, 'on_timeout', None)
+    if action is not None and action not in ('fail', 'upload'):
+        raise SystemExit('--on-timeout must be fail or upload.')
+    drain = getattr(args, 'drain_timeout', None)
+    if drain is not None:
+        try:
+            value = parse_duration(drain)
+        except ValueError:
+            raise SystemExit('Invalid --drain-timeout.')
+        if mode != 'buffer' or not math.isfinite(value) or not 1 <= value <= 3600:
+            raise SystemExit('--drain-timeout requires buffer mode and 1..3600 seconds.')
+    ports, pins, triggers = resolve_channel_indices(args, spi_ports, include_triggers=True)
     if args.channels:
         labels = set()
         for item in args.channels.split(','):
@@ -545,6 +598,17 @@ def validate_backend_args(args, spi_ports):
     rate = parse_samplerate(args.samplerate) if args.samplerate else 25_000_000
     if rate != int(rate) or rate > 2**64 - 1:
         raise SystemExit('--samplerate must be an integer rate within the producer limit.')
+    bits = _used_channel_bits(ports, pins, triggers)
+    allowed = {50000, 100000, 200000, 400000, 500000, 1000000, 2000000, 4000000,
+               5000000, 10000000, 20000000, 25000000, 50000000, 100000000, 200000000, 400000000}
+    if rate not in allowed or (mode == 'stream' and
+            (rate > 100000000 or len(bits) > (16 if rate <= 20000000 else
+                                            12 if rate == 25000000 else 6 if rate == 50000000 else 3))):
+        raise SystemExit('Unsupported DSLogic samplerate/channel combination.')
+    if mode == 'buffer' and ((rate == 200000000 and max(bits) >= 8) or
+                             (rate == 400000000 and max(bits) >= 4)):
+        raise SystemExit('Fast DSLogic buffer mode exceeds physical lane limits.')
+
 
 
 def build_dslcap_cmd(args, spi_ports):
@@ -555,18 +619,26 @@ def build_dslcap_cmd(args, spi_ports):
     mapping, and must never be passed directly as the producer channel list.
     """
     validate_backend_args(args, spi_ports)
-    ports, pins = resolve_channel_indices(args, spi_ports)
-    bits = _used_channel_bits(ports, pins)
+    ports, pins, triggers = resolve_channel_indices(args, spi_ports, include_triggers=True)
+    bits = _used_channel_bits(ports, pins, triggers)
     rate = parse_samplerate(args.samplerate) if args.samplerate else 25_000_000
     cmd = [args.dslcap, '--samplerate', str(int(rate)), '--channels',
            ','.join(str(bit) for bit in bits), '--vth',
-           str(args.vth if args.vth is not None else 1.6)]
+           str(args.vth if args.vth is not None else 1.6), '--mode', getattr(args, 'dsl_mode', 'stream')]
     if args.samples:
         cmd += ['--samples', str(int(parse_samplerate(args.samples)))]
     elif args.time:
         cmd += ['--time', f'{parse_duration(args.time):.12g}s']
     else:
         cmd += ['--continuous']
+    if triggers:
+        cmd += ['--trigger', ','.join(f'{bit}:{condition}' for bit, condition in triggers)]
+    for attribute, flag in (('trigger_pos', '--trigger-pos'), ('trigger_timeout', '--trigger-timeout'),
+                            ('on_timeout', '--on-timeout'), ('drain_timeout', '--drain-timeout')):
+        value = getattr(args, attribute, None)
+        if value is not None:
+            forwarded = f'{parse_duration(value):.12g}s' if attribute in ('trigger_timeout', 'drain_timeout') else str(value)
+            cmd += [flag, forwarded]
     verbosity = min(getattr(args, 'dslcap_verbose', 0), 2)
     if verbosity:
         cmd += ['-' + 'v' * verbosity]
@@ -575,15 +647,23 @@ def build_dslcap_cmd(args, spi_ports):
 
 class CaptureError(RuntimeError):
     """Producer/read failure; any already emitted decode may be partial."""
+    def __init__(self, message, exit_code=1):
+        super().__init__(message)
+        self.exit_code = exit_code
 
 
 class MetaPrefix:
-    """Incrementally separate optional/required META from byte samples."""
+    """Parse exactly the requested META line count, never sniff binary data."""
     marker = b'META samplerate: '
 
-    def __init__(self, requested_rate, required=False):
+    def __init__(self, requested_rate, required=False, expected_lines=1):
+        if expected_lines not in (1, 2) or (expected_lines == 2 and not required):
+            raise ValueError('Two-line META requires a triggered DSLogic request')
         self.rate = requested_rate
         self.required = required
+        self.expected_lines = expected_lines
+        self.lines = 0
+        self.trigger_sample = None
         self.pending = bytearray()
         self.ready = False
 
@@ -591,18 +671,31 @@ class MetaPrefix:
         if self.ready:
             return data
         self.pending.extend(data)
-        length = min(len(self.pending), len(self.marker))
-        if self.pending[:length] != self.marker[:length]:
-            if self.required:
-                raise CaptureError('dslcap stream is missing its META samplerate header')
-            self.ready = True
-        else:
+        while self.lines < self.expected_lines:
+            marker = self.marker if self.lines == 0 else b'META trigger: '
+            length = min(len(self.pending), len(marker))
+            if self.pending[:length] != marker[:length]:
+                if self.required:
+                    raise CaptureError('dslcap stream is missing its META ' +
+                                       ('samplerate' if self.lines == 0 else 'trigger') + ' header')
+                self.ready = True
+                break
             newline = self.pending.find(b'\n')
-            if newline >= 0:
-                header = bytes(self.pending[:newline + 1])
-                match = re.fullmatch(rb'META samplerate: ([1-9][0-9]*)\r?\n', header)
-                if not match or newline > 255:
-                    raise CaptureError('Malformed META samplerate header')
+            if newline < 0:
+                if len(self.pending) > 255:
+                    raise CaptureError('META header is too long or has no newline')
+                if eof:
+                    if self.required or len(self.pending) >= len(marker):
+                        raise CaptureError('Truncated/missing META ' +
+                                           ('samplerate' if self.lines == 0 else 'trigger') + ' header')
+                    self.ready = True
+                break
+            header = bytes(self.pending[:newline + 1])
+            pattern = rb'META samplerate: ([1-9][0-9]*)\r?\n' if self.lines == 0 else rb'META trigger: (none|0|[1-9][0-9]*)\r?\n'
+            match = re.fullmatch(pattern, header)
+            if not match or newline > 255:
+                raise CaptureError('Malformed META header')
+            if self.lines == 0:
                 rate = int(match[1])
                 if rate > 2**64 - 1:
                     raise CaptureError('META samplerate exceeds producer limit')
@@ -610,14 +703,14 @@ class MetaPrefix:
                     print(f'Warning: META samplerate {rate} differs from requested '
                           f'{self.rate:g}; using META for SPI and pin timing.', file=sys.stderr)
                 self.rate = rate
-                del self.pending[:newline + 1]
-                self.ready = True
-            elif len(self.pending) > 255:
-                raise CaptureError('META header is too long or has no newline')
-            elif eof:
-                if self.required or len(self.pending) >= len(self.marker):
-                    raise CaptureError('Truncated/missing META samplerate header')
-                self.ready = True  # Optional raw stream can end with a short prefix.
+            elif match[1] != b'none':
+                self.trigger_sample = int(match[1])
+                if self.trigger_sample > 2**64 - 1:
+                    raise CaptureError('META trigger exceeds producer limit')
+            del self.pending[:newline + 1]
+            self.lines += 1
+        if self.lines == self.expected_lines:
+            self.ready = True
         if self.ready:
             data = bytes(self.pending)
             self.pending.clear()
@@ -765,6 +858,11 @@ class CaptureProducer:
             if any(thread.is_alive() for thread in self.readers):
                 raise CaptureError(f'{self.name} pipe reader did not stop')
             if code:
+                if self.name == 'dslcap' and code == 16:
+                    raise CaptureError('No trigger within --trigger-timeout', 16)
+                if self.name == 'dslcap' and (code < 0 or code >= 128):
+                    signum = -code if code < 0 else code - 128
+                    raise CaptureError(f'dslcap interrupted by signal {signum}', 128 + signum)
                 raise CaptureError(f'{self.name} exited with status {code}; decoded output may be partial')
 
 
@@ -857,7 +955,9 @@ def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate, cmd=None):
 
     decoder = None
     sample_tail = b''
-    prefix = MetaPrefix(samplerate, required=getattr(args, 'dslogic', False))
+    triggered = bool(getattr(args, 'dslogic', False) and getattr(args, 'trigger', None))
+    prefix = MetaPrefix(samplerate, required=getattr(args, 'dslogic', False),
+                        expected_lines=2 if triggered else 1)
     cmd = cmd if cmd is not None else build_sigrok_cmd(args, spi_ports)
     print(f"Running: {' '.join(cmd)}", file=sys.stderr)
     # Output is held back this long (in capture seconds) so a transaction
@@ -918,10 +1018,19 @@ def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate, cmd=None):
             _flush_results_until(results_heap, chunk_events[-1][0] - HOLD)
 
     def decode(buf):
-        nonlocal decoder, pin_logger, sample_tail
+        nonlocal decoder, pin_logger, sample_tail, seq
         if not prefix.ready:
             return
         if decoder is None:
+            if triggered:
+                if prefix.trigger_sample is None:
+                    print('Untriggered capture (forced upload)', file=sys.stderr)
+                else:
+                    t = prefix.trigger_sample / prefix.rate
+                    text = f'Trigger at sample {prefix.trigger_sample} (t = {t:.9f} s)'
+                    print(text, file=sys.stderr)
+                    heapq.heappush(results_heap, (t, seq, '', f'{t:.9f}: {text}'))
+                    seq += 1
             decoder = MultiPortDecoder(ports, prefix.rate, cpol=args.cpol, cpha=args.cpha)
             pin_logger = PinLogger(log_pins, prefix.rate) if log_pins else None
         if sample_tail:
@@ -1167,6 +1276,13 @@ def main():
                         help='[dslogic] Input threshold 0..2.5 V (default: 1.6)')
     parser.add_argument('-v', '--dslcap-verbose', action='count', default=0,
                         help='[dslogic] Producer information logging; repeat/-vv for debug')
+    parser.add_argument('--dsl-mode', choices=('stream', 'buffer'), default='stream',
+                        help='[dslogic] Capture mode (default: stream)')
+    parser.add_argument('--trigger', help='[dslogic buffer] AND trigger NAME:COND,... (r/f/h/l/1/0/e)')
+    parser.add_argument('--trigger-pos', type=int, help='[dslogic trigger] Pre-trigger percent 0..90 (default: 10)')
+    parser.add_argument('--trigger-timeout', help='[dslogic trigger] Wait timeout; absent waits indefinitely')
+    parser.add_argument('--on-timeout', choices=('fail', 'upload'), help='[dslogic trigger] Timeout action (default: fail)')
+    parser.add_argument('--drain-timeout', help='[dslogic buffer] Output stall timeout 1..3600s (default: 30)')
     parser.add_argument('--saleae-port', type=int, default=10430,
                         help='Saleae automation server port (default: 10430)')
 
@@ -1252,7 +1368,7 @@ if __name__ == '__main__':
         main()
     except CaptureError as error:
         print(f'Capture failed: {error}', file=sys.stderr)
-        sys.exit(1)
+        sys.exit(error.exit_code)
     except KeyboardInterrupt:
         sys.exit(130)
     except BrokenPipeError:

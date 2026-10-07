@@ -29,8 +29,8 @@ No direct GPIO generation on radio-connected lines. Radio activity is via
 the existing application owner with armed GO handshakes. DSView and dslcap
 must never own the analyzer concurrently.
 
-Review budget for this distinct group: 0/3 consumed. First synthesizer
-launch will consume cycle 1; follow-ups/fixes stay in this group and budget.
+Review budget for this distinct group: 1/3 consumed. Cycle 1 allocated before
+launching review-1; follow-ups/fixes stay in this group and budget.
 Prior bring-up/G3 implementation and plan reviews are separate completed
 scopes. Only FAIL in cycle 1 or 2 permits a scoped fix wave; cycle 3 terminal.
 
@@ -46,7 +46,7 @@ Decisions:
 - Routine implementation ambiguity is resolved by lead with the accepted
   design; a genuinely new dependency/plan requires operator review.
 
-Status: worker implementation assigned; independent review and live gates pending.
+Status: worker wave 1 delivered; independent review cycle 1 PASS; live validation underway.
 
 ## Parallel reference evidence
 
@@ -92,3 +92,27 @@ byte-identical and USB released per owner. Lead now owns USB again.
 
 The dslcap comparison half of B.1 is still pending the worker's executable.
 Temporary shim, raw packets, logs and decoder: /tmp/dslcap-golden/.
+
+### Wave 1 handoff and review cycle 1
+
+Worker handoff: /tmp/dslcap-phase-b-handoff.md. Lead verified all 19 source
+fingerprints and clean diff whitespace. Production binary:
+/tmp/dslcap-phase-b-build/dslcap (real DSView source, default timing).
+Offline CTest: 5/5 groups PASS, 23.76s; Python: 36 tests PASS. Tests exercise
+real control/ring/callback code with a fake driver; they do not close live gates.
+Independent synthesizer review-1 receives /tmp/dslcap-phase-b-review.md,
+whole wave and exact frozen worker scope. No analysts requested. Sole review
+file writer: review-1, dslcap/TRIGGER_REVIEW.md. Cycle 1 of 3 allocated here
+before launch. No previous findings in B-simple-trigger.
+
+Cycle 1 PASS consumed: 0 High+, 1 Low (duplicate --on-timeout action),
+2 Warnings (fixed-sleep phase signal tests and open live gates). Reviewer
+independently passed 5/5 CTest, 36 Python tests and 19/19 source fingerprints.
+No fix wave was opened. Report: TRIGGER_REVIEW.md. Single-occurrence timeout
+options work; retained duplicate-option issue is not claimed corrected.
+
+B.1 implementation side PASS: all three real USB 372-byte setting images
+match the saved DSView bytes exactly at100M/200M/400M. Idle captures exited16
+as expected, with elapsed1.637/1.637/1.641s including initialization/cleanup.
+Artifacts: /tmp/dslcap-b-golden-live/summary.json and per-rate shim/raw/stderr.
+This closes register equivalence only; other hardware gates remain open.

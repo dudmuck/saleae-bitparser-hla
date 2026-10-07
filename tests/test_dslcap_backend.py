@@ -39,7 +39,7 @@ class BackendTests(unittest.TestCase):
         ports = [hla.parse_spi_port('sclk,MISO,mosi,CS')]
         cmd = hla.build_dslcap_cmd(args, ports)
         self.assertEqual(cmd, ['dslcap', '--samplerate', '1000000', '--channels',
-            '0,1,2,3,4,7', '--vth', '1.6', '--time', '0.1s'])
+            '0,1,2,3,4,7', '--vth', '1.6', '--mode', 'stream', '--time', '0.1s'])
         self.assertNotIn('=', cmd[cmd.index('--channels') + 1])
 
     def test_numeric_ports_and_continuous_defaults(self):

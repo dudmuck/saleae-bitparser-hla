@@ -75,6 +75,14 @@ static void conversion_tests(void)
 
 static void parser_tests(void)
 {
+    size_t capacity;
+    CHECK(!dsl_buffer_capacity(UINT64_C(268435456), 2, 100000000, 1, &capacity));
+    CHECK(capacity == (size_t)536870912 + strlen("META samplerate: 100000000\n") + strlen("META trigger: 268435455\n"));
+    CHECK(dsl_buffer_capacity(UINT64_MAX, 2, 100000000, 1, &capacity));
+    CHECK(dsl_trigger_position(10, 1000448, 33554432) == 100032);
+    CHECK(dsl_trigger_position(10, 2000896, 67108864) == 200064);
+    CHECK(dsl_trigger_position(0, 1024, 16777216) == 64);
+    CHECK(dsl_trigger_position(90, 268435456, 268435456) == (UINT64_C(241591910) & ~UINT64_C(63)));
     uint16_t mask; uint64_t value;
     CHECK(!dsl_parse_channels("0,3,9,15", &mask) && mask == 0x8209);
     const char *bad_channels[] = {"", "0,", ",1", "-1", "0-16", "3-1", "1,1", "0-3,2", "0x1", "65536"};

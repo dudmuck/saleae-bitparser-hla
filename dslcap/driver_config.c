@@ -89,6 +89,7 @@ int dsl_configure(struct dsl_options *o)
         // Buffer trigger-position parsing rounds captured counts down to
         // SAMPLES_ALIGN; arm an aligned count and trim to the requested N.
         if (!o->stream) driver_limit = (driver_limit + SAMPLES_ALIGN) & ~SAMPLES_ALIGN;
+        o->arm_limit = driver_limit;
         if (set(SR_CONF_CHANNEL_MODE, g_variant_new_int16((int16_t)mode)) ||
             set(SR_CONF_SAMPLERATE, g_variant_new_uint64(o->rate)) ||
             set(SR_CONF_LIMIT_SAMPLES, g_variant_new_uint64(driver_limit)))
@@ -134,9 +135,24 @@ int dsl_configure(struct dsl_options *o)
         fprintf(stderr, "dslcap: channel readback mismatch or enabled count exceeds valid channel count\n");
         return DSL_CONFIG_ERROR;
     }
+    o->arm_limit = o->stream ? o->samples : (o->samples + SAMPLES_ALIGN) & ~SAMPLES_ALIGN;
     // Ensure optional RLE and trigger state cannot alter the raw cross format.
     if (set(SR_CONF_RLE_SUPPORT, g_variant_new_boolean(FALSE)) || ds_trigger_reset() != SR_OK)
         return DSL_CONFIG_ERROR;
+    if (o->trigger) {
+        o->trigger_effective = dsl_trigger_position(o->trigger_pos, o->arm_limit,
+                (profile()->dev_caps.hw_depth / (unsigned)enabled) & ~SAMPLES_ALIGN);
+        if (ds_trigger_set_pos((uint16_t)o->trigger_pos) != SR_OK ||
+            ds_trigger_set_mode(SIMPLE_TRIGGER) != SR_OK) return DSL_CONFIG_ERROR;
+        for (unsigned ch = 0; ch < 16; ch++)
+            if (o->trigger_conditions[ch] && ds_trigger_probe_set((uint16_t)ch,
+                    (unsigned char)o->trigger_conditions[ch], 'X') != SR_OK) return DSL_CONFIG_ERROR;
+        if (o->timeout_upload && set(SR_CONF_BUFFER_OPTIONS, g_variant_new_int16(1) /* DSView dslogic.c private SR_BUF_UPLOAD */))
+            return DSL_CONFIG_ERROR;
+        if (ds_trigger_set_en(1) != SR_OK) return DSL_CONFIG_ERROR;
+        fprintf(stderr, "dslcap: simple AND trigger position=%u%% effective=%" PRIu64 " arm-limit=%" PRIu64 "\n",
+                o->trigger_pos, o->trigger_effective, o->arm_limit);
+    }
     fprintf(stderr, "dslcap: capture configured: %" PRIu64 " Hz, mask=0x%04x, unitsize=%d, %s, %s\n",
             o->rate, o->channels, o->channels & 0xff00 ? 2 : 1,
             o->stream ? "stream" : "buffer", o->continuous ? "continuous" : "finite");

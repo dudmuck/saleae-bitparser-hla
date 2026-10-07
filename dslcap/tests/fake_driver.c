@@ -7,6 +7,9 @@
 #include <pthread.h>
 #include <stdatomic.h>
 #include <unistd.h>
+#include <assert.h>
+#include <signal.h>
+#include <time.h>
 
 extern xlog_writer *sr_log;
 static ds_device_handle active;
@@ -20,7 +23,9 @@ static uint64_t rate = 25000000, sample_limit;
 static int operation, setter_count;
 static atomic_int collecting, stop_requested;
 static pthread_t collect_thread;
-static int thread_started;
+static int thread_started, trigger_enabled, trigger_step;
+static uint64_t running_ns;
+static atomic_int upload_requested;
 static ds_datafeed_callback_t feed_callback;
 static dslib_event_callback_t event_callback;
 
@@ -53,6 +58,7 @@ int ds_lib_exit(void)
     if (is("init-fail"))
         abort(); // DSView's partial-init exit may use an uninitialized mutex.
     fprintf(stderr, "FAKE cleanup active=%llu\n", active);
+    if (is("trigger-signal-cleanup")) raise(SIGTERM);
     if (thread_started) pthread_join(collect_thread, NULL);
     g_slist_free(channel_list); channel_list = NULL;
     active = 0;
@@ -196,7 +202,14 @@ int ds_get_actived_device_config(const struct sr_channel *ch, const struct sr_ch
     if (key == SR_CONF_SAMPLERATE) *value = g_variant_new_uint64(is("config-clamp") ? rate / 2 : rate);
     else if (key == SR_CONF_LIMIT_SAMPLES) *value = g_variant_new_uint64(sample_limit);
     else if (key == SR_CONF_VLD_CH_NUM) *value = g_variant_new_int16(is("config-valid-count") ? 1 : 16);
-    else return SR_ERR;
+    else if (key == SR_CONF_WAIT_UPLOAD) {
+        assert(trigger_enabled);
+        atomic_store(&upload_requested, 1);
+        if (is("trigger-false-valid") || is("trigger-false-end") || is("trigger-false-short"))
+            while (atomic_load(&collecting)) usleep(100);
+        *value = g_variant_new_boolean(!is("trigger-false-valid") && !is("trigger-false-none") &&
+                                      !is("trigger-false-end") && !is("trigger-false-short"));
+    } else return SR_ERR;
     g_variant_ref_sink(*value);
     return SR_OK;
 }
@@ -210,7 +223,23 @@ int ds_enable_device_channel_index(int index, gboolean enabled)
 }
 
 GSList *ds_get_actived_device_channels(void) { return channel_list; }
-int ds_trigger_reset(void) { return SR_OK; }
+int ds_trigger_reset(void) { trigger_step = 0; trigger_enabled = 0; return SR_OK; }
+int ds_trigger_set_pos(uint16_t position) { assert(trigger_step++ == 0 && position <= 90); return SR_OK; }
+int ds_trigger_set_mode(uint16_t mode) { assert(trigger_step++ == 1 && mode == SIMPLE_TRIGGER); return SR_OK; }
+int ds_trigger_probe_set(uint16_t probe, unsigned char first, unsigned char second)
+{ assert(trigger_step >= 2 && !trigger_enabled && probe < 16 && channels[probe].enabled && second == 'X');
+  assert(first == 'R' || first == 'F' || first == '1' || first == '0' || first == 'C'); trigger_step++; return SR_OK; }
+int ds_trigger_set_en(uint16_t enabled) { assert(trigger_step >= 3 && enabled == 1); trigger_enabled = 1; return SR_OK; }
+static uint64_t now_ns(void)
+{ struct timespec t; clock_gettime(CLOCK_MONOTONIC, &t); return (uint64_t)t.tv_sec * 1000000000 + t.tv_nsec; }
+int ds_get_actived_device_status(struct sr_status *status, gboolean progress)
+{
+    assert(progress); memset(status, 0, sizeof(*status));
+    if (is("trigger-status-fail") || is("trigger-status-fail-header")) return SR_ERR;
+    if ((is("trigger-hit-grace") || (is("trigger-post-hang") || is("trigger-post-detach") || is("trigger-post-data"))) && now_ns() - running_ns >= 6000000)
+        status->trig_hit = 1;
+    return SR_OK;
+}
 void ds_set_datafeed_callback(ds_datafeed_callback_t callback) { feed_callback = callback; }
 void ds_set_event_callback(dslib_event_callback_t callback) { event_callback = callback; }
 int ds_is_collecting(void) { return atomic_load(&collecting); }
@@ -218,12 +247,64 @@ int ds_is_collecting(void) { return atomic_load(&collecting); }
 static void *collect(void *unused)
 {
     (void)unused;
+    running_ns = now_ns();
     if (event_callback) event_callback(DS_EV_DEVICE_RUNNING);
     unsigned count = 0;
     for (unsigned i = 0; i < 16; i++) if (channels[i].enabled) count++;
     uint8_t data[128] = {0};
     for (unsigned i = 0; i < count; i++) memset(data + i * 8, (i & 1) ? 0xaa : 0x55, 8);
-    uint64_t groups = (sample_limit + 63) / 64;
+    uint64_t actual = sample_limit;
+    int send_logic = 1;
+    if (trigger_enabled) {
+        const char *specified = getenv("DSLCAP_TEST_ACTUAL");
+        if (specified) actual = strtoull(specified, NULL, 10);
+        if (is("trigger-grace-header") || is("trigger-status-fail-header")) usleep(5000);
+        if (is("trigger-hit-grace") || is("trigger-post-data") || is("trigger-post-detach")) usleep(30000);
+        if (is("trigger-post-detach")) send_logic = 0;
+        if (is("trigger-timeout") || is("trigger-signal-cleanup") || is("trigger-status-fail") || is("trigger-late-header") ||
+            is("trigger-post-hang") || is("trigger-wait-hang") || is("trigger-wait-detach")) {
+            if (is("trigger-wait-detach")) usleep(3000);
+            else while (!atomic_load(&stop_requested)) usleep(100);
+            if (!is("trigger-late-header")) send_logic = 0;
+        }
+        if (is("trigger-force") || is("trigger-force-hit") || is("trigger-forced-data") || is("trigger-force-no-header") ||
+            is("trigger-false-valid") || is("trigger-false-end") || is("trigger-false-none") ||
+            is("trigger-false-short") || is("trigger-forced-detach") || is("trigger-forced-hang")) {
+            while (!atomic_load(&upload_requested) && !atomic_load(&stop_requested)) usleep(100);
+            if (is("trigger-force-no-header") || is("trigger-false-none") || is("trigger-forced-hang")) {
+                while (!atomic_load(&stop_requested)) usleep(100);
+                send_logic = 0;
+            }
+            if (is("trigger-false-end") || is("trigger-forced-detach")) send_logic = 0;
+        }
+        if (is("trigger-logic-before")) {
+            struct sr_datafeed_logic logic = {.length = count * 8, .format = LA_CROSS_DATA, .data = data};
+            struct sr_datafeed_packet p = {.type = SR_DF_LOGIC, .status = SR_PKT_OK, .payload = &logic};
+            feed_callback(NULL, &p);
+        }
+        if (send_logic && !is("trigger-missing")) {
+            uint64_t remain = actual <= sample_limit ? sample_limit - actual : sample_limit + 1;
+            struct ds_trigger_pos *header = malloc(sizeof(*header));
+            *header = (struct ds_trigger_pos){.check_id = is("trigger-bad-id") ? 0 : 0x55555555,
+                .real_pos = is("trigger-pos-outside") ? (uint32_t)actual : actual > 8 ? 8 : 0,
+                .remain_cnt_l = (uint32_t)remain, .remain_cnt_h = (uint32_t)(remain >> 32),
+                .status = is("trigger-force") ? 0 : 1};
+            const char *position = getenv("DSLCAP_TEST_POS");
+            if (position) header->real_pos = (uint32_t)strtoul(position, NULL, 10);
+            struct sr_datafeed_packet p = {.type = SR_DF_TRIGGER,
+                .status = (is("trigger-packet-status") || is("trigger-post-data") || is("trigger-forced-data")) ? SR_PKT_DATA_ERROR : SR_PKT_OK,
+                .payload = is("trigger-null") ? NULL : header};
+            feed_callback(NULL, &p);
+            if (is("trigger-duplicate")) feed_callback(NULL, &p);
+            memset(header, 0xcc, sizeof(*header)); free(header);
+        }
+        if (is("trigger-upload-hang") || is("trigger-upload-detach")) {
+            if (is("trigger-upload-hang")) while (!atomic_load(&stop_requested)) usleep(100);
+            send_logic = 0;
+        }
+    }
+    uint64_t groups = (actual + 63) / 64;
+    if (!send_logic) groups = 0;
     if (is("capture-short")) groups = 1;
     if (is("capture-hang")) {
         while (!atomic_load(&stop_requested)) usleep(1000);
@@ -231,20 +312,26 @@ static void *collect(void *unused)
         for (uint64_t i = 0; i < groups && !atomic_load(&stop_requested); i++) {
             struct sr_datafeed_logic logic = {.length = count * 8,
                 .format = is("capture-format") ? LA_SPLIT_DATA : LA_CROSS_DATA, .data = data};
-            if (is("capture-partial")) logic.length--;
+            if (is("capture-partial") || is("trigger-upload-data")) logic.length--;
             struct sr_datafeed_packet packet = {.type = is("capture-overflow") ? SR_DF_OVERFLOW : SR_DF_LOGIC,
                 .status = is("capture-status") ? SR_PKT_DATA_ERROR : SR_PKT_OK, .payload = &logic};
             feed_callback(NULL, &packet);
         }
     }
-    if (!is("capture-no-end")) {
+    if (!is("capture-no-end") && !is("trigger-no-end")) {
         struct sr_datafeed_packet packet = {.type = SR_DF_END, .status = SR_PKT_OK};
         feed_callback(NULL, &packet);
     }
+    if (is("trigger-signal-end")) raise(SIGTERM);
     atomic_store(&collecting, 0);
     if (event_callback) event_callback(is("capture-device-error") ? DS_EV_COLLECT_TASK_END_BY_ERROR :
-        is("capture-detach") ? DS_EV_COLLECT_TASK_END_BY_DETACHED :
+        (is("capture-detach") || is("trigger-wait-detach") || is("trigger-forced-detach") || is("trigger-upload-detach") || is("trigger-post-detach")) ? DS_EV_COLLECT_TASK_END_BY_DETACHED :
         is("capture-speed") ? DS_EV_DEVICE_SPEED_NOT_MATCH : DS_EV_COLLECT_TASK_END);
+    if (is("capture-drain-detach")) {
+        dslib_event_callback_t callback = event_callback;
+        usleep(200000);
+        if (callback) callback(DS_EV_CURRENT_DEVICE_DETACH);
+    }
     return NULL;
 }
 
@@ -254,6 +341,7 @@ int ds_start_collect(void)
     atomic_store(&collecting, 1);
     if (pthread_create(&collect_thread, NULL, collect, NULL)) abort();
     thread_started = 1;
+    if (is("trigger-burst")) while (atomic_load(&collecting)) usleep(100);
     return SR_OK;
 }
 

@@ -11,6 +11,7 @@
 volatile sig_atomic_t dsl_signal;
 static atomic_uint_fast64_t deadline;
 static atomic_bool done;
+static atomic_uint signal_grace = 5;
 static pthread_t watchdog;
 
 static void signal_handler(int signal_number) { dsl_signal = signal_number; }
@@ -21,14 +22,14 @@ static void *watch(void *unused)
     uint64_t signal_deadline = 0;
     while (!atomic_load(&done)) {
         uint64_t now = dsl_now_ns(), bound = atomic_load(&deadline);
-        if (dsl_signal && !signal_deadline) signal_deadline = now + UINT64_C(5000000000);
+        if (dsl_signal && !signal_deadline) signal_deadline = now + (uint64_t)atomic_load(&signal_grace) * 1000000000;
         if (signal_deadline && now >= signal_deadline) {
             int flags = fcntl(STDERR_FILENO, F_GETFL);
             if (flags >= 0) fcntl(STDERR_FILENO, F_SETFL, flags | O_NONBLOCK);
-            dprintf(STDERR_FILENO, "dslcap: interrupted driver did not stop within 5s; process exit releases USB resources\n");
+            dprintf(STDERR_FILENO, "dslcap: interrupted driver did not stop within signal grace; process exit releases USB resources\n");
             _exit(128 + dsl_signal);
         }
-        if (bound && now >= bound) {
+        if (!dsl_signal && bound && now >= bound) {
             int flags = fcntl(STDERR_FILENO, F_GETFL);
             if (flags >= 0) fcntl(STDERR_FILENO, F_SETFL, flags | O_NONBLOCK);
             dprintf(STDERR_FILENO, "dslcap: driver watchdog timed out; process exit releases USB resources; verify reopen\n");
@@ -39,6 +40,9 @@ static void *watch(void *unused)
     }
     return NULL;
 }
+
+void dsl_control_deadline(uint64_t absolute_ns) { atomic_store(&deadline, absolute_ns); }
+void dsl_control_signal_grace(unsigned seconds) { atomic_store(&signal_grace, seconds); }
 
 void dsl_control_bound(uint64_t seconds)
 {
