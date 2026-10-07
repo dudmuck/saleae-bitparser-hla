@@ -8,8 +8,9 @@ Warning about fixed-sleep tests not proving which phase received a signal.
 No new package, DSView source modification, radio configuration or NVM write.
 
 Machine-readable evidence: [TRIGGER_VALIDATION.json](TRIGGER_VALIDATION.json).
-Phase B gates B.1 through B.6 passed. A2 continuous-clock ppm validation is
-separate and remains open; this result does not waive it or start Phase C.
+Phase B gates B.1 through B.6 passed. A2 was separate and open at this handoff;
+it subsequently passed with independent review and restoration evidence in
+[A2_VALIDATION.md](A2_VALIDATION.md). Phase C has not started.
 
 ## B.1 — real DSView register equivalence: PASS
 
@@ -167,7 +168,8 @@ earlier reference `/tmp/dslcap-radio-live1.stdout`.
 
 ## Remaining scope
 
-A2 continuous-clock ppm validation remains open. Serial triggering and
+A2 continuous-clock validation subsequently passed; see the linked record.
+Serial triggering and
 optional trigger-relative timestamps were excluded from this Phase B wave.
 The reviewed duplicate C CLI timeout-option issue remains Low; specify
 `--on-timeout` once. Historical repeated-Python-interrupt cleanup limitations

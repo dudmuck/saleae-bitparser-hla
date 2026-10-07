@@ -1,0 +1,1077 @@
+{
+  "date": "2026-10-07",
+  "scope": "A2 continuous clock relative accuracy at 200M and 400M",
+  "production_commit": "fb85f37",
+  "production_changes": false,
+  "measurement_status": "PASS",
+  "independent_review_status": "PASS",
+  "capture_directory": "/tmp/dslcap-a2-live",
+  "captures": [
+    {
+      "name": "200M-1",
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "200M",
+        "--channels",
+        "0-7",
+        "--samples",
+        "33554432",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.9407378239557147,
+      "header": "META samplerate: 200000000",
+      "samples": 33554432,
+      "expected_samples": 33554432,
+      "raw_sha256": "1aa0334ea71f0f363139eefe7b77ec0ec2114008905f83af724715d6e1cef41a"
+    },
+    {
+      "name": "200M-2",
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "200M",
+        "--channels",
+        "0-7",
+        "--samples",
+        "33554432",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.9438813580200076,
+      "header": "META samplerate: 200000000",
+      "samples": 33554432,
+      "expected_samples": 33554432,
+      "raw_sha256": "7d91285870051bdd3c1e74216865913772f5c8e584c78986783744c3ef0791ca"
+    },
+    {
+      "name": "200M-3",
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "200M",
+        "--channels",
+        "0-7",
+        "--samples",
+        "33554432",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.9437818070873618,
+      "header": "META samplerate: 200000000",
+      "samples": 33554432,
+      "expected_samples": 33554432,
+      "raw_sha256": "46f2d33099c036b0937a08fc4a2455c73d2a97d37bcab635b73c0de2ee78d165"
+    },
+    {
+      "name": "400M-1",
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "400M",
+        "--channels",
+        "0-3",
+        "--samples",
+        "67108864",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 2.0684431069530547,
+      "header": "META samplerate: 400000000",
+      "samples": 67108864,
+      "expected_samples": 67108864,
+      "raw_sha256": "4f4ca3c6812fdf27479cbc7223e17a4d1fd8b1e58647a8ac1d5255b1de9fd6a4"
+    },
+    {
+      "name": "400M-2",
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "400M",
+        "--channels",
+        "0-3",
+        "--samples",
+        "67108864",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 2.0688543268479407,
+      "header": "META samplerate: 400000000",
+      "samples": 67108864,
+      "expected_samples": 67108864,
+      "raw_sha256": "6acfe5c1f77605259da48e6e468d8ad0fcd2239492c2eee99535861fe889d5bd"
+    },
+    {
+      "name": "400M-3",
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "400M",
+        "--channels",
+        "0-3",
+        "--samples",
+        "67108864",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 2.0677048400975764,
+      "header": "META samplerate: 400000000",
+      "samples": 67108864,
+      "expected_samples": 67108864,
+      "raw_sha256": "ba31c1e2937891eaa7905320584a0bbece41b4a8adece18e875e2584f86bb118"
+    }
+  ],
+  "lead_analysis": [
+    {
+      "name": "200M-1",
+      "rising_edges": 167774,
+      "span_samples": 33554093,
+      "frequency_hz": 1000015.109930106,
+      "relative_ppm": 15.109930106005365,
+      "interior_run_histogram": {
+        "99": 35571,
+        "100": 264913,
+        "101": 35064
+      }
+    },
+    {
+      "name": "200M-2",
+      "rising_edges": 167775,
+      "span_samples": 33554293,
+      "frequency_hz": 1000015.1098400435,
+      "relative_ppm": 15.10984004338134,
+      "interior_run_histogram": {
+        "99": 35484,
+        "100": 265088,
+        "101": 34977
+      }
+    },
+    {
+      "name": "200M-3",
+      "rising_edges": 167775,
+      "span_samples": 33554294,
+      "frequency_hz": 1000015.0800371482,
+      "relative_ppm": 15.080037148118564,
+      "interior_run_histogram": {
+        "99": 35489,
+        "100": 265076,
+        "101": 34983
+      }
+    },
+    {
+      "name": "400M-1",
+      "rising_edges": 167775,
+      "span_samples": 67108586,
+      "frequency_hz": 1000015.1098400435,
+      "relative_ppm": 15.10984004338134,
+      "interior_run_histogram": {
+        "199": 71604,
+        "200": 193354,
+        "201": 70591
+      }
+    },
+    {
+      "name": "400M-2",
+      "rising_edges": 167775,
+      "span_samples": 67108587,
+      "frequency_hz": 1000015.0949385955,
+      "relative_ppm": 15.094938595527907,
+      "interior_run_histogram": {
+        "199": 71674,
+        "200": 193214,
+        "201": 70661
+      }
+    },
+    {
+      "name": "400M-3",
+      "rising_edges": 167775,
+      "span_samples": 67108588,
+      "frequency_hz": 1000015.0800371482,
+      "relative_ppm": 15.080037148118564,
+      "interior_run_histogram": {
+        "199": 71819,
+        "200": 192922,
+        "201": 70807
+      }
+    }
+  ],
+  "worker_analysis": {
+    "all_pass": true,
+    "independently_recomputed_frequency": "exact Fraction arithmetic from edge counters/span",
+    "independently_verified_capture_hashes": 6,
+    "interpretation": "Relative Pi clock versus analyzer agreement; neither source calibrated absolutely.",
+    "rows": [
+      {
+        "capture_exit": 0,
+        "duty_fraction": 0.5010525478811311,
+        "first_rising_sample": 191,
+        "high_hist": {
+          "100": 132710,
+          "101": 35064
+        },
+        "last_rising_sample": 33554284,
+        "low_hist": {
+          "100": 132203,
+          "99": 35571
+        },
+        "name": "200M-1",
+        "outlying_runs": 0,
+        "pass_observed_criteria": true,
+        "quantization_bound_ppm": 0.029803074663504958,
+        "relative_ppm": 15.109930105993328,
+        "rising_edges": 167774,
+        "samples": 33554432,
+        "sha256": "1aa0334ea71f0f363139eefe7b77ec0ec2114008905f83af724715d6e1cef41a",
+        "short_runs": 0,
+        "span_samples": 33554093
+      },
+      {
+        "capture_exit": 0,
+        "duty_fraction": 0.501049951968324,
+        "first_rising_sample": 28,
+        "high_hist": {
+          "100": 132798,
+          "101": 34977
+        },
+        "last_rising_sample": 33554321,
+        "low_hist": {
+          "100": 132290,
+          "99": 35484
+        },
+        "name": "200M-2",
+        "outlying_runs": 0,
+        "pass_observed_criteria": true,
+        "quantization_bound_ppm": 0.02980289701372385,
+        "relative_ppm": 15.109840043418588,
+        "rising_edges": 167775,
+        "samples": 33554432,
+        "sha256": "7d91285870051bdd3c1e74216865913772f5c8e584c78986783744c3ef0791ca",
+        "short_runs": 0,
+        "span_samples": 33554293
+      },
+      {
+        "capture_exit": 0,
+        "duty_fraction": 0.5010501189504986,
+        "first_rising_sample": 75,
+        "high_hist": {
+          "100": 132791,
+          "101": 34983
+        },
+        "last_rising_sample": 33554369,
+        "low_hist": {
+          "100": 132285,
+          "99": 35489
+        },
+        "name": "200M-3",
+        "outlying_runs": 0,
+        "pass_observed_criteria": true,
+        "quantization_bound_ppm": 0.029802895267494026,
+        "relative_ppm": 15.08003714815159,
+        "rising_edges": 167775,
+        "samples": 33554432,
+        "sha256": "46f2d33099c036b0937a08fc4a2455c73d2a97d37bcab635b73c0de2ee78d165",
+        "short_runs": 0,
+        "span_samples": 33554294
+      },
+      {
+        "capture_exit": 0,
+        "duty_fraction": 0.5010594365527581,
+        "first_rising_sample": 73,
+        "high_hist": {
+          "200": 97184,
+          "201": 70591
+        },
+        "last_rising_sample": 67108659,
+        "low_hist": {
+          "199": 71604,
+          "200": 96170
+        },
+        "name": "400M-1",
+        "outlying_runs": 0,
+        "pass_observed_criteria": true,
+        "quantization_bound_ppm": 0.014901448274031281,
+        "relative_ppm": 15.109840043418588,
+        "rising_edges": 167775,
+        "samples": 67108864,
+        "sha256": "4f4ca3c6812fdf27479cbc7223e17a4d1fd8b1e58647a8ac1d5255b1de9fd6a4",
+        "short_runs": 0,
+        "span_samples": 67108586
+      },
+      {
+        "capture_exit": 0,
+        "duty_fraction": 0.5010604795768596,
+        "first_rising_sample": 251,
+        "high_hist": {
+          "200": 97113,
+          "201": 70661
+        },
+        "last_rising_sample": 67108838,
+        "low_hist": {
+          "199": 71674,
+          "200": 96101
+        },
+        "name": "400M-2",
+        "outlying_runs": 0,
+        "pass_observed_criteria": true,
+        "quantization_bound_ppm": 0.014901447924785316,
+        "relative_ppm": 15.094938595563038,
+        "rising_edges": 167775,
+        "samples": 67108864,
+        "sha256": "6acfe5c1f77605259da48e6e468d8ad0fcd2239492c2eee99535861fe889d5bd",
+        "short_runs": 0,
+        "span_samples": 67108587
+      },
+      {
+        "capture_exit": 0,
+        "duty_fraction": 0.5010626508786029,
+        "first_rising_sample": 101,
+        "high_hist": {
+          "200": 96967,
+          "201": 70807
+        },
+        "last_rising_sample": 67108689,
+        "low_hist": {
+          "199": 71819,
+          "200": 95955
+        },
+        "name": "400M-3",
+        "outlying_runs": 0,
+        "pass_observed_criteria": true,
+        "quantization_bound_ppm": 0.014901447342708705,
+        "relative_ppm": 15.08003714815159,
+        "rising_edges": 167775,
+        "samples": 67108864,
+        "sha256": "ba31c1e2937891eaa7905320584a0bbece41b4a8adece18e875e2584f86bb118",
+        "short_runs": 0,
+        "span_samples": 67108588
+      }
+    ]
+  },
+  "worker_per_capture": [
+    {
+      "channel": 1,
+      "edges": {
+        "first_rising_sample": 191,
+        "first_sample": 91,
+        "last_rising_sample": 33554284,
+        "last_sample": 33554384,
+        "rising": 167774,
+        "total": 335549
+      },
+      "excluded_boundary_runs": {
+        "first_samples": 91,
+        "last_samples": 48
+      },
+      "expected_samples": 33554432,
+      "frequency": {
+        "complete_rising_periods": 167773,
+        "endpoint_span_quantization_bound_samples": 1,
+        "estimate_hz": 1000015.109930106,
+        "first_last_span_samples": 33554093,
+        "first_last_span_seconds": 0.167770465,
+        "mean_period_samples": 199.9969780596401,
+        "period_max_samples": 201,
+        "period_min_samples": 199,
+        "quantization_bound_ppm": 0.029803074663504958,
+        "quantization_frequency_interval_hz": [
+          1000015.080127033,
+          1000015.1397331806
+        ],
+        "quantization_resolves_ppm_limit": true,
+        "relative_ppm": 15.109930106005365
+      },
+      "header_bytes": 27,
+      "high_low_mean_difference_samples": 0.42101279101649425,
+      "interpretation": "Relative Pi-clock/analyzer timebase agreement only. Nominal Pi frequency requires confirmed integer divider/source and stable clock generation. Neither oscillator is calibrated by this comparison. Quantization bound excludes oscillator error, jitter, threshold effects, and missed/glitch edges; run tests check for visible anomalies.",
+      "issues": [],
+      "nominal_frequency_hz": 1000000.0,
+      "observed_mean_duty_fraction": 0.5010525478811311,
+      "outlying_or_short_runs": 0,
+      "outlying_run_examples": [],
+      "pass_observed_criteria": true,
+      "path": "/tmp/dslcap-a2-live/200M-1.raw",
+      "ppm_limit": 100,
+      "run_criterion": {
+        "allowed_integer_range": [
+          99,
+          101
+        ],
+        "explanation": "All complete runs inside floor(H/(1+tol))..ceil(H/(1-tol)); each level uses at most two adjacent integers; no complete run below 3. High/low full-run means differ by at most 1 + 1/n_high + 1/n_low samples. Boundary partial runs are excluded, never classified as glitches.",
+        "finite_run_mean_allowance": "1/n_high + 1/n_low samples",
+        "maximum_high_low_mean_difference_samples": 1,
+        "minimum_run_samples": 3,
+        "nominal_halfperiod_samples": 100.0,
+        "per_level_max_distinct_adjacent_values": 2
+      },
+      "runs": {
+        "high": {
+          "count": 167774,
+          "histogram": {
+            "100": 132710,
+            "101": 35064
+          },
+          "maximum": 101,
+          "mean_samples": 100.20899543433428,
+          "minimum": 100
+        },
+        "low": {
+          "count": 167774,
+          "histogram": {
+            "100": 132203,
+            "99": 35571
+          },
+          "maximum": 100,
+          "mean_samples": 99.78798264331779,
+          "minimum": 99
+        }
+      },
+      "samplerate_hz": 200000000,
+      "samples": 33554432,
+      "sha256": "1aa0334ea71f0f363139eefe7b77ec0ec2114008905f83af724715d6e1cef41a",
+      "short_runs_below_3": 0
+    },
+    {
+      "channel": 1,
+      "edges": {
+        "first_rising_sample": 28,
+        "first_sample": 28,
+        "last_rising_sample": 33554321,
+        "last_sample": 33554421,
+        "rising": 167775,
+        "total": 335550
+      },
+      "excluded_boundary_runs": {
+        "first_samples": 28,
+        "last_samples": 11
+      },
+      "expected_samples": 33554432,
+      "frequency": {
+        "complete_rising_periods": 167774,
+        "endpoint_span_quantization_bound_samples": 1,
+        "estimate_hz": 1000015.1098400435,
+        "first_last_span_samples": 33554293,
+        "first_last_span_seconds": 0.167771465,
+        "mean_period_samples": 199.99697807765207,
+        "period_max_samples": 201,
+        "period_min_samples": 199,
+        "quantization_bound_ppm": 0.02980289701372385,
+        "quantization_frequency_interval_hz": [
+          1000015.0800371482,
+          1000015.1396429405
+        ],
+        "quantization_resolves_ppm_limit": true,
+        "relative_ppm": 15.10984004338134
+      },
+      "header_bytes": 27,
+      "high_low_mean_difference_samples": 0.4199744389736395,
+      "interpretation": "Relative Pi-clock/analyzer timebase agreement only. Nominal Pi frequency requires confirmed integer divider/source and stable clock generation. Neither oscillator is calibrated by this comparison. Quantization bound excludes oscillator error, jitter, threshold effects, and missed/glitch edges; run tests check for visible anomalies.",
+      "issues": [],
+      "nominal_frequency_hz": 1000000.0,
+      "observed_mean_duty_fraction": 0.501049951968324,
+      "outlying_or_short_runs": 0,
+      "outlying_run_examples": [],
+      "pass_observed_criteria": true,
+      "path": "/tmp/dslcap-a2-live/200M-2.raw",
+      "ppm_limit": 100,
+      "run_criterion": {
+        "allowed_integer_range": [
+          99,
+          101
+        ],
+        "explanation": "All complete runs inside floor(H/(1+tol))..ceil(H/(1-tol)); each level uses at most two adjacent integers; no complete run below 3. High/low full-run means differ by at most 1 + 1/n_high + 1/n_low samples. Boundary partial runs are excluded, never classified as glitches.",
+        "finite_run_mean_allowance": "1/n_high + 1/n_low samples",
+        "maximum_high_low_mean_difference_samples": 1,
+        "minimum_run_samples": 3,
+        "nominal_halfperiod_samples": 100.0,
+        "per_level_max_distinct_adjacent_values": 2
+      },
+      "runs": {
+        "high": {
+          "count": 167775,
+          "histogram": {
+            "100": 132798,
+            "101": 34977
+          },
+          "maximum": 101,
+          "mean_samples": 100.20847563701386,
+          "minimum": 100
+        },
+        "low": {
+          "count": 167774,
+          "histogram": {
+            "100": 132290,
+            "99": 35484
+          },
+          "maximum": 100,
+          "mean_samples": 99.78850119804022,
+          "minimum": 99
+        }
+      },
+      "samplerate_hz": 200000000,
+      "samples": 33554432,
+      "sha256": "7d91285870051bdd3c1e74216865913772f5c8e584c78986783744c3ef0791ca",
+      "short_runs_below_3": 0
+    },
+    {
+      "channel": 1,
+      "edges": {
+        "first_rising_sample": 75,
+        "first_sample": 75,
+        "last_rising_sample": 33554369,
+        "last_sample": 33554369,
+        "rising": 167775,
+        "total": 335549
+      },
+      "excluded_boundary_runs": {
+        "first_samples": 75,
+        "last_samples": 63
+      },
+      "expected_samples": 33554432,
+      "frequency": {
+        "complete_rising_periods": 167774,
+        "endpoint_span_quantization_bound_samples": 1,
+        "estimate_hz": 1000015.0800371482,
+        "first_last_span_samples": 33554294,
+        "first_last_span_seconds": 0.16777147,
+        "mean_period_samples": 199.99698403805118,
+        "period_max_samples": 201,
+        "period_min_samples": 199,
+        "quantization_bound_ppm": 0.029802895267494026,
+        "quantization_frequency_interval_hz": [
+          1000015.0502342547,
+          1000015.1098400435
+        ],
+        "quantization_resolves_ppm_limit": true,
+        "relative_ppm": 15.080037148118564
+      },
+      "header_bytes": 27,
+      "high_low_mean_difference_samples": 0.42004124596182635,
+      "interpretation": "Relative Pi-clock/analyzer timebase agreement only. Nominal Pi frequency requires confirmed integer divider/source and stable clock generation. Neither oscillator is calibrated by this comparison. Quantization bound excludes oscillator error, jitter, threshold effects, and missed/glitch edges; run tests check for visible anomalies.",
+      "issues": [],
+      "nominal_frequency_hz": 1000000.0,
+      "observed_mean_duty_fraction": 0.5010501189504986,
+      "outlying_or_short_runs": 0,
+      "outlying_run_examples": [],
+      "pass_observed_criteria": true,
+      "path": "/tmp/dslcap-a2-live/200M-3.raw",
+      "ppm_limit": 100,
+      "run_criterion": {
+        "allowed_integer_range": [
+          99,
+          101
+        ],
+        "explanation": "All complete runs inside floor(H/(1+tol))..ceil(H/(1-tol)); each level uses at most two adjacent integers; no complete run below 3. High/low full-run means differ by at most 1 + 1/n_high + 1/n_low samples. Boundary partial runs are excluded, never classified as glitches.",
+        "finite_run_mean_allowance": "1/n_high + 1/n_low samples",
+        "maximum_high_low_mean_difference_samples": 1,
+        "minimum_run_samples": 3,
+        "nominal_halfperiod_samples": 100.0,
+        "per_level_max_distinct_adjacent_values": 2
+      },
+      "runs": {
+        "high": {
+          "count": 167774,
+          "histogram": {
+            "100": 132791,
+            "101": 34983
+          },
+          "maximum": 101,
+          "mean_samples": 100.20851264200651,
+          "minimum": 100
+        },
+        "low": {
+          "count": 167774,
+          "histogram": {
+            "100": 132285,
+            "99": 35489
+          },
+          "maximum": 100,
+          "mean_samples": 99.78847139604468,
+          "minimum": 99
+        }
+      },
+      "samplerate_hz": 200000000,
+      "samples": 33554432,
+      "sha256": "46f2d33099c036b0937a08fc4a2455c73d2a97d37bcab635b73c0de2ee78d165",
+      "short_runs_below_3": 0
+    },
+    {
+      "channel": 1,
+      "edges": {
+        "first_rising_sample": 73,
+        "first_sample": 73,
+        "last_rising_sample": 67108659,
+        "last_sample": 67108860,
+        "rising": 167775,
+        "total": 335550
+      },
+      "excluded_boundary_runs": {
+        "first_samples": 73,
+        "last_samples": 4
+      },
+      "expected_samples": 67108864,
+      "frequency": {
+        "complete_rising_periods": 167774,
+        "endpoint_span_quantization_bound_samples": 1,
+        "estimate_hz": 1000015.1098400435,
+        "first_last_span_samples": 67108586,
+        "first_last_span_seconds": 0.167771465,
+        "mean_period_samples": 399.99395615530415,
+        "period_max_samples": 401,
+        "period_min_samples": 399,
+        "quantization_bound_ppm": 0.014901448274031281,
+        "quantization_frequency_interval_hz": [
+          1000015.0949385955,
+          1000015.1247414917
+        ],
+        "quantization_resolves_ppm_limit": true,
+        "relative_ppm": 15.10984004338134
+      },
+      "header_bytes": 27,
+      "high_low_mean_difference_samples": 0.8475364433820118,
+      "interpretation": "Relative Pi-clock/analyzer timebase agreement only. Nominal Pi frequency requires confirmed integer divider/source and stable clock generation. Neither oscillator is calibrated by this comparison. Quantization bound excludes oscillator error, jitter, threshold effects, and missed/glitch edges; run tests check for visible anomalies.",
+      "issues": [],
+      "nominal_frequency_hz": 1000000.0,
+      "observed_mean_duty_fraction": 0.5010594365527581,
+      "outlying_or_short_runs": 0,
+      "outlying_run_examples": [],
+      "pass_observed_criteria": true,
+      "path": "/tmp/dslcap-a2-live/400M-1.raw",
+      "ppm_limit": 100,
+      "run_criterion": {
+        "allowed_integer_range": [
+          199,
+          201
+        ],
+        "explanation": "All complete runs inside floor(H/(1+tol))..ceil(H/(1-tol)); each level uses at most two adjacent integers; no complete run below 3. High/low full-run means differ by at most 1 + 1/n_high + 1/n_low samples. Boundary partial runs are excluded, never classified as glitches.",
+        "finite_run_mean_allowance": "1/n_high + 1/n_low samples",
+        "maximum_high_low_mean_difference_samples": 1,
+        "minimum_run_samples": 3,
+        "nominal_halfperiod_samples": 200.0,
+        "per_level_max_distinct_adjacent_values": 2
+      },
+      "runs": {
+        "high": {
+          "count": 167775,
+          "histogram": {
+            "200": 97184,
+            "201": 70591
+          },
+          "maximum": 201,
+          "mean_samples": 200.42074802562956,
+          "minimum": 200
+        },
+        "low": {
+          "count": 167774,
+          "histogram": {
+            "199": 71604,
+            "200": 96170
+          },
+          "maximum": 200,
+          "mean_samples": 199.57321158224755,
+          "minimum": 199
+        }
+      },
+      "samplerate_hz": 400000000,
+      "samples": 67108864,
+      "sha256": "4f4ca3c6812fdf27479cbc7223e17a4d1fd8b1e58647a8ac1d5255b1de9fd6a4",
+      "short_runs_below_3": 0
+    },
+    {
+      "channel": 1,
+      "edges": {
+        "first_rising_sample": 251,
+        "first_sample": 51,
+        "last_rising_sample": 67108838,
+        "last_sample": 67108838,
+        "rising": 167775,
+        "total": 335550
+      },
+      "excluded_boundary_runs": {
+        "first_samples": 51,
+        "last_samples": 26
+      },
+      "expected_samples": 67108864,
+      "frequency": {
+        "complete_rising_periods": 167774,
+        "endpoint_span_quantization_bound_samples": 1,
+        "estimate_hz": 1000015.0949385955,
+        "first_last_span_samples": 67108587,
+        "first_last_span_seconds": 0.1677714675,
+        "mean_period_samples": 399.99396211570325,
+        "period_max_samples": 401,
+        "period_min_samples": 399,
+        "quantization_bound_ppm": 0.014901447924785316,
+        "quantization_frequency_interval_hz": [
+          1000015.0800371482,
+          1000015.1098400435
+        ],
+        "quantization_resolves_ppm_limit": true,
+        "relative_ppm": 15.094938595527907
+      },
+      "header_bytes": 27,
+      "high_low_mean_difference_samples": 0.848370860782353,
+      "interpretation": "Relative Pi-clock/analyzer timebase agreement only. Nominal Pi frequency requires confirmed integer divider/source and stable clock generation. Neither oscillator is calibrated by this comparison. Quantization bound excludes oscillator error, jitter, threshold effects, and missed/glitch edges; run tests check for visible anomalies.",
+      "issues": [],
+      "nominal_frequency_hz": 1000000.0,
+      "observed_mean_duty_fraction": 0.5010604795768596,
+      "outlying_or_short_runs": 0,
+      "outlying_run_examples": [],
+      "pass_observed_criteria": true,
+      "path": "/tmp/dslcap-a2-live/400M-2.raw",
+      "ppm_limit": 100,
+      "run_criterion": {
+        "allowed_integer_range": [
+          199,
+          201
+        ],
+        "explanation": "All complete runs inside floor(H/(1+tol))..ceil(H/(1-tol)); each level uses at most two adjacent integers; no complete run below 3. High/low full-run means differ by at most 1 + 1/n_high + 1/n_low samples. Boundary partial runs are excluded, never classified as glitches.",
+        "finite_run_mean_allowance": "1/n_high + 1/n_low samples",
+        "maximum_high_low_mean_difference_samples": 1,
+        "minimum_run_samples": 3,
+        "nominal_halfperiod_samples": 200.0,
+        "per_level_max_distinct_adjacent_values": 2
+      },
+      "runs": {
+        "high": {
+          "count": 167774,
+          "histogram": {
+            "200": 97113,
+            "201": 70661
+          },
+          "maximum": 201,
+          "mean_samples": 200.4211677613933,
+          "minimum": 200
+        },
+        "low": {
+          "count": 167775,
+          "histogram": {
+            "199": 71674,
+            "200": 96101
+          },
+          "maximum": 200,
+          "mean_samples": 199.57279690061094,
+          "minimum": 199
+        }
+      },
+      "samplerate_hz": 400000000,
+      "samples": 67108864,
+      "sha256": "6acfe5c1f77605259da48e6e468d8ad0fcd2239492c2eee99535861fe889d5bd",
+      "short_runs_below_3": 0
+    },
+    {
+      "channel": 1,
+      "edges": {
+        "first_rising_sample": 101,
+        "first_sample": 101,
+        "last_rising_sample": 67108689,
+        "last_sample": 67108689,
+        "rising": 167775,
+        "total": 335549
+      },
+      "excluded_boundary_runs": {
+        "first_samples": 101,
+        "last_samples": 175
+      },
+      "expected_samples": 67108864,
+      "frequency": {
+        "complete_rising_periods": 167774,
+        "endpoint_span_quantization_bound_samples": 1,
+        "estimate_hz": 1000015.0800371482,
+        "first_last_span_samples": 67108588,
+        "first_last_span_seconds": 0.16777147,
+        "mean_period_samples": 399.99396807610236,
+        "period_max_samples": 401,
+        "period_min_samples": 399,
+        "quantization_bound_ppm": 0.014901447342708705,
+        "quantization_frequency_interval_hz": [
+          1000015.0651357012,
+          1000015.0949385955
+        ],
+        "quantization_resolves_ppm_limit": true,
+        "relative_ppm": 15.080037148118564
+      },
+      "header_bytes": 27,
+      "high_low_mean_difference_samples": 0.8501078832238704,
+      "interpretation": "Relative Pi-clock/analyzer timebase agreement only. Nominal Pi frequency requires confirmed integer divider/source and stable clock generation. Neither oscillator is calibrated by this comparison. Quantization bound excludes oscillator error, jitter, threshold effects, and missed/glitch edges; run tests check for visible anomalies.",
+      "issues": [],
+      "nominal_frequency_hz": 1000000.0,
+      "observed_mean_duty_fraction": 0.5010626508786029,
+      "outlying_or_short_runs": 0,
+      "outlying_run_examples": [],
+      "pass_observed_criteria": true,
+      "path": "/tmp/dslcap-a2-live/400M-3.raw",
+      "ppm_limit": 100,
+      "run_criterion": {
+        "allowed_integer_range": [
+          199,
+          201
+        ],
+        "explanation": "All complete runs inside floor(H/(1+tol))..ceil(H/(1-tol)); each level uses at most two adjacent integers; no complete run below 3. High/low full-run means differ by at most 1 + 1/n_high + 1/n_low samples. Boundary partial runs are excluded, never classified as glitches.",
+        "finite_run_mean_allowance": "1/n_high + 1/n_low samples",
+        "maximum_high_low_mean_difference_samples": 1,
+        "minimum_run_samples": 3,
+        "nominal_halfperiod_samples": 200.0,
+        "per_level_max_distinct_adjacent_values": 2
+      },
+      "runs": {
+        "high": {
+          "count": 167774,
+          "histogram": {
+            "200": 96967,
+            "201": 70807
+          },
+          "maximum": 201,
+          "mean_samples": 200.42203797966312,
+          "minimum": 200
+        },
+        "low": {
+          "count": 167774,
+          "histogram": {
+            "199": 71819,
+            "200": 95955
+          },
+          "maximum": 200,
+          "mean_samples": 199.57193009643925,
+          "minimum": 199
+        }
+      },
+      "samplerate_hz": 400000000,
+      "samples": 67108864,
+      "sha256": "ba31c1e2937891eaa7905320584a0bbece41b4a8adece18e875e2584f86bb118",
+      "short_runs_below_3": 0
+    }
+  ],
+  "synthetic_tests": {
+    "count": 8,
+    "passed": 8,
+    "log_sha256": "acfee8b1974731d39bc3de45d42e092d647c5bb446eecf824fdb420e381108f2"
+  },
+  "reference": {
+    "host": "pi133",
+    "model": "Pi4 Model B Rev1.5",
+    "gpio": 20,
+    "physical_pin": 38,
+    "analyzer_channel": 1,
+    "requested_hz": 1000000,
+    "source": "PLLD_PER (clock source6)",
+    "modeled_source_hz": 750000023,
+    "integer_divisor": 750,
+    "fractional_divisor": 0,
+    "mash": 0,
+    "ctl_hex": "0x00000096",
+    "div_hex": "0x002ee000",
+    "physical_calibration": false
+  },
+  "cleanup": {
+    "clock_enabled": false,
+    "clock_busy": false,
+    "gpio20": "input/pull-down/low",
+    "pigpiod": "inactive/disabled, no process",
+    "started_daemon_stopped": true,
+    "radio_app_unchanged": true,
+    "clock_control_hex": "0x00000120",
+    "clock_divider_hex": "0x002ee000",
+    "clock_registers_byte_identical_to_baseline": false,
+    "residue": "disabled volatile divider and pigpio stop bits retained; no direct register writes",
+    "user_restored_CH1_to_MISO": true,
+    "CH6_disconnected": true
+  },
+  "restored_idle": [
+    {
+      "rate": "200M",
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "200M",
+        "--channels",
+        "0-3",
+        "--samples",
+        "1000448",
+        "-v"
+      ],
+      "exit": 0,
+      "samples": 1000448,
+      "raw_sha256": "39a0e0f529610f24bfba9745d86c98d33939db7e8abe9d9963a78a16e7786715",
+      "levels": {
+        "0": [
+          0
+        ],
+        "1": [
+          0
+        ],
+        "2": [
+          0
+        ],
+        "3": [
+          1
+        ]
+      }
+    },
+    {
+      "rate": "400M",
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "400M",
+        "--channels",
+        "0-3",
+        "--samples",
+        "1000448",
+        "-v"
+      ],
+      "exit": 0,
+      "samples": 1000448,
+      "raw_sha256": "3169c15a919aa44fd842eeee0df365a7c97de7ff63308364e9e43ace64f50ea5",
+      "levels": {
+        "0": [
+          0
+        ],
+        "1": [
+          0
+        ],
+        "2": [
+          0
+        ],
+        "3": [
+          1
+        ]
+      }
+    }
+  ],
+  "restored_idle_reference": {
+    "path": "/tmp/dslcap-b-deadline-final/upload-1.36.raw",
+    "sha256": "8b11c0138fd1d184402632a5f93ed5f05ca41561af053f62ef604cc40166de89",
+    "levels": {
+      "0": [
+        0
+      ],
+      "1": [
+        0
+      ],
+      "2": [
+        0
+      ],
+      "3": [
+        1
+      ]
+    },
+    "interpretation": "Latest pre-A2 idle MISO is low after B6 status/errors reads; historical A0 high state is not current baseline"
+  },
+  "owner_result": {
+    "task": "dslcap-a2-clock-20261007",
+    "revision": 5,
+    "sha256": "eaa4eac28695442a596725d5af4a68e8612c174f32d83f6c3703a3ca16acded2",
+    "consumed_and_acknowledged": true
+  },
+  "active_restoration": {
+    "summary": {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "400M",
+        "--channels",
+        "0-3",
+        "--samples",
+        "2000896",
+        "--trigger",
+        "3:f",
+        "--trigger-timeout",
+        "60s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 17.84953547688201
+    },
+    "inspection": {
+      "source": "/tmp/dslcap-a2-restored-active/capture.raw",
+      "sha256": "c7ae7d2109843c42121eccee622993ae7e2633d501867a8cb657194d1900b83e",
+      "samplerate": 400000000,
+      "samples": 2000896,
+      "unitsize": 1,
+      "mask": "0xf",
+      "trigger_index": 200092,
+      "spi": [
+        {
+          "physical": "0,1,2,3",
+          "complete_frames": [
+            {
+              "start": 200092,
+              "end": 203893,
+              "rising_clocks": 16,
+              "mosi": "0101",
+              "miso": "0452"
+            },
+            {
+              "start": 274044,
+              "end": 277046,
+              "rising_clocks": 32,
+              "mosi": "00000000",
+              "miso": "06520118"
+            }
+          ]
+        }
+      ],
+      "trigger_fraction": 0.10000119946264073,
+      "condition_offsets_within_8": [
+        0
+      ],
+      "condition_at_reported_index": true
+    },
+    "verified": {
+      "known_getversion_bytes_match": true,
+      "post_transaction_idle400M": {
+        "0": [
+          0
+        ],
+        "1": [
+          0
+        ],
+        "2": [
+          0
+        ],
+        "3": [
+          1
+        ]
+      },
+      "idle_matches_latest_pre_A2": true,
+      "restoration": "User confirmation plus exact active MOSI/MISO expected bytes and prior/latest idle comparison; historical idle-high snapshot is not a required electrical invariant"
+    },
+    "owner": {
+      "task": "dslcap-a2-restore-spi-20261007",
+      "revision": 4,
+      "result_sha256": "faf9a80a2e3acd86fdb841733a3e0e39b26b543f76b4ca3e6820a6e14a7d4c91",
+      "response": "0118",
+      "status": 0,
+      "requests": 1,
+      "consumed_and_acknowledged": true
+    }
+  },
+  "independent_review": {
+    "group": "A2-clock-validation",
+    "wave": 1,
+    "cycle": 1,
+    "verdict": "PASS",
+    "report": "A2_REVIEW.md",
+    "live_gates_open": [],
+    "documentation_findings_reconciled": true
+  }
+}

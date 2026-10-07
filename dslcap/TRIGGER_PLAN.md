@@ -3,7 +3,9 @@
 Implementation status, 2026-10-07: **Phase B complete**, independently
 reviewed and hardware gates B.1–B.6 passed. See
 [TRIGGER_VALIDATION.md](TRIGGER_VALIDATION.md) for evidence and retained
-limitations. A2 continuous-clock ppm remains open. Phase C serial triggering
+limitations. A2 continuous-clock validation also passed, with independent
+review and restored wiring; see [A2_VALIDATION.md](A2_VALIDATION.md).
+Phase C serial triggering
 and optional trigger-relative timestamps are not implemented by this wave.
 
 Plan review history: proposed 2026-10-07, revised the same day for review
@@ -682,6 +684,13 @@ channels 400M reaches.
   when this is committed.
 
 A2. **Continuous reference clock (after A1).**
+
+Completed: three captures each at 200M and 400M measured +15.08 to +15.11 ppm
+relative to the nominal 1MHz Pi reference, within ±100 ppm, with clean run
+lengths. This is relative clock agreement, not absolute calibration. Clock,
+daemon, GPIO and MISO wiring restoration were verified, including a known
+GetVersion decode. Independent review: [A2_REVIEW.md](A2_REVIEW.md).
+
 - **Preconditions, rechecked immediately before use.** The gpioinfo result
   above is a snapshot, not evidence of physical isolation.
   - Re-run `gpioinfo` and `pinctrl get 6,20` on pi133.
@@ -692,11 +701,15 @@ A2. **Continuous reference clock (after A1).**
     coordinate with the pi133 application owner and stop it afterwards.
   - Installing any new package or tool is a **new dependency**. Under the
     user's standing rule that needs a new plan before use.
-- Pi GPCLK on GPIO6 or GPIO20 at an integer divider of the 54 MHz
-  oscillator (no MASH fractional divider): e.g. 54/6 = 9 MHz or 54/54 =
-  1 MHz. With pigpiod running, `pigs hc 6 9000000` drives it.
-- Wire it to **CH6/CH7 for 200M**. For **400M** it has to be on CH0-3,
-  which means CH1:
+- Pi GPCLK on GPIO6 or GPIO20 with a verified integer clock divider and
+  no MASH dithering. Do not assume pigpio selects the raw 54MHz oscillator.
+  On the tested Pi4, `pigs hc 20 1000000` selects PLLD_PER / 750:
+  GP0CTL=0x96 (source6, MASH0), GP0DIV=0x002ee000 (DIVI750, DIVF0).
+  Kernel-modeled PLLD_PER=750000023Hz gives nominal 1000000.03Hz; it is not
+  a physical frequency calibration. A raw 54MHz source could use /54 for
+  1MHz or /6 for 9MHz, but that source was not selected or tested here.
+- CH1 works for **both 200M and 400M**, as used in the completed test.
+  CH6/CH7 are an alternative for 200M only. For 400M use CH0-3:
   - **unplug the CH1 analyzer lead from MISO completely**, then connect it
     to the GPCLK pin
   - the GPCLK output must never be electrically joined to radio MISO (no
@@ -708,9 +721,12 @@ A2. **Continuous reference clock (after A1).**
     1.5 M periods at 9 MHz over 168 ms) is within ±100 ppm. The
     quantization contribution is about 1e-6 here; the budget is dominated
     by the Pi and DSLogic crystals.
-- Restore afterwards and verify: GPCLK off, the pin back to input
-  (`pinctrl get`), `pigpiod` stopped if it was started, and the CH1 lead
-  back on MISO, confirmed by an idle-level capture (MISO=1) as in A0.
+- Restore afterwards and verify: GPCLK off, the pin back to its original
+  input/pull state (`pinctrl get`), `pigpiod` stopped if it was started,
+  and CH1 back on MISO. Compare idle levels with a contemporary pre-test
+  baseline; MISO=1 in A0 was a snapshot, not an invariant. The A2 baseline
+  and restored idle are MISO=0. A separately authorized read-only GetVersion
+  also verified restored MISO data as 0452 / 06520118.
 - The LR2021 HF clock out (32 MHz, via a DIO) is a crystal-accurate
   alternative. It's near the edge of a clean edge at the DSLogic input and
   needs the radio owner to configure it, so it's second choice.

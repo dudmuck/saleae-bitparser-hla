@@ -37,8 +37,8 @@ scopes. Only FAIL in cycle 1 or 2 permits a scoped fix wave; cycle 3 terminal.
 Decisions:
 - A1 high-rate packing evidence is recorded in TRIGGER_PLAN.md by the
   DSView agent; lead has not independently rerun that historical evidence.
-- A2 continuous-clock ppm acceptance remains open. Starting Phase B does
-  not claim A2 completion or waive remaining hardware validation.
+- A2 continuous-clock ppm acceptance was open when Phase B started, not
+  waived. It subsequently passed; see A2_VALIDATION.md and A2_REVIEW.md.
 - Trigger timeout uses best-effort cached status/grace; no precise
   hardware-event deadline guarantee. A completed header cannot recover
   data discarded by an abort; success always requires exact count + END.
@@ -47,7 +47,7 @@ Decisions:
   design; a genuinely new dependency/plan requires operator review.
 
 Status: Phase B implemented, committed as fb85f37, independently reviewed
-PASS, and live gates B.1–B.6 passed. A2 remains separate and open.
+PASS, and live gates B.1–B.6 passed. The separate A2 check subsequently passed.
 
 ## Parallel reference evidence
 
@@ -139,6 +139,7 @@ assumption) were corrected and affected checks rerun; implementation stayed
 frozen at fb85f37. No additional review cycle consumed.
 
 See TRIGGER_VALIDATION.md/JSON for counts, timing uncertainty and artifact
-locations. A2 continuous-clock ppm remains open, not waived. Phase C serial
+locations. A2 was subsequently completed in A2_VALIDATION.md, not waived.
+Phase C serial
 and optional --t0 trigger remain excluded. Retained review Low issue is
 documented; no automatic fix wave was opened after PASS.

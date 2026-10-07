@@ -412,9 +412,7 @@
       "complete_spi_frames": 4
     }
   ],
-  "open_gates": [
-    "A2 clock ppm"
-  ],
+  "open_gates": [],
   "matrix": {
     "captures": 300,
     "all_exact": true,
@@ -1901,5 +1899,11 @@
     "final_readback": "20: ip    pd | lo // GPIO20 = input",
     "other_gpio_changes": false
   },
-  "phase_b_status": "PASS B1 through B6"
+  "phase_b_status": "PASS B1 through B6",
+  "a2_followup": {
+    "status": "PASS",
+    "report": "A2_VALIDATION.md",
+    "independent_review": "A2_REVIEW.md",
+    "scope": "relative clock agreement and restoration; separate from Phase B"
+  }
 }
