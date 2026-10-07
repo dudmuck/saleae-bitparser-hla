@@ -453,3 +453,27 @@ remains unavailable; no acceptance waiver is inferred. Additional IRQ/BUSY
 wiring and10MHz kernel-driver traffic are future work. At25M the profile
 allows at most12selected inputs: the current8SPI inputs leave4status inputs,
 not all8remaining physical channels enabled simultaneously.
+
+### Follow-on BUSY / DIO8 bench validation
+
+User wired CH4/5 to pi133 BUSY/DIO8 and CH12/13 to pi134 BUSY/DIO8.
+Lead owns capture/documentation; native dslcap_worker independently verifies
+channel selection and saved output; existing application owner controls all
+radio activity through secondopinion. No implementation/review wave or new
+dependency was needed. The existing flags select mask 0x3f3f at 25M, width 2.
+
+PINS1 completed 90 seconds with exit 0/nooverflow/reopenPASS. Each radio returned
+20/20 GetVersion v1.24. BUSY edges passed both Pis; pi133 DIO8 rose/fell on a
+receive-only TIMEOUT. pi134 DIO8 had no edges and remains unvalidated, with
+unknown preserved write-only DIO routing/mask. pi134's RX attempt produced
+missing-calibration ERROR; separate conditional cleanup verified IRQ 0/errors 0
+and original STBY_RC. pi133 verified IRQ 0/STBY_XOSC. The pre-test pi134 error
+register was not read, so prior latch restoration cannot be claimed exactly.
+
+Application tasks dslcap-radio-pins-20261007 revision 4 and
+dslcap-radio-pins-cleanup-20261007 revision 3 completed and were acknowledged.
+No active run remains. Wiring/CLI is in sigrok_hla_readme.md; exact evidence,
+hashes, cleanup and remaining CH13 limit are in VALIDATION.md and
+RADIO_PINS_VALIDATION.json. No further RX is planned without addressing the
+application's calibration/configuration; no direct GPIO output is permitted
+on these radio-connected pins.

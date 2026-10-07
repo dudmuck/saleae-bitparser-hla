@@ -107,8 +107,25 @@ The producer captures only these eight physical inputs (`0,1,2,3,8,9,10,11`)
 and outputs two bytes per sample, preserving physical bit positions. It keeps
 the 12-channel-capable 25M stream profile; it does not lower the requested
 rate. Up to four additional selected inputs can fit this profile, subject to
-wiring and decoder requirements. Selecting all 16 at 25M fails. IRQ/BUSY
-connections for this bench are deferred.
+wiring and decoder requirements. Selecting all 16 at 25M fails.
+
+With the bench's BUSY and DIO8 connections, log all four status inputs:
+
+```bash
+./sigrok_hla.py --dslogic --dslcap /tmp/dslcap-build/dslcap \
+    --hla-path ~/HLA/saleae_lr2021 --spi 0,1,2,3 --spi 8,9,10,11 \
+    -C 4=pi133_busy,5=pi133_dio8,12=pi134_busy,13=pi134_dio8 \
+    --int-pin pi133_dio8 --extra-pin pi134_dio8 \
+    --extra-pin pi133_busy --extra-pin pi134_busy \
+    --samplerate 25M --continuous --hex
+```
+
+On each Pi, BUSY is physical pin 12 (GPIO18), and DIO8 is physical pin 29
+(GPIO5). Both Pi grounds connect to the analyzer. This selects exactly 12
+inputs, mask `0x3f3f`, with two-byte samples at 25 MSa/s. Both pin options
+log edges interleaved with decoded SPI; `--int-pin` is not a hardware trigger.
+Static levels produce no initial event. The radio application retains GPIO
+ownership; do not run the earlier synthetic GPIO generators on these pins.
 
 Named channels and a logged interrupt:
 

@@ -1,0 +1,107 @@
+{
+  "date": "2026-10-07",
+  "mask": "0x3f3f",
+  "samplerate": 25000000,
+  "unitsize": 2,
+  "pins": {
+    "pi133_busy": {
+      "rising": 46,
+      "falling": 46,
+      "high_width_us_min": 16.72,
+      "high_width_us_max": 106.2
+    },
+    "pi134_busy": {
+      "rising": 48,
+      "falling": 48,
+      "high_width_us_min": 17.12,
+      "high_width_us_max": 143.72
+    },
+    "pi133_dio8": {
+      "rising": 1,
+      "falling": 1,
+      "high_width_us_min": 8895183.44,
+      "high_width_us_max": 8895183.44
+    },
+    "pi134_dio8": {
+      "rising": 0,
+      "falling": 0,
+      "high_width_us_min": null,
+      "high_width_us_max": null
+    }
+  },
+  "ports": {
+    "SPI": {
+      "requests": 20,
+      "responses": 20,
+      "total_frames": 46
+    },
+    "SPI_B": {
+      "requests": 20,
+      "responses": 20,
+      "total_frames": 48
+    }
+  },
+  "timestamp_ordered": true,
+  "capture": {
+    "command": [
+      "python3",
+      "sigrok_hla.py",
+      "--dslogic",
+      "--dslcap",
+      "/tmp/dslcap-lead-review/dslcap",
+      "--spi",
+      "0,1,2,3",
+      "--spi",
+      "8,9,10,11",
+      "--samplerate",
+      "25M",
+      "-C",
+      "4=pi133_busy,5=pi133_dio8,12=pi134_busy,13=pi134_dio8",
+      "--int-pin",
+      "pi133_dio8",
+      "--extra-pin",
+      "pi134_dio8",
+      "--extra-pin",
+      "pi133_busy",
+      "--extra-pin",
+      "pi134_busy",
+      "--time",
+      "90s",
+      "--hla-path",
+      "/home/wroberts/HLA/saleae_lr2021",
+      "--hex",
+      "-vv"
+    ],
+    "exit": 0,
+    "elapsed_s": 91.42406863998622,
+    "stop_reason": "finite_capture"
+  },
+  "samples": 2250000000,
+  "output_bytes": 4500000026,
+  "ring_high_water": 983680,
+  "artifacts": {
+    "/tmp/dslcap-radio-pins-live1.stdout": "69ac2c3cc7e9114012ab8d3cac269c59ac8a77f112b7591e75c970c9aa38bc9d",
+    "/tmp/dslcap-radio-pins-live1.stderr": "b9a3334e766941a0bd9155204e76543a81c1b13307858bccf9965afa848a1641",
+    "/tmp/dslcap-radio-pins-live1.json": "62996723fee33168cf1fe9b72cd7a68a67f4612e25e4a34301f691bf4892902a"
+  },
+  "limitations": [
+    "No pi134 DIO8 transitions observed; initial static level and DIO8 routing/mask not established.",
+    "No raw sample recording for this run; edge audit is of production logger output.",
+    "pi134 RX-only test raised missing-calibration ERROR; cleared and verified in separate cleanup task. Exact prior error-register baseline unknown."
+  ],
+  "reopen_exit": 0,
+  "coordination": {
+    "pins_task": "dslcap-radio-pins-20261007",
+    "pins_revision": 4,
+    "pins_result_sha256": "4535b16b21d6edba573e0c9b22fdfa779f50af90c4bc8cb4b990869fffc84ec9",
+    "cleanup_task": "dslcap-radio-pins-cleanup-20261007",
+    "cleanup_revision": 3,
+    "cleanup_result_sha256": "83b46b6764547bc76d2923940b8c0c57a4095279778cf8cd70dfdac30909538c",
+    "acknowledged": true
+  },
+  "cleanup": {
+    "pi133": "IRQ0, STBY_XOSC; errors register not read",
+    "pi134": "IRQ0, errors0, STBY_RC",
+    "limit": "Pre-test pi134 error-register baseline was not read; exact prior error-latch restoration is unproven. Missing RX calibration remains; no calibration or DIO configuration changes made."
+  }
+}

@@ -431,3 +431,57 @@ The deterministic commands and application-returned bytes are the reference
 for these tests; no same-traffic Saleae/Logic2 comparison is claimed because
 no Saleae is attached. Sustained heavy transaction load, mixed radio families,
 future IRQ/BUSY wiring and 10 MHz kernel traffic remain untested.
+
+## Dual-radio BUSY / DIO8 validation — 2026-10-07
+
+The user added pi133 BUSY/IRQ to CH4/CH5 and pi134 BUSY/IRQ to CH12/CH13.
+BUSY is physical Pi pin 12/GPIO18; IRQ is DIO8 on pin 29/GPIO5. The application
+owner verified both mappings and active-high polarity against its configuration.
+Both grounds were already connected. No synthetic GPIO generators were used.
+
+The documented `--int-pin pi133_dio8` and three `--extra-pin` arguments
+selected physical mask `0x3f3f`: exactly 12 inputs, two-byte samples, 25 MSa/s.
+The live Python/HLA pipeline completed 90 seconds, 2250000000 samples and
+4500000026 producer bytes with exit 0, no overflow and ring high-water 983680.
+Analyzer reopen passed. All timestamped output was ordered.
+
+| Signal | Rising / falling edges | Observed high width |
+| --- | --- | --- |
+| pi133 BUSY / CH4 | 46 / 46 | 16.72–106.20 us |
+| pi134 BUSY / CH12 | 48 / 48 | 17.12–143.72 us |
+| pi133 DIO8 / CH5 | 1 / 1 | 8.89518344 s |
+| pi134 DIO8 / CH13 | 0 / 0 | Not established |
+
+Each port decoded exactly 20 GetVersion requests and 20 v1.24 responses,
+matching the application's 20 returned `0118` values. These commands produced
+no DIO8 edges. A subsequent bounded receive-only timeout caused pi133 DIO8
+to rise 10.09512 ms after SetRx and fall when TIMEOUT was cleared. Its long
+high interval reflects the separate application calls used to inspect status
+before clearing. There was no RF transmission.
+
+Before RX, both radios reported IRQ 0 and their expected standby modes.
+pi133 produced TIMEOUT only. pi134 produced TIMEOUT plus ERROR, with
+`RXFREQ_NO_FRONT_END_CALIB` (errors 512) for its existing RX configuration.
+The test cleared only TIMEOUT and restored original standby modes; a separate
+conditional cleanup then cleared pi134's sole diagnosed error and IRQ bit16.
+Final application checks: pi133 IRQ 0/STBY_XOSC; pi134 IRQ 0/errors 0/STBY_RC.
+The pi134 error-register baseline was not read before the test, so exact
+restoration of that prior latch is unproven. Missing calibration remains;
+no calibration, DIO/mask, GPIO, firmware, driver or package changes were made.
+RX counters and a host IRQ semaphore may have changed during the test.
+
+CH13 produced no physical edges despite chip IRQ status becoming active.
+Its wiring and DIO8 routing/mask remain unvalidated: the existing chip DIO
+configuration is write-only and was preserved. PinLogger does not emit an
+initial static level, so this log establishes neither stuck-high nor stuck-low.
+Do not claim all four status connections passed. Further CH13 testing needs
+a known application DIO8 configuration or separate wiring diagnosis.
+
+Native `dslcap_worker` independently checked CLI channel selection; lead
+validated the output counts, ordering, widths and producer completion.
+This run saved decoded output, not raw samples. Evidence and hashes:
+[RADIO_PINS_VALIDATION.json](RADIO_PINS_VALIDATION.json), with temporary
+`/tmp/dslcap-radio-pins-live1.{stdout,stderr,json}` and reopen logs.
+Secondopinion tasks `dslcap-radio-pins-20261007` revision 4 and
+`dslcap-radio-pins-cleanup-20261007` revision 3 were consumed and acknowledged.
+No test activity remains. Earlier same-traffic Saleae and 10 MHz limits remain.
