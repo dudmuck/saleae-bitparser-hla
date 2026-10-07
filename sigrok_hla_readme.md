@@ -56,9 +56,13 @@ firmware resource directory is `/usr/local/share/DSView/res`; the producer
 verifies activation/security/HDL before capturing. Save captures and close
 DSView before using the analyzer.
 
-The Python backend uses the existing NumPy engine. It accepts physical
-channels 0–7 only; standalone dslcap's wider two-byte output is not supported
-here. `--engine srd`, `-d`, `-i`, `-I`, `-T` and `--saleae` cannot be combined
+The DSLogic Python backend uses the existing NumPy engine and accepts
+physical channels 0–15. It reads one byte per sample when every captured
+channel is below 8, otherwise two little-endian bytes. Width follows the
+exact SPI/pin channel union passed to dslcap, not unused `-C` name mappings.
+This wider input applies only to `--dslogic`; sigrok raw behavior remains
+8-bit and Saleae automation is unchanged. `--engine srd`, `-d`, `-i`, `-I`,
+`-T` and `--saleae` cannot be combined
 with `--dslogic`. Select exactly one of `--samples`, `--time`, or
 `--continuous`. The default rate is 25M, threshold 1.6 V; `--vth V` accepts
 0–2.5 V. Impossible hardware rates/channel counts are rejected by dslcap.
@@ -90,13 +94,21 @@ Single SPI port:
     --hla-path ~/HLA/saleae_lr2021 --spi 0,1,2,3 --samplerate 25M --time 5s
 ```
 
-Dual SPI, continuous capture with producer debug diagnostics:
+Dual-radio wiring, continuous capture with producer debug diagnostics:
 
 ```bash
 ./sigrok_hla.py --dslogic --dslcap /tmp/dslcap-build/dslcap -vv \
-    --hla-path ~/HLA/saleae_lr2021 --spi 0,1,2,3 --spi 4,5,6,7 \
+    --hla-path ~/HLA/saleae_lr2021 --spi 0,1,2,3 --spi 8,9,10,11 \
     --samplerate 25M --continuous --hex
 ```
+
+This maps pi133 SCLK/MISO/MOSI/NSS to CH0/1/2/3 and pi134 to CH8/9/10/11.
+The producer captures only these eight physical inputs (`0,1,2,3,8,9,10,11`)
+and outputs two bytes per sample, preserving physical bit positions. It keeps
+the 12-channel-capable 25M stream profile; it does not lower the requested
+rate. Up to four additional selected inputs can fit this profile, subject to
+wiring and decoder requirements. Selecting all 16 at 25M fails. IRQ/BUSY
+connections for this bench are deferred.
 
 Named channels and a logged interrupt:
 
@@ -110,7 +122,8 @@ Named channels and a logged interrupt:
 `-C/--channels` maps names to physical bits; it is not a dslcap capture list.
 The backend derives a sorted unique producer `--channels` list from the SPI
 roles and `--int-pin`/`--extra-pin` references. Unreferenced named signals
-are not captured. Duplicate names and references above channel 7 fail before
+are not captured and cannot force two-byte input. Duplicate names, negative
+indices and references above channel 15 fail before
 starting the producer. SPI roles may use numbers or mapped names; name lookup
 is case insensitive. `D0=SCLK` mapping syntax is also accepted.
 
@@ -123,7 +136,9 @@ live diagnostics with `[dslcap stderr]` or `[sigrok stderr]`. This prevents
 child stderr from filling while decoding waits on stdout. The raw decoder
 parses fragmented META headers before initializing SPI and pin timestamps.
 If META disagrees with the requested rate, it warns and uses the reported
-rate for both. dslcap requires a valid META header; legacy sigrok raw input
+rate for both. Wide DSLogic input carries an odd trailing sample byte across
+reads after META parsing, and rejects an incomplete two-byte sample at EOF.
+dslcap requires a valid META header; legacy sigrok raw input
 without META retains the configured rate. HOLD/heap ordering and fast_spi
 interfaces remain shared.
 
@@ -139,11 +154,12 @@ producer. A producer closing stdout but failing to exit gets a bounded
 Offline verification:
 
 ```bash
-python3 -m unittest discover -s tests -p 'test_dslcap_backend.py' -v
+python3 -m unittest discover -s tests -p 'test_dslcap*.py' -v
 ```
 
 Tests use fake subprocesses only: fragmented META, synthetic single/dual SPI
-bytes and rate-derived pin timing, stderr exceeding pipe capacity, producer
+on low and high physical bits, little-endian uint16, odd/random byte splits,
+truncated EOF, high-pin timestamps/order, stderr exceeding pipe capacity, producer
 failure, read faults, saturated queues and stubborn-child cancellation.
 They also exercise sigrok raw input and srd annotation regressions. The
 DSLogic examples describe supported syntax; real dual-SPI HLA comparison

@@ -8,9 +8,9 @@ Three backends:
   dslogic: Uses dslcap for DSLogic Plus PGL12, with the shared NumPy decoder
 
 Examples:
-  # DSLogic Plus PGL12 - dual SPI, streaming at 25M
+  # DSLogic Plus PGL12 - pi133/pi134 dual SPI, streaming at 25M
   ./sigrok_hla.py --hla-path ~/HLA/saleae_lr2021 --dslogic \\
-      --dslcap /tmp/dslcap-build/dslcap --spi 0,1,2,3 --spi 4,5,6,7 \\
+      --dslcap /tmp/dslcap-build/dslcap --spi 0,1,2,3 --spi 8,9,10,11 \\
       --samplerate 25M --time 5s
 
   # Saleae Logic 2 automation - single SPI port (channels 0-3)
@@ -420,6 +420,7 @@ def resolve_channel_indices(args, spi_ports):
     -C (e.g. "0=SCLK,1=MISO,..."); bare numbers are accepted directly.
     """
     name_to_idx = {}
+    maximum = 15 if getattr(args, 'dslogic', False) else 7
     if args.channels:
         for item in args.channels.split(','):
             item = item.strip()
@@ -448,10 +449,10 @@ def resolve_channel_indices(args, spi_ports):
                     f"{what} '{val}': cannot map to a channel index. Name it in "
                     f"-C (e.g. -C 0={val},...) or give a channel number. "
                     f"Known: {', '.join(sorted(name_to_idx)) or '(none)'}")
-        if not 0 <= idx <= 7:
+        if not 0 <= idx <= maximum:
             raise SystemExit(
-                f"{what} '{val}': channel index {idx} exceeds 7; the packed "
-                "sample stream holds 8 channels.")
+                f"{what} '{val}': channel index {idx} is outside 0..{maximum}; "
+                f"this backend's packed sample stream holds {maximum + 1} channels.")
         return idx
 
     resolved = []
@@ -465,6 +466,18 @@ def resolve_channel_indices(args, spi_ports):
         pins.append((val, to_index(val, what)))
 
     return resolved, pins
+
+
+def _used_channel_bits(ports, pins):
+    """The exact physical channel union shared by dslcap command and width."""
+    return sorted({bit for port in ports for bit in port.values()} |
+                  {bit for _, bit in pins})
+
+
+def dslcap_sample_unitsize(args, spi_ports):
+    """Match dslcap's one/two-byte width from captured channels, not -C labels."""
+    ports, pins = resolve_channel_indices(args, spi_ports)
+    return 2 if any(bit >= 8 for bit in _used_channel_bits(ports, pins)) else 1
 
 
 def validate_backend_args(args, spi_ports):
@@ -507,9 +520,9 @@ def validate_backend_args(args, spi_ports):
     if args.channels:
         labels = set()
         for item in args.channels.split(','):
-            match = re.fullmatch(r'(?:D)?([0-7])\s*=\s*(.+)', item.strip(), re.IGNORECASE)
+            match = re.fullmatch(r'(?:D)?([0-9]|1[0-5])\s*=\s*(.+)', item.strip(), re.IGNORECASE)
             if not match or not match[2].strip():
-                raise SystemExit('--dslogic -C is a name mapping using indices 0..7, e.g. 0=SCLK.')
+                raise SystemExit('--dslogic -C is a name mapping using indices 0..15, e.g. 0=SCLK.')
             label = match[2].strip().casefold()
             if label in labels:
                 raise SystemExit('--dslogic -C has ambiguous duplicate channel names.')
@@ -543,10 +556,10 @@ def build_dslcap_cmd(args, spi_ports):
     """
     validate_backend_args(args, spi_ports)
     ports, pins = resolve_channel_indices(args, spi_ports)
-    bits = {bit for port in ports for bit in port.values()} | {bit for _, bit in pins}
+    bits = _used_channel_bits(ports, pins)
     rate = parse_samplerate(args.samplerate) if args.samplerate else 25_000_000
     cmd = [args.dslcap, '--samplerate', str(int(rate)), '--channels',
-           ','.join(str(bit) for bit in sorted(bits)), '--vth',
+           ','.join(str(bit) for bit in bits), '--vth',
            str(args.vth if args.vth is not None else 1.6)]
     if args.samples:
         cmd += ['--samples', str(int(parse_samplerate(args.samples)))]
@@ -826,6 +839,8 @@ def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate, cmd=None):
     from fast_spi import MultiPortDecoder, PinLogger
 
     chan, log_pins = resolve_channel_indices(args, spi_ports)
+    unitsize = dslcap_sample_unitsize(args, spi_ports) if getattr(args, 'dslogic', False) else 1
+    sample_dtype = '<u2' if unitsize == 2 else np.uint8
     ports = [dict(name=name, **idx) for name, idx in zip(port_name_list, chan)]
     for p in ports:
         print(f"  {p['name']}: bits clk={p['clk']} miso={p['miso']} "
@@ -841,6 +856,7 @@ def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate, cmd=None):
                 for name in port_name_list}
 
     decoder = None
+    sample_tail = b''
     prefix = MetaPrefix(samplerate, required=getattr(args, 'dslogic', False))
     cmd = cmd if cmd is not None else build_sigrok_cmd(args, spi_ports)
     print(f"Running: {' '.join(cmd)}", file=sys.stderr)
@@ -902,14 +918,21 @@ def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate, cmd=None):
             _flush_results_until(results_heap, chunk_events[-1][0] - HOLD)
 
     def decode(buf):
-        nonlocal decoder, pin_logger
+        nonlocal decoder, pin_logger, sample_tail
         if not prefix.ready:
             return
         if decoder is None:
             decoder = MultiPortDecoder(ports, prefix.rate, cpol=args.cpol, cpha=args.cpha)
             pin_logger = PinLogger(log_pins, prefix.rate) if log_pins else None
+        if sample_tail:
+            buf = sample_tail + buf
+            sample_tail = b''
+        aligned = len(buf) - len(buf) % unitsize
+        if aligned < len(buf):
+            sample_tail = buf[aligned:]
+            buf = buf[:aligned]
         if buf:
-            chunk = np.frombuffer(buf, dtype=np.uint8)
+            chunk = np.frombuffer(buf, dtype=sample_dtype)
             events = [(f.start_time, 'frame', (n, f))
                       for n, f in decoder.feed(chunk)]
             if pin_logger is not None:
@@ -923,6 +946,8 @@ def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate, cmd=None):
             decode(prefix.feed(buf))
         producer.finish()  # Check child status before synthesizing final frames.
         decode(prefix.feed(b'', eof=True))
+        if sample_tail:
+            raise CaptureError('Truncated DSLogic uint16 sample: one byte remains at EOF')
         complete = True
         process([(f.start_time, 'frame', (n, f)) for n, f in decoder.end()])
         _flush_results(results_heap)
@@ -1135,7 +1160,7 @@ def main():
     backend.add_argument('--saleae', action='store_true',
                         help='Use Saleae Logic 2 automation API (requires Logic 2 with automation enabled)')
     backend.add_argument('--dslogic', action='store_true',
-                        help='Use dslcap for DSLogic Plus PGL12 (NumPy, channels 0..7)')
+                        help='Use dslcap for DSLogic Plus PGL12 (NumPy, physical channels 0..15)')
     parser.add_argument('--dslcap', default='dslcap', metavar='PATH',
                         help='[dslogic] dslcap executable (default: dslcap on PATH)')
     parser.add_argument('--vth', type=float, default=None,

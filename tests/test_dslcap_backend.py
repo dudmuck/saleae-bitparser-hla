@@ -61,12 +61,12 @@ class BackendTests(unittest.TestCase):
             dict(samples=None), dict(time='1s'), dict(continuous=True),
             dict(vth=float('nan')), dict(vth=2.6), dict(samplerate='nan'),
             dict(samples='0'), dict(samples='1.1'), dict(time='bad', samples=None),
-            dict(channels='9=CLK'), dict(int_pin='8'), dict(channels='0=CLK,1=clk')]
+            dict(channels='16=CLK'), dict(int_pin='16'), dict(channels='0=CLK,1=clk')]
         for change in cases:
             with self.subTest(change=change), self.assertRaises(SystemExit):
                 hla.build_dslcap_cmd(arguments(**change), PORTS)
         with self.assertRaises(SystemExit):
-            hla.build_dslcap_cmd(arguments(), [hla.parse_spi_port('8,1,2,3')])
+            hla.build_dslcap_cmd(arguments(), [hla.parse_spi_port('16,1,2,3')])
 
     def test_sigrok_command_regression(self):
         args = arguments(dslogic=False, driver='fx2lafw', channels='0=CLK,1=DI,2=DO,3=CS')

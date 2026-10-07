@@ -95,8 +95,9 @@ running. Temporary source and timing log: `/tmp/dslcap-pi133-pulses.py` and
 
 ## Open gates
 
-- Dual-SPI LR1110/LR2021 HLA comparison with Saleae/Logic 2. The known
-  single-port Pi burst and independent sigrok decode now pass (below).
+- Same-traffic Saleae/Logic 2 comparison remains unavailable. Live dual-radio
+  LR2021 operation on pi133/pi134 now passes (below); mixed LR1110/LR2021,
+  10MHz kernel-driver traffic and future IRQ/BUSY wiring were not exercised.
 
 Raw captures and full temporary logs are intentionally not committed.
 
@@ -350,3 +351,83 @@ Cold scan stderr SHA-256:
 `19f62576652317883b86f47b206ba81ccfe13055db4d30a7b23ec3fd711c4a1d`.
 Capture SHA-256:
 `4f05a2e95862ae22a069e5065a06c38cb1d371429c2977cf968d2e6e1d704fa3`.
+
+## G3 wide Python and actual dual-radio operation — PASS
+
+User supplied physical wiring: pi133 CH0/1/2/3 and pi134 CH8/9/10/11,
+each SCLK/MISO/MOSI/NSS, and confirmed both grounds connected. The original
+optional uint16 integration was activated without a new dependency. Width
+is inferred from the same exact channel union as the C command; odd sample
+bytes are carried after META parsing, incomplete EOF rejected. Existing
+fast_spi, effective timing, HOLD/order and non-DSLogic defaults are unchanged.
+
+Worker handoff: `/tmp/dslcap-wide-handoff.txt`. Lead independently passed
+all 29 focused tests in 17.362s. Review-1's G3 cycle 1 PASS independently passed
+29 tests, 194 additional split-boundary checks and Saleae dispatch validation.
+All five frozen source fingerprints matched afterward. Historical G2
+repeated-interrupt cleanup and G1 signal-publication findings remain recorded;
+this feature does not claim to fix them.
+
+Application ownership stayed with user-named hydra-develop-9f via the
+secondopinion task `dslcap-dual-radio-20261007`. Read-only preflight found
+no lr20/lr11/pcycle module loaded and both spi0.0/spi0.1 bound to spidev on
+each Pi. Both applications are LR2021 builds, mode0/MSB-first, requested
+8 MHz SPI. No GPIO, application, driver, radio-state, firmware or NVM changes
+were made. Each GO authorized exactly 20 read-only GetVersion commands per Pi,
+approximately 5 ms apart, through the existing application HAL/MCP path.
+
+### RAW1: independent physical-byte reconstruction
+
+The production C frontend captured physical mask0x0f0f at 25 MSa/s in the
+12-channel-capable stream profile with two-byte samples. A 90-second bound
+stopped it by SIGINT (expected exit 130); it recorded 2228998144 samples with
+no overflow, ring high-water 1000448 bytes. Raw gzip output is about 19 MiB;
+the 4.46 GB logical stream was inspected incrementally without full expansion.
+
+Each port contained exactly 40 complete NSS frames and 960 rising clock edges,
+alternating 16/32 clocks, 120 bytes per direction. All 20 pairs matched:
+
+| Pi | Request MOSI/MISO | Response MOSI/MISO |
+| --- | --- | --- |
+| pi133 | 0101 / 0452 | 00000000 / 06520118 |
+| pi134 | 0101 / 0421 | 00000000 / 06210118 |
+
+Application results independently reported 01 18 for all 20 reads on each Pi,
+with no errors. Decoded radio modes were STBY_XOSC on pi133 and STBY_RC
+on pi134. Within-byte SCLK estimates were 7.8009 MHz and 7.8154 MHz from
+3/4-sample periods. Each byte-boundary period stretched to6/7 samples;
+exact expected clock counts show these were not missing edges. Bursts
+were sequential, not overlapping, in this run. These measurements validate
+this application's timing, not a later 10 MHz clock or arbitrary duty cycle.
+
+An unchanged 3-second sample window was replayed through the wide Python
+backend and existing `/home/wroberts/HLA/saleae_lr2021` HLA. It exited 0
+with exactly 20 requests and 20 GetVersion v1.24 responses per port, in timestamp
+order. Replay window offset 1037500000 samples (41.5s) is recorded separately.
+
+### LIVE1: complete wide Python/HLA pipeline
+
+Lead ran the real producer for 90 seconds with `--dslogic --samplerate 25M
+--spi 0,1,2,3 --spi 8,9,10,11 --time 90s --hex -vv`, using that same HLA.
+Capture was armed before sending GO. The application agent performed the
+same 20 read-only requests per Pi exactly once. The pipeline exited 0 after
+91.533 seconds, processing 2250000000 samples / 4500000026 producer bytes,
+with ring high-water 2460672 bytes and no overflow. HLA output contained
+exactly 20 requests and 20 v1.24 responses per port, chronologically ordered.
+Immediate analyzer reopen exited 0. Debug stderr was drained throughout;
+large-log pipe-pressure coverage remains supplied by the offline tests.
+
+Application final report revision 7 was consumed, hash-validated and
+acknowledged. Both runs completed without error or state changes; no test
+loops or captures remain. Normal application services retain their owner.
+No direct GPIO signal generation was used for these radio runs.
+
+Durable summary and hashes: [DUAL_RADIO_VALIDATION.json](DUAL_RADIO_VALIDATION.json).
+Temporary artifacts: `/tmp/dslcap-radio-run1.{raw.gz,json,stderr}`,
+`/tmp/dslcap-radio-run1-inspection.json`, `/tmp/dslcap-radio-run1-window.*`,
+`/tmp/dslcap-radio-run1-hla*`, `/tmp/dslcap-radio-live1.*`,
+`/tmp/dslcap-radio-live1-validation.json` and reopen stdout/stderr.
+The deterministic commands and application-returned bytes are the reference
+for these tests; no same-traffic Saleae/Logic2 comparison is claimed because
+no Saleae is attached. Sustained heavy transaction load, mixed radio families,
+future IRQ/BUSY wiring and 10 MHz kernel traffic remain untested.

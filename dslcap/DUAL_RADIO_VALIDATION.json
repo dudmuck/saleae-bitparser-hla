@@ -1,0 +1,136 @@
+{
+  "date": "2026-10-07",
+  "topology": {
+    "pi133": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "pi134": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  "roles": [
+    "SCLK",
+    "MISO",
+    "MOSI",
+    "NSS"
+  ],
+  "radio_family": "LR2021 on both boards",
+  "samplerate": 25000000,
+  "unitsize": 2,
+  "profile": "DSL_STREAM25x12",
+  "enabled_mask": "0x0f0f",
+  "spi_mode": 0,
+  "requested_spi_hz": 8000000,
+  "raw_run": {
+    "samples": 2228998144,
+    "duration_s": 89.15992576,
+    "source": "/tmp/dslcap-radio-run1.raw.gz",
+    "sha256": "443f459a1a03c13cd58869be1804fb68a549067de7a4da616751be926a35af94",
+    "exit": 130,
+    "stop": "bounded SIGINT",
+    "ports": {
+      "pi133": {
+        "frames": 40,
+        "rising_edges": 960,
+        "command_mosi": [
+          "0101"
+        ],
+        "response_mosi": [
+          "00000000"
+        ],
+        "command_miso": [
+          "0452"
+        ],
+        "response_miso": [
+          "06520118"
+        ],
+        "within_byte_sclk_hz": 7800891.530460624,
+        "burst_start_s": 42.67968312,
+        "burst_end_s": 42.78348544,
+        "byte_boundary_period_samples": [
+          6,
+          7
+        ]
+      },
+      "pi134": {
+        "frames": 40,
+        "rising_edges": 960,
+        "command_mosi": [
+          "0101"
+        ],
+        "response_mosi": [
+          "00000000"
+        ],
+        "command_miso": [
+          "0421"
+        ],
+        "response_miso": [
+          "06210118"
+        ],
+        "within_byte_sclk_hz": 7815407.517677708,
+        "burst_start_s": 43.59758476,
+        "burst_end_s": 43.70145484,
+        "byte_boundary_period_samples": [
+          6,
+          7
+        ]
+      }
+    }
+  },
+  "live_run": {
+    "SPI": {
+      "requests": 20,
+      "responses": 20
+    },
+    "SPI_B": {
+      "requests": 20,
+      "responses": 20
+    },
+    "capture": {
+      "samples": 2250000000,
+      "output_bytes": 4500000026,
+      "ring_high_water": 2460672,
+      "elapsed_s": 91.53271063603461,
+      "exit": 0
+    },
+    "stdout_sha256": "bc3c94fba28fc0808ce681c1bb092782d3a64d422161bff0c303b87a2d2b9fb2",
+    "stderr_sha256": "448e63b709bf369a3c1b5cb12fdbbcae924a7b8f2c18431a4207b81db62483c5"
+  },
+  "reference": {
+    "type": "source-derived GetVersion commands and application MCP responses",
+    "same_traffic_saleae": false
+  },
+  "application_task": {
+    "id": "dslcap-dual-radio-20261007",
+    "worker": "hydra-develop-9f",
+    "state": "complete",
+    "acknowledged_revision": 7,
+    "result_sha256": "9e8006c75ffb71715264ffd854b356a69d4d54642826e1d06a96eeb114e593fb"
+  },
+  "review": {
+    "group": "G3-wide-dslogic",
+    "cycle": 1,
+    "verdict": "PASS",
+    "focused_tests": 29,
+    "additional_split_checks": 194
+  },
+  "scope_limitations": [
+    "No same-traffic Saleae or Logic2 capture available",
+    "Both radios are LR2021; no mixed LR1110 run",
+    "No 10MHz kernel SPI or additional IRQ/BUSY wiring tested",
+    "Low transaction load; no sustained heavy dual-bus workload claim"
+  ],
+  "source_sha256": {
+    "sigrok_hla.py": "c5c7fb52d3a0f9141d6ad85531224b39e3edace35725c620040406a11b25d54f",
+    "sigrok_hla_readme.md": "4604298e01882ab33da23f95d7486e098201dc507c8992d74e4343561b0cc869",
+    "tests/test_dslcap_backend.py": "92eb0cd25862fc982daf6960330c4d7a2703d044bb8d123b380d140e49e48b75",
+    "tests/test_dslcap_wide.py": "ca25289d2df590de191b3039413e5f359ce3e6ded18fd7de90ecd8d16dc4035b",
+    "tests/dslcap/wide_producer.py": "c1d9189fa6c4530f7ce3aa0882d2f99a0491feaa5ff01243ee02f063b94b309e"
+  }
+}

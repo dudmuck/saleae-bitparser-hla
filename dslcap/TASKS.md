@@ -377,3 +377,79 @@ commands, HLA/reference paths and bench availability. Worker must await
 lead GO before generating activity, retain application ownership, and
 restore temporary state. Delivery is queued, not completion. Consume and
 acknowledge messages/results on this same durable task.
+
+### G3 radio preflight and RAW1
+
+Operator confirmed analyzer grounds on both Pis. hydra-develop-9f reported
+both applications built for LR2021, SPI mode0/MSB-first, requested8MHz.
+Lead's read-only SSH check found no lr20/lr11/pcycle module loaded and
+spi0.0/spi0.1 bound to spidev on both Pis. No application, driver or GPIO
+configuration was changed. There is no Saleae attached; historical exports
+are not a same-traffic reference for this run.
+
+On armed capture GO `lead-go-raw1`, the application agent executed20
+read-only GetVersion commands per Pi using its existing HAL/MCP controls.
+Report `hd9f-raw1-done` was consumed and hash-acknowledged on the same task.
+Both returned data01 18 for all20reads, no errors/configuration changes.
+Lead's bounded C capture at25M,mask0x0f0f,width2 stopped by its90-second
+deadline with expectedSIGINT exit130, no overflow,2228998144samples.
+Gzip output is approximately19MiB; no multi-GB uncompressed file was kept.
+
+Independent streaming byte reconstruction found40completeNSSframes and
+960risingclockedges perPi, alternating16/32clocks. Every command frame was
+MOSI0101; every response frame MOSI00000000. pi133MISO0452/06520118,
+pi134MISO0421/06210118, all matching application results. Within-byte
+SCLK estimates7.8009/7.8154MHz; 6/7-sample intervals occur at byte boundaries.
+Bursts were sequential in the actual capture, separated by approximately
+0.918seconds, despite the application agent submitting one tool batch.
+
+RAW1 artifacts: `/tmp/dslcap-radio-run1.{raw.gz,json,stderr}`,
+`/tmp/dslcap-radio-run1-inspection.json`; a3-second wide window in
+`/tmp/dslcap-radio-run1-window.raw` retains both bursts for Python replay.
+The original sample offset is1037500000. Application worker remains on
+HOLD pending explicit live-Python GO. No analyzer capture remains running.
+
+### G3 review cycle1 handoff
+
+Worker reported all29focused tests passing and documentation complete.
+Lead independently passed the same29tests in17.362s and replayed the real
+RAW1 window through both wide ports and the existing LR2021 HLA: exactly
+20requests/20version1.24responses perport, timestamp-sorted, exit0.
+Implementation scope is frozen for G3wave1 reviewcycle1; fingerprints are
+in `/tmp/dslcap-g3-review.sha256`. Exact scope is sigrok_hla.py,
+sigrok_hla_readme.md, tests/test_dslcap_backend.py,
+tests/test_dslcap_wide.py and tests/dslcap/wide_producer.py.
+
+Review-1 is the sole independent synthesizer, no analysts; may append only
+REVIEW.md, no implementation/Git/USB/Pi/app actions. Acceptance is the G3
+contract above, especially DSLogic-only width inference, byte-fragment
+handling, negative/default regressions, true high-bit/timestamp assertions
+and unchanged fast_spi/HOLD behavior. Live Python/HLA remains pending;
+same-traffic Saleae/Logic2 comparison remains unavailable. G2's prior
+repeated-interrupt finding is historical, not silently fixed by this scope.
+
+### G3 disposition and LIVE1
+
+G3wave1cycle1 PASS:29focused tests,194additional split checks and Saleae
+dispatch verification; frozen five-file hashes unchanged. Worker handoff
+is `/tmp/dslcap-wide-handoff.txt`. Lead actual-radio replay passed both
+ports, then live90-second Python/HLA capture processed2250000000samples
+at25M,mask0x0f0f,width2 with exit0 and nooverflow. Exactly20GetVersion
+requests and20v1.24responses perport matched the application agent's
+20/20results. Immediate analyzer reopen passed. No additional dependency,
+driver/application/GPIO configuration or radio state change was needed.
+
+Secondopinion task `dslcap-dual-radio-20261007` completed at revision7;
+final result SHA-256
+`9e8006c75ffb71715264ffd854b356a69d4d54642826e1d06a96eeb114e593fb`
+was consumed and revision7 acknowledged by the original requester. No
+pending application run remains. Codex worker is frozen/idle and reviewer
+completed. Full evidence and limits are in VALIDATION.md and
+DUAL_RADIO_VALIDATION.json. Implementation is ready for scoped commit.
+
+Actual bench operation is validated for two LR2021 radios at their observed
+approximately7.8MHz application clock. Same-traffic Saleae/Logic2 validation
+remains unavailable; no acceptance waiver is inferred. Additional IRQ/BUSY
+wiring and10MHz kernel-driver traffic are future work. At25M the profile
+allows at most12selected inputs: the current8SPI inputs leave4status inputs,
+not all8remaining physical channels enabled simultaneously.

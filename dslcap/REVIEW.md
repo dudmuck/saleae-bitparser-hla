@@ -398,3 +398,134 @@ No Critical, Severe, or High finding remains and all executed test commands
 passed. Counts: 0 Critical/Severe/High, 1 Medium, 0 Low, 1 Warning,
 0 Suggestions. This verdict accepts the reviewed integration with the
 repeated-interrupt weakness and physical validation gaps retained explicitly.
+
+## G3 Cycle 1 - 2026-10-07
+
+Reviewing: Wave 1, **G3-wide-dslogic**, group cycle **1 of 3**.
+Reviewer/synthesizer: **review-1**; analysts: none requested or missing.
+This is the operator-authorized wide-channel feature, not a new cycle for
+G2's existing findings. G0/G1/G2 review history is preserved.
+Scope: `sigrok_hla.py`, `sigrok_hla_readme.md`,
+`tests/test_dslcap_backend.py`, `tests/test_dslcap_wide.py`, and
+`tests/dslcap/wide_producer.py`. Requirements: updated PLAN.md dual-radio
+extension and TASKS.md G3 contract. Read the scoped diff, implementation,
+tests, frozen fingerprint manifest and finalized worker handoff at
+`/tmp/dslcap-wide-handoff.txt`.
+
+### Critical / Severe / High
+
+- None.
+
+### Medium / Low / Warning
+
+- **Warning — requires live validation**: The actual RAW1 replay supports
+  both low and high SPI ports, but a live wide Python producer/decoder run
+  was pending at assignment, and a same-traffic Saleae/Logic 2 comparison
+  remains unavailable. The synthetic and replay checks do not prove all
+  8MHz/10MHz timing margins at 25M sampling. Preserve those runtime/reference
+  gates and distinguish observed GetVersion traffic from arbitrary traffic.
+  The earlier G2 repeated-interrupt Medium remains historical and unresolved;
+  this feature neither changes that lifecycle code nor claims to fix it.
+
+### Suggestion
+
+- None.
+
+### Spec Alignment
+
+DSLogic-only resolution accepts physical channels 0..15; the non-DSLogic
+raw path still limits indices to 0..7. The shared `_used_channel_bits`
+function supplies both the producer channel list and sample-width choice,
+so unused high `-C` labels cannot widen the stream. CH0/1/2/3 plus
+CH8/9/10/11 yields exactly eight selected physical channels and two-byte
+samples, retaining the requested 25M rate. No generic width override or
+automatic rate reduction is introduced.
+
+META parsing precedes byte alignment. The decoder carries at most one
+trailing payload byte, combines it with the next read, and feeds complete
+little-endian `<u2` samples to the existing decoder and pin logger.
+Successful EOF with a leftover byte fails explicitly; producer failure is
+checked first and retains precedence over incidental truncation. Both
+decoders initialize from the effective META rate. Existing HOLD, heap
+ordering, HLA and hex processing are unchanged.
+
+### Cross-Task Consistency
+
+The width contract matches the C producer's physical mask rule. Tests keep
+the low-channel DSLogic path and legacy sigrok raw/srd behavior, updating
+only obsolete high-channel rejection limits from 8/9 to 16. An independent
+mocked Saleae CLI check with CH8/9/10/11 retained those ports and dispatched
+only the Saleae backend; DSLogic width logic did not affect it.
+`git diff --exit-code HEAD -- fast_spi.py` returned 0, confirming no
+fast_spi edits. Only REVIEW.md was written; no USB/GPIO/application actions,
+implementation edits, or Git mutations were performed by review-1.
+
+### Security And Operations
+
+No new process launch, dependency, device operation, or parser trust boundary
+is introduced. Negative and out-of-range physical inputs are rejected by
+the command-building path. Stderr, cancellation and producer-error handling
+reuse G2 infrastructure and its known limitations. Wide truncation cannot
+be silently interpreted as an 8-bit final sample, and normal EOF validation
+does not supersede a producer's nonzero exit.
+
+### Verification And Test Adequacy
+
+Independent focused command, exit 0:
+
+```sh
+python3 -m unittest discover -s tests -p 'test_dslcap*.py' -v
+```
+
+All 29 tests passed in **17.341 seconds**; output:
+`/tmp/dslcap-g3-review-tests.log`. Existing 20 tests retain low-channel,
+sigrok, stderr-pressure and cancellation coverage. Nine wide tests cover
+the exact producer union, unused high mappings, names, bounds, distinct
+bytes on both buses, high pins 12/15, effective META timing/order, dtype,
+deterministic odd/random fragments, truncated EOF, upstream failure
+precedence and actual subprocess cleanup.
+
+The wide fixture deliberately assigns different MOSI/MISO bytes to the two
+ports. Exact expected interleaving includes high-port result times 21/37us,
+low-port times 17/33us, and pin transitions 10/14/20/24us at META 2M versus
+requested 1M. A dtype spy asserts `<u2`, 84 samples, initial word 0x0808.
+This verifies physical high-bit use and timing rather than only output size.
+Controlled chunks establish byte boundaries that OS pipe coalescing could
+otherwise hide; real subprocess variants additionally check reader/reap paths.
+
+Additional independent adversarial command, exit 0: used the wide fixture
+through the real decode function at **all 194 possible two-chunk split
+positions** across its entire META+payload sequence (including empty first
+or last chunks), asserting the same exact expected bytes/times/order for
+every split. The same command verified mocked Saleae high-channel dispatch.
+
+`sha256sum -c /tmp/dslcap-g3-review.sha256` returned 0 for all five scoped
+files; no fingerprint changes were observed. Worker reports 29 tests in
+17.626s and lead reports 29 in 17.362s. Worker also reports successful
+py_compile, help and diff checks, no added dependencies and no live actions.
+
+### Open Live Validation
+
+Read lead-produced `/tmp/dslcap-radio-run1-hla-validation.json` and the
+replayed HLA output: 20 requests and 20 responses per port, including
+GetVersion v1.24, matching lead's report of RAW1 bus reconstruction.
+This is lead hardware/replay evidence, not reviewer hardware execution.
+Live wide pipeline was pending at assignment, and same-traffic Saleae/Logic 2
+comparison remains open. The standalone independent DSView reference checks
+for all four required channel/rate configurations and cold automatic FPGA
+startup were already completed before G3, as recorded in VALIDATION.md
+and commits `297c9db` and `4e02d4b`; the cold run automatically uploaded
+530620 bytes and passed security/HDL/reopen. Those completed standalone
+checks are distinct from the pending live wide Python pipeline. Future high
+IRQ/BUSY wiring is deferred. Lead should record subsequent physical outcomes
+in VALIDATION.md without recasting this offline review as having performed
+them. This gate correction is editorial; the G3 cycle and verdict are unchanged.
+
+### Verdict: PASS
+
+No new Critical, Severe, High, Medium or Low finding in the G3 feature;
+one Warning records runtime/reference validation limits. All independently
+executed tests and adversarial assertions passed. Counts for this cycle:
+0 Critical/Severe/High, 0 Medium/Low, 1 Warning, 0 Suggestions. G2's
+unresolved repeated-interrupt Medium is carried forward without resetting
+its review history or claiming a fix.
