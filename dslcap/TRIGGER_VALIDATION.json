@@ -1,0 +1,1905 @@
+{
+  "date": "2026-10-07",
+  "implementation_commit": "fb85f37",
+  "reference_source": "/home/wroberts/DSView-1.3.2",
+  "review": {
+    "group": "B-simple-trigger",
+    "cycle": 1,
+    "verdict": "PASS",
+    "ctest_suites": 5,
+    "python_tests": 36,
+    "retained_findings": [
+      "duplicate on-timeout action Low",
+      "exact-phase signal test synchronization Warning"
+    ]
+  },
+  "golden": [
+    {
+      "rate": "100M",
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-7",
+        "--samples",
+        "1000448",
+        "--trigger",
+        "3:f",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "0.2s",
+        "--vth",
+        "1.6",
+        "-v"
+      ],
+      "exit": 16,
+      "elapsed_s": 1.6372670480050147,
+      "decode_exit": 0,
+      "identical": true,
+      "sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+      "raw_sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab"
+    },
+    {
+      "rate": "200M",
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "200M",
+        "--channels",
+        "0-7",
+        "--samples",
+        "1000448",
+        "--trigger",
+        "3:f",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "0.2s",
+        "--vth",
+        "1.6",
+        "-v"
+      ],
+      "exit": 16,
+      "elapsed_s": 1.6367627251893282,
+      "decode_exit": 0,
+      "identical": true,
+      "sha256": "0d80e20b2e0621b09a98f4e7ee060c00021a74e21fa5a25b05d78258be2bdf17",
+      "raw_sha256": "f626bb659c23691cc4ca7400e08e640e608df9a54f6e36c2df77489f9d9afd6d"
+    },
+    {
+      "rate": "400M",
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "400M",
+        "--channels",
+        "0-3",
+        "--samples",
+        "2000896",
+        "--trigger",
+        "3:f",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "0.2s",
+        "--vth",
+        "1.6",
+        "-v"
+      ],
+      "exit": 16,
+      "elapsed_s": 1.6411443860270083,
+      "decode_exit": 0,
+      "identical": true,
+      "sha256": "0e46b4425b99908ce3f6d2baf509f1c1faedd19ea08a24d43081da9f54038690",
+      "raw_sha256": "d1eb5f267dd52b0976fa6ee6c7ccdba79674ab7a1b4013d5bcaaa513293b50e8"
+    }
+  ],
+  "idle": [
+    {
+      "name": "fail",
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-3",
+        "--samples",
+        "1000448",
+        "--trigger",
+        "3:f",
+        "--trigger-timeout",
+        "0.2s",
+        "-v"
+      ],
+      "exit": 16,
+      "elapsed_s": 1.6172231240198016,
+      "header1": "META samplerate: 100000000",
+      "header2": "",
+      "samples": 0,
+      "total_bytes": 27,
+      "reopen_exit": 0,
+      "raw_sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab"
+    },
+    {
+      "name": "upload0",
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-3",
+        "--samples",
+        "67108864",
+        "--trigger",
+        "3:f",
+        "--trigger-timeout",
+        "0",
+        "--on-timeout",
+        "upload",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.4165327050723135,
+      "header1": "META samplerate: 100000000",
+      "header2": "META trigger: none",
+      "samples": 6710272,
+      "total_bytes": 6710318,
+      "reopen_exit": 0,
+      "raw_sha256": "ea77758ec5df46de198481ceb52584cdf673fc029b232351d3fd2b4d099ae77f"
+    },
+    {
+      "name": "uploadshort",
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-3",
+        "--samples",
+        "67108864",
+        "--trigger",
+        "3:f",
+        "--trigger-timeout",
+        "0.1s",
+        "--on-timeout",
+        "upload",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.5165445352904499,
+      "header1": "META samplerate: 100000000",
+      "header2": "META trigger: none",
+      "samples": 6710272,
+      "total_bytes": 6710318,
+      "reopen_exit": 0,
+      "raw_sha256": "ea77758ec5df46de198481ceb52584cdf673fc029b232351d3fd2b4d099ae77f"
+    },
+    {
+      "name": "uploadlong",
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-3",
+        "--samples",
+        "67108864",
+        "--trigger",
+        "3:f",
+        "--trigger-timeout",
+        "1s",
+        "--on-timeout",
+        "upload",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 2.41872137831524,
+      "header1": "META samplerate: 100000000",
+      "header2": "META trigger: none",
+      "samples": 6710272,
+      "total_bytes": 6710318,
+      "reopen_exit": 0,
+      "raw_sha256": "ea77758ec5df46de198481ceb52584cdf673fc029b232351d3fd2b4d099ae77f"
+    },
+    {
+      "name": "cancelwait",
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-3",
+        "--samples",
+        "1000448",
+        "--trigger",
+        "3:f",
+        "-v"
+      ],
+      "exit": 130,
+      "elapsed_s": 1.214438886847347,
+      "header1": "META samplerate: 100000000",
+      "header2": "",
+      "samples": 0,
+      "total_bytes": 27,
+      "reopen_exit": 0,
+      "raw_sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab"
+    }
+  ],
+  "smoke": [
+    {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0,1,2,3",
+        "--samples",
+        "1000448",
+        "--trigger",
+        "0:f",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "2s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.0160378850996494,
+      "file": "/tmp/dslcap-b-smoke2/100M-c0-00",
+      "inspection_exit": 0,
+      "samples": 1000448,
+      "trigger_index": 100075,
+      "trigger_fraction": 0.10003018647645855,
+      "condition_at_reported_index": true,
+      "condition_offsets_within_8": [
+        0
+      ],
+      "complete_spi_frames": 4
+    },
+    {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0,1,2,3",
+        "--samples",
+        "1000448",
+        "--trigger",
+        "0:r",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "2s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.0159164499491453,
+      "file": "/tmp/dslcap-b-smoke2/100M-c1-00",
+      "inspection_exit": 0,
+      "samples": 1000448,
+      "trigger_index": 100042,
+      "trigger_fraction": 0.09999720125383828,
+      "condition_at_reported_index": true,
+      "condition_offsets_within_8": [
+        0
+      ],
+      "complete_spi_frames": 4
+    },
+    {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0,1,2,3",
+        "--samples",
+        "1000448",
+        "--trigger",
+        "0:1",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "2s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.0155377672053874,
+      "file": "/tmp/dslcap-b-smoke2/100M-c2-00",
+      "inspection_exit": 0,
+      "samples": 1000448,
+      "trigger_index": 94204,
+      "trigger_fraction": 0.09416181550665302,
+      "condition_at_reported_index": true,
+      "condition_offsets_within_8": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "complete_spi_frames": 4
+    },
+    {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0,1,2,3",
+        "--samples",
+        "1000448",
+        "--trigger",
+        "0:e",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "2s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.0156957423314452,
+      "file": "/tmp/dslcap-b-smoke2/100M-c3-00",
+      "inspection_exit": 0,
+      "samples": 1000448,
+      "trigger_index": 100082,
+      "trigger_fraction": 0.10003718334186285,
+      "condition_at_reported_index": true,
+      "condition_offsets_within_8": [
+        0,
+        7
+      ],
+      "complete_spi_frames": 4
+    },
+    {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0,1,2,3",
+        "--samples",
+        "1000448",
+        "--trigger",
+        "0:r,3:0",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "2s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.015884397085756,
+      "file": "/tmp/dslcap-b-smoke2/100M-c4-00",
+      "inspection_exit": 0,
+      "samples": 1000448,
+      "trigger_index": 100046,
+      "trigger_fraction": 0.10000119946264073,
+      "condition_at_reported_index": true,
+      "condition_offsets_within_8": [
+        0
+      ],
+      "complete_spi_frames": 4
+    }
+  ],
+  "open_gates": [
+    "A2 clock ppm"
+  ],
+  "matrix": {
+    "captures": 300,
+    "all_exact": true,
+    "samples_per_capture": 1000448,
+    "cases": [
+      {
+        "rate": "100M",
+        "condition": "0:f",
+        "captures": 20,
+        "exit0": true,
+        "condition_at_reported_index": true,
+        "trigger_index_min": 12631,
+        "trigger_index_max": 100093
+      },
+      {
+        "rate": "100M",
+        "condition": "0:r",
+        "captures": 20,
+        "exit0": true,
+        "condition_at_reported_index": true,
+        "trigger_index_min": 49,
+        "trigger_index_max": 100095
+      },
+      {
+        "rate": "100M",
+        "condition": "0:1",
+        "captures": 20,
+        "exit0": true,
+        "condition_at_reported_index": true,
+        "trigger_index_min": 7742,
+        "trigger_index_max": 100095
+      },
+      {
+        "rate": "100M",
+        "condition": "0:e",
+        "captures": 20,
+        "exit0": true,
+        "condition_at_reported_index": true,
+        "trigger_index_min": 298,
+        "trigger_index_max": 100089
+      },
+      {
+        "rate": "100M",
+        "condition": "0:r,3:0",
+        "captures": 20,
+        "exit0": true,
+        "condition_at_reported_index": true,
+        "trigger_index_min": 47393,
+        "trigger_index_max": 100095
+      },
+      {
+        "rate": "200M",
+        "condition": "0:f",
+        "captures": 20,
+        "exit0": true,
+        "condition_at_reported_index": true,
+        "trigger_index_min": 12372,
+        "trigger_index_max": 100095
+      },
+      {
+        "rate": "200M",
+        "condition": "0:r",
+        "captures": 20,
+        "exit0": true,
+        "condition_at_reported_index": true,
+        "trigger_index_min": 2291,
+        "trigger_index_max": 100094
+      },
+      {
+        "rate": "200M",
+        "condition": "0:1",
+        "captures": 20,
+        "exit0": true,
+        "condition_at_reported_index": true,
+        "trigger_index_min": 19103,
+        "trigger_index_max": 100095
+      },
+      {
+        "rate": "200M",
+        "condition": "0:e",
+        "captures": 20,
+        "exit0": true,
+        "condition_at_reported_index": true,
+        "trigger_index_min": 100036,
+        "trigger_index_max": 100095
+      },
+      {
+        "rate": "200M",
+        "condition": "0:r,3:0",
+        "captures": 20,
+        "exit0": true,
+        "condition_at_reported_index": true,
+        "trigger_index_min": 45292,
+        "trigger_index_max": 100093
+      },
+      {
+        "rate": "400M",
+        "condition": "0:f",
+        "captures": 20,
+        "exit0": true,
+        "condition_at_reported_index": true,
+        "trigger_index_min": 27614,
+        "trigger_index_max": 100093
+      },
+      {
+        "rate": "400M",
+        "condition": "0:r",
+        "captures": 20,
+        "exit0": true,
+        "condition_at_reported_index": true,
+        "trigger_index_min": 100039,
+        "trigger_index_max": 100094
+      },
+      {
+        "rate": "400M",
+        "condition": "0:1",
+        "captures": 20,
+        "exit0": true,
+        "condition_at_reported_index": true,
+        "trigger_index_min": 97807,
+        "trigger_index_max": 100095
+      },
+      {
+        "rate": "400M",
+        "condition": "0:e",
+        "captures": 20,
+        "exit0": true,
+        "condition_at_reported_index": true,
+        "trigger_index_min": 100033,
+        "trigger_index_max": 100088
+      },
+      {
+        "rate": "400M",
+        "condition": "0:r,3:0",
+        "captures": 20,
+        "exit0": true,
+        "condition_at_reported_index": true,
+        "trigger_index_min": 33064,
+        "trigger_index_max": 100089
+      }
+    ],
+    "summary_sha256": "850bef3fa3b0cd0fd30f2599b7cb108271ef441b097bacc7b5dfe0deffcb6c92",
+    "artifact_directory": "/tmp/dslcap-b-matrix"
+  },
+  "positions": [
+    {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0,1,2,3",
+        "--samples",
+        "65536",
+        "--trigger",
+        "0:r",
+        "--trigger-pos",
+        "0",
+        "--trigger-timeout",
+        "2s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.0157969412393868,
+      "file": "/tmp/dslcap-b-positions/100M-p0/100M-c0-00",
+      "inspection_exit": 0,
+      "samples": 65536,
+      "trigger_index": 125,
+      "trigger_fraction": 0.0019073486328125,
+      "condition_at_reported_index": true,
+      "condition_offsets_within_8": [
+        0
+      ],
+      "complete_spi_frames": 1,
+      "requested_position": 0,
+      "phase": "placement"
+    },
+    {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0,1,2,3",
+        "--samples",
+        "65536",
+        "--trigger",
+        "0:r",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "2s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.0159085812047124,
+      "file": "/tmp/dslcap-b-positions/100M-p10/100M-c0-00",
+      "inspection_exit": 0,
+      "samples": 65536,
+      "trigger_index": 6580,
+      "trigger_fraction": 0.10040283203125,
+      "condition_at_reported_index": true,
+      "condition_offsets_within_8": [
+        0
+      ],
+      "complete_spi_frames": 2,
+      "requested_position": 10,
+      "phase": "placement"
+    },
+    {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0,1,2,3",
+        "--samples",
+        "65536",
+        "--trigger",
+        "0:r",
+        "--trigger-pos",
+        "50",
+        "--trigger-timeout",
+        "2s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.0157887837849557,
+      "file": "/tmp/dslcap-b-positions/100M-p50/100M-c0-00",
+      "inspection_exit": 0,
+      "samples": 65536,
+      "trigger_index": 32817,
+      "trigger_fraction": 0.5007476806640625,
+      "condition_at_reported_index": true,
+      "condition_offsets_within_8": [
+        0
+      ],
+      "complete_spi_frames": 2,
+      "requested_position": 50,
+      "phase": "placement"
+    },
+    {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0,1,2,3",
+        "--samples",
+        "65536",
+        "--trigger",
+        "0:r",
+        "--trigger-pos",
+        "90",
+        "--trigger-timeout",
+        "2s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.0161922280676663,
+      "file": "/tmp/dslcap-b-positions/100M-p90/100M-c0-00",
+      "inspection_exit": 0,
+      "samples": 65536,
+      "trigger_index": 58987,
+      "trigger_fraction": 0.9000701904296875,
+      "condition_at_reported_index": true,
+      "condition_offsets_within_8": [
+        0
+      ],
+      "complete_spi_frames": 1,
+      "requested_position": 90,
+      "phase": "placement"
+    },
+    {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0,1,2,3",
+        "--samples",
+        "10004480",
+        "--trigger",
+        "0:r",
+        "--trigger-pos",
+        "90",
+        "--trigger-timeout",
+        "2s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.216133773792535,
+      "file": "/tmp/dslcap-b-positions/100M-early/100M-c0-00",
+      "inspection_exit": 0,
+      "samples": 10004480,
+      "trigger_index": 153134,
+      "trigger_fraction": 0.01530654266888434,
+      "condition_at_reported_index": true,
+      "condition_offsets_within_8": [
+        0
+      ],
+      "complete_spi_frames": 38,
+      "requested_position": 90,
+      "phase": "early_bursty_spi"
+    },
+    {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "200M",
+        "--channels",
+        "0,1,2,3",
+        "--samples",
+        "65536",
+        "--trigger",
+        "0:r",
+        "--trigger-pos",
+        "0",
+        "--trigger-timeout",
+        "2s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.01584058906883,
+      "file": "/tmp/dslcap-b-positions/200M-p0/200M-c0-00",
+      "inspection_exit": 0,
+      "samples": 65536,
+      "trigger_index": 106,
+      "trigger_fraction": 0.001617431640625,
+      "condition_at_reported_index": true,
+      "condition_offsets_within_8": [
+        0
+      ],
+      "complete_spi_frames": 1,
+      "requested_position": 0,
+      "phase": "placement"
+    },
+    {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "200M",
+        "--channels",
+        "0,1,2,3",
+        "--samples",
+        "65536",
+        "--trigger",
+        "0:r",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "2s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.0159368817694485,
+      "file": "/tmp/dslcap-b-positions/200M-p10/200M-c0-00",
+      "inspection_exit": 0,
+      "samples": 65536,
+      "trigger_index": 6567,
+      "trigger_fraction": 0.1002044677734375,
+      "condition_at_reported_index": true,
+      "condition_offsets_within_8": [
+        0
+      ],
+      "complete_spi_frames": 2,
+      "requested_position": 10,
+      "phase": "placement"
+    },
+    {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "200M",
+        "--channels",
+        "0,1,2,3",
+        "--samples",
+        "65536",
+        "--trigger",
+        "0:r",
+        "--trigger-pos",
+        "50",
+        "--trigger-timeout",
+        "2s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.0157671459019184,
+      "file": "/tmp/dslcap-b-positions/200M-p50/200M-c0-00",
+      "inspection_exit": 0,
+      "samples": 65536,
+      "trigger_index": 32795,
+      "trigger_fraction": 0.5004119873046875,
+      "condition_at_reported_index": true,
+      "condition_offsets_within_8": [
+        0
+      ],
+      "complete_spi_frames": 1,
+      "requested_position": 50,
+      "phase": "placement"
+    },
+    {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "200M",
+        "--channels",
+        "0,1,2,3",
+        "--samples",
+        "65536",
+        "--trigger",
+        "0:r",
+        "--trigger-pos",
+        "90",
+        "--trigger-timeout",
+        "2s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.0161111298948526,
+      "file": "/tmp/dslcap-b-positions/200M-p90/200M-c0-00",
+      "inspection_exit": 0,
+      "samples": 65536,
+      "trigger_index": 58970,
+      "trigger_fraction": 0.899810791015625,
+      "condition_at_reported_index": true,
+      "condition_offsets_within_8": [
+        0
+      ],
+      "complete_spi_frames": 1,
+      "requested_position": 90,
+      "phase": "placement"
+    },
+    {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "200M",
+        "--channels",
+        "0,1,2,3",
+        "--samples",
+        "10004480",
+        "--trigger",
+        "0:r",
+        "--trigger-pos",
+        "90",
+        "--trigger-timeout",
+        "2s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.2163428352214396,
+      "file": "/tmp/dslcap-b-positions/200M-early/200M-c0-00",
+      "inspection_exit": 0,
+      "samples": 10004480,
+      "trigger_index": 100515,
+      "trigger_fraction": 0.010046998944472876,
+      "condition_at_reported_index": true,
+      "condition_offsets_within_8": [
+        0
+      ],
+      "complete_spi_frames": 20,
+      "requested_position": 90,
+      "phase": "early_bursty_spi"
+    },
+    {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "400M",
+        "--channels",
+        "0,1,2,3",
+        "--samples",
+        "65536",
+        "--trigger",
+        "0:r",
+        "--trigger-pos",
+        "0",
+        "--trigger-timeout",
+        "2s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.016103204805404,
+      "file": "/tmp/dslcap-b-positions/400M-p0/400M-c0-00",
+      "inspection_exit": 0,
+      "samples": 65536,
+      "trigger_index": 119,
+      "trigger_fraction": 0.0018157958984375,
+      "condition_at_reported_index": true,
+      "condition_offsets_within_8": [
+        0
+      ],
+      "complete_spi_frames": 0,
+      "requested_position": 0,
+      "phase": "placement"
+    },
+    {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "400M",
+        "--channels",
+        "0,1,2,3",
+        "--samples",
+        "65536",
+        "--trigger",
+        "0:r",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "2s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.016524637117982,
+      "file": "/tmp/dslcap-b-positions/400M-p10/400M-c0-00",
+      "inspection_exit": 0,
+      "samples": 65536,
+      "trigger_index": 6565,
+      "trigger_fraction": 0.1001739501953125,
+      "condition_at_reported_index": true,
+      "condition_offsets_within_8": [
+        0
+      ],
+      "complete_spi_frames": 1,
+      "requested_position": 10,
+      "phase": "placement"
+    },
+    {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "400M",
+        "--channels",
+        "0,1,2,3",
+        "--samples",
+        "65536",
+        "--trigger",
+        "0:r",
+        "--trigger-pos",
+        "50",
+        "--trigger-timeout",
+        "2s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.0157446372322738,
+      "file": "/tmp/dslcap-b-positions/400M-p50/400M-c0-00",
+      "inspection_exit": 0,
+      "samples": 65536,
+      "trigger_index": 32813,
+      "trigger_fraction": 0.5006866455078125,
+      "condition_at_reported_index": true,
+      "condition_offsets_within_8": [
+        0
+      ],
+      "complete_spi_frames": 1,
+      "requested_position": 50,
+      "phase": "placement"
+    },
+    {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "400M",
+        "--channels",
+        "0,1,2,3",
+        "--samples",
+        "65536",
+        "--trigger",
+        "0:r",
+        "--trigger-pos",
+        "90",
+        "--trigger-timeout",
+        "2s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.0158240576274693,
+      "file": "/tmp/dslcap-b-positions/400M-p90/400M-c0-00",
+      "inspection_exit": 0,
+      "samples": 65536,
+      "trigger_index": 59007,
+      "trigger_fraction": 0.9003753662109375,
+      "condition_at_reported_index": true,
+      "condition_offsets_within_8": [
+        0
+      ],
+      "complete_spi_frames": 1,
+      "requested_position": 90,
+      "phase": "placement"
+    },
+    {
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "400M",
+        "--channels",
+        "0,1,2,3",
+        "--samples",
+        "10004480",
+        "--trigger",
+        "0:r",
+        "--trigger-pos",
+        "90",
+        "--trigger-timeout",
+        "2s",
+        "-v"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.115978430956602,
+      "file": "/tmp/dslcap-b-positions/400M-early/400M-c0-00",
+      "inspection_exit": 0,
+      "samples": 10004480,
+      "trigger_index": 2023021,
+      "trigger_fraction": 0.20221150924385875,
+      "condition_at_reported_index": true,
+      "condition_offsets_within_8": [
+        0
+      ],
+      "complete_spi_frames": 8,
+      "requested_position": 90,
+      "phase": "early_bursty_spi"
+    }
+  ],
+  "post_trigger_cancel": {
+    "command": [
+      "/tmp/dslcap-phase-b-build/dslcap",
+      "--mode",
+      "buffer",
+      "--samplerate",
+      "100M",
+      "--channels",
+      "0-3",
+      "--samples",
+      "67108864",
+      "--trigger",
+      "0:r",
+      "--trigger-pos",
+      "10",
+      "--trigger-timeout",
+      "5s",
+      "-v"
+    ],
+    "observed_cached_hit": {
+      "elapsed_s": 1.0029220459982753,
+      "header_already_present": false
+    },
+    "exit": 130,
+    "elapsed_s": 2.2209457741118968,
+    "reopen_exit": 0,
+    "raw_bytes": 27
+  },
+  "hla": {
+    "single": {
+      "capture": {
+        "command": [
+          "python3",
+          "sigrok_hla.py",
+          "--dslogic",
+          "--dslcap",
+          "/tmp/dslcap-phase-b-build/dslcap",
+          "--dsl-mode",
+          "buffer",
+          "--spi",
+          "0,1,2,3",
+          "--samplerate",
+          "400M",
+          "--samples",
+          "67108864",
+          "--trigger",
+          "3:f",
+          "--trigger-timeout",
+          "40s",
+          "--hla-path",
+          "/home/wroberts/HLA/saleae_lr2021",
+          "--hex",
+          "-v"
+        ],
+        "exit": 0,
+        "elapsed_s": 15.548350676894188
+      },
+      "comparison": {
+        "comparison": "previous25Mstream pi13320GetVersion sequence",
+        "reference_lines": 120,
+        "buffer_lines": 120,
+        "identical": true,
+        "requests": 20,
+        "responses": 20
+      },
+      "stdout_sha256": "9995be7cb986360f4c14ba0ebd256494f83ca2338e2c0c5354ce7539591790f2",
+      "stderr_sha256": "201751139de3bb01187826d9136fd10ca6ede4459a56ff46f5b8fe1716916c40"
+    },
+    "dual": {
+      "capture": {
+        "command": [
+          "python3",
+          "sigrok_hla.py",
+          "--dslogic",
+          "--dslcap",
+          "/tmp/dslcap-phase-b-build/dslcap",
+          "--dsl-mode",
+          "buffer",
+          "--spi",
+          "0,1,2,3",
+          "--samplerate",
+          "100M",
+          "--samples",
+          "33554432",
+          "--trigger",
+          "11:f",
+          "--trigger-timeout",
+          "40s",
+          "--hla-path",
+          "/home/wroberts/HLA/saleae_lr2021",
+          "--hex",
+          "-v",
+          "--spi",
+          "8,9,10,11",
+          "--trigger-pos",
+          "40"
+        ],
+        "exit": 0,
+        "elapsed_s": 16.495339217130095
+      },
+      "comparison": {
+        "ports": [
+          {
+            "port": "SPI",
+            "reference_lines": 120,
+            "buffer_lines": 120,
+            "identical": true,
+            "requests": 20,
+            "responses": 20
+          },
+          {
+            "port": "SPI_B",
+            "reference_lines": 120,
+            "buffer_lines": 120,
+            "identical": true,
+            "requests": 20,
+            "responses": 20
+          }
+        ],
+        "chronological": true,
+        "markers": 1,
+        "comparison": "previous25Mstream20GetVersionperPi; timestamps removed, per-port order retained"
+      },
+      "stdout_sha256": "4ebc08b6a1957cb38329b161276787b136b57cd0c0223056a97478ca10d182e6",
+      "stderr_sha256": "e1762cd2919a2337413e45d228e98835b681e5b0d781020a130ec1c878622ec3"
+    }
+  },
+  "radio_owner": {
+    "task": "dslcap-phase-b-radio-20261007",
+    "agent": "hydra-develop-26",
+    "uuid": "75e80b13-b652-47db-a4d6-ff7d836a30d4",
+    "smoke": {
+      "pi133_checked_getversion": 7936,
+      "duration_s": 45.214,
+      "errors": 0,
+      "message_sha256": "dd89cfa06e75c6a379492065fb55a24db653e9c1d4134815feebc470b7ead083"
+    },
+    "matrix": {
+      "pi133_checked_getversion": 71680,
+      "duration_s": 409.039,
+      "errors": 0,
+      "message_sha256": "e577472275ecf4c6b12e798ce8a2eecf12807136db7552d62d59e3045ea47b4b"
+    },
+    "single": {
+      "pi133_checked_getversion": 20,
+      "errors": 0,
+      "message_sha256": "bbb544970df3765a5ecf64bd31fdff931623cd6f8e2935dcd2441be32448c98f"
+    },
+    "dual": {
+      "pi133_checked_getversion": 20,
+      "pi134_checked_getversion": 20,
+      "errors": 0,
+      "message_sha256": "2083e69d1dd459264de513386d7fa7ca44869b2e7ae2e8d5322601f1b888dbf3"
+    },
+    "no_config_reset_or_radio_gpio_changes": true,
+    "final_result": {
+      "revision": 4,
+      "sha256": "7edecb7e5618f625ce40a5e2b82e21c2a8307a1b71513e7ee1727483d5874c33",
+      "cumulative_verified": 79676,
+      "pi133": 79656,
+      "pi134": 20,
+      "errors": 0,
+      "no_generator_processes": true,
+      "consumed_and_acknowledged": true
+    }
+  },
+  "deadline": [
+    {
+      "action": "fail",
+      "scheduled_offset_from_arm_s": 0.5,
+      "timeout_s": 1.0,
+      "gpio": {
+        "ready": 330361.50960085,
+        "before": "20: ip    pd | lo // GPIO20 = input",
+        "active": "20: op -- pd | lo // GPIO20 = output"
+      },
+      "clock_sync": {
+        "host_minus_pi": 2280814.6867216085,
+        "rtt": 0.00481052091345191
+      },
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-7",
+        "--samples",
+        "33554432",
+        "--trigger",
+        "6:r",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "1s",
+        "--on-timeout",
+        "fail",
+        "-v"
+      ],
+      "arm_observed_after_launch_s": 0.8565481682308018,
+      "pulse": {
+        "pulse_before": 330362.900994003,
+        "pulse_after": 330362.903586663,
+        "low_again": 330362.911114829
+      },
+      "pulse_host_interval_after_arm_s": [
+        0.5000767591409385,
+        0.5026694191619754
+      ],
+      "restoration": {
+        "restored": "20: ip    pd | lo // GPIO20 = input"
+      },
+      "remote_exit": 0,
+      "exit": 0,
+      "elapsed_s": 2.6061485558748245,
+      "host_log_observations_after_arm_s": {
+        "arm": -9.404122829437256e-05,
+        "hit": 0.6586743337102234,
+        "header": 0.8052022107876837
+      },
+      "header1": "META samplerate: 100000000",
+      "header2": "META trigger: 3355412",
+      "samples": 33554432,
+      "inspection_exit": 0,
+      "trigger_index": 3355412,
+      "hardware_counts": {
+        "remain": 0,
+        "aligned_actual": 33554432,
+        "emitted": 33554432
+      },
+      "reopen_exit": 0,
+      "raw_sha256": "f41c10aebade40804164db881be395ae97d04eb6d42001975c2ec6fa5f6293cb"
+    },
+    {
+      "action": "fail",
+      "scheduled_offset_from_arm_s": 0.98,
+      "timeout_s": 1.0,
+      "gpio": {
+        "ready": 330366.050261384,
+        "before": "20: ip    pd | lo // GPIO20 = input",
+        "active": "20: op -- pd | lo // GPIO20 = output"
+      },
+      "clock_sync": {
+        "host_minus_pi": 2280814.6864997735,
+        "rtt": 0.0050566308200359344
+      },
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-7",
+        "--samples",
+        "33554432",
+        "--trigger",
+        "6:r",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "1s",
+        "--on-timeout",
+        "fail",
+        "-v"
+      ],
+      "arm_observed_after_launch_s": 0.8571830159053206,
+      "pulse": {
+        "pulse_before": 330367.922754143,
+        "pulse_after": 330367.925370672,
+        "low_again": 330367.932964726
+      },
+      "pulse_host_interval_after_arm_s": [
+        0.9800811065360904,
+        0.9826976354233921
+      ],
+      "restoration": {
+        "restored": "20: ip    pd | lo // GPIO20 = input"
+      },
+      "remote_exit": 0,
+      "exit": 0,
+      "elapsed_s": 3.13650143193081,
+      "host_log_observations_after_arm_s": {
+        "arm": 0.00010799523442983627,
+        "hit": 1.014710689894855,
+        "header": 1.2848876412026584
+      },
+      "header1": "META samplerate: 100000000",
+      "header2": "META trigger: 3355415",
+      "samples": 33554432,
+      "inspection_exit": 0,
+      "trigger_index": 3355415,
+      "hardware_counts": {
+        "remain": 0,
+        "aligned_actual": 33554432,
+        "emitted": 33554432
+      },
+      "reopen_exit": 0,
+      "raw_sha256": "d33366273610e864c24471e0ec50707e34423e7bf3f51c3842ea31a5b64b0a15"
+    },
+    {
+      "action": "fail",
+      "scheduled_offset_from_arm_s": 1.02,
+      "timeout_s": 1.0,
+      "gpio": {
+        "ready": 330371.277162238,
+        "before": "20: ip    pd | lo // GPIO20 = input",
+        "active": "20: op -- pd | lo // GPIO20 = output"
+      },
+      "clock_sync": {
+        "host_minus_pi": 2280814.6866383045,
+        "rtt": 0.004707628861069679
+      },
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-7",
+        "--samples",
+        "33554432",
+        "--trigger",
+        "6:r",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "1s",
+        "--on-timeout",
+        "fail",
+        "-v"
+      ],
+      "arm_observed_after_launch_s": 0.8582779690623283,
+      "pulse": {
+        "pulse_before": 330373.18866151,
+        "pulse_after": 330373.191224133,
+        "low_again": 330373.198763541
+      },
+      "pulse_host_interval_after_arm_s": [
+        1.020082626491785,
+        1.0226452494971454
+      ],
+      "restoration": {
+        "restored": "20: ip    pd | lo // GPIO20 = input"
+      },
+      "remote_exit": 0,
+      "exit": 0,
+      "elapsed_s": 3.127441016957164,
+      "host_log_observations_after_arm_s": {
+        "arm": 0.00013466086238622665,
+        "hit": 1.116762172896415,
+        "header": 1.3244362897239625
+      },
+      "header1": "META samplerate: 100000000",
+      "header2": "META trigger: 3355417",
+      "samples": 33554432,
+      "inspection_exit": 0,
+      "trigger_index": 3355417,
+      "hardware_counts": {
+        "remain": 0,
+        "aligned_actual": 33554432,
+        "emitted": 33554432
+      },
+      "reopen_exit": 0,
+      "raw_sha256": "48865c61f5acd5f06c4190dc5afbad478fd99cab633e26838b1eea8f045fb095"
+    },
+    {
+      "action": "fail",
+      "scheduled_offset_from_arm_s": 1.3,
+      "timeout_s": 1.0,
+      "gpio": {
+        "ready": 330376.48485216,
+        "before": "20: ip    pd | lo // GPIO20 = input",
+        "active": "20: op -- pd | lo // GPIO20 = output"
+      },
+      "clock_sync": {
+        "host_minus_pi": 2280814.6865701713,
+        "rtt": 0.004804171156138182
+      },
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-7",
+        "--samples",
+        "33554432",
+        "--trigger",
+        "6:r",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "1s",
+        "--on-timeout",
+        "fail",
+        "-v"
+      ],
+      "arm_observed_after_launch_s": 0.8611354981549084,
+      "pulse": {
+        "pulse_before": 330378.681051669,
+        "pulse_after": 330378.683634847,
+        "low_again": 330378.691157625
+      },
+      "pulse_host_interval_after_arm_s": [
+        1.3000840763561428,
+        1.3026672541163862
+      ],
+      "restoration": {
+        "restored": "20: ip    pd | lo // GPIO20 = input"
+      },
+      "remote_exit": 0,
+      "exit": 16,
+      "elapsed_s": 2.4083420750685036,
+      "host_log_observations_after_arm_s": {
+        "arm": -0.000254887156188488,
+        "decision": 1.34150444669649
+      },
+      "header1": "META samplerate: 100000000",
+      "header2": "",
+      "samples": 0,
+      "reopen_exit": 0,
+      "raw_sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab"
+    },
+    {
+      "action": "fail",
+      "scheduled_offset_from_arm_s": 1.36,
+      "timeout_s": 1.0,
+      "gpio": {
+        "ready": 330380.556929625,
+        "before": "20: ip    pd | lo // GPIO20 = input",
+        "active": "20: op -- pd | lo // GPIO20 = output"
+      },
+      "clock_sync": {
+        "host_minus_pi": 2280814.6865369286,
+        "rtt": 0.0048698424361646175
+      },
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-7",
+        "--samples",
+        "33554432",
+        "--trigger",
+        "6:r",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "1s",
+        "--on-timeout",
+        "fail",
+        "-v"
+      ],
+      "arm_observed_after_launch_s": 0.8608035603538156,
+      "pulse": {
+        "pulse_before": 330382.809052266,
+        "pulse_after": 330382.814879869,
+        "low_again": 330382.825638981
+      },
+      "pulse_host_interval_after_arm_s": [
+        1.3601234536617994,
+        1.3659510565921664
+      ],
+      "restoration": {
+        "restored": "20: ip    pd | lo // GPIO20 = input"
+      },
+      "remote_exit": 0,
+      "exit": 16,
+      "elapsed_s": 2.44763429928571,
+      "host_log_observations_after_arm_s": {
+        "arm": -0.0005979519337415695,
+        "decision": 1.3400972010567784
+      },
+      "header1": "META samplerate: 100000000",
+      "header2": "",
+      "samples": 0,
+      "reopen_exit": 0,
+      "raw_sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab"
+    },
+    {
+      "action": "upload",
+      "scheduled_offset_from_arm_s": 0.5,
+      "timeout_s": 1.0,
+      "gpio": {
+        "ready": 330384.756128517,
+        "before": "20: ip    pd | lo // GPIO20 = input",
+        "active": "20: op -- pd | lo // GPIO20 = output"
+      },
+      "clock_sync": {
+        "host_minus_pi": 2280814.6866643964,
+        "rtt": 0.0045874230563640594
+      },
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-7",
+        "--samples",
+        "33554432",
+        "--trigger",
+        "6:r",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "1s",
+        "--on-timeout",
+        "upload",
+        "-v"
+      ],
+      "arm_observed_after_launch_s": 0.8582991780713201,
+      "pulse": {
+        "pulse_before": 330386.144612216,
+        "pulse_after": 330386.147184339,
+        "low_again": 330386.154736302
+      },
+      "pulse_host_interval_after_arm_s": [
+        0.5000833082012832,
+        0.502655431162566
+      ],
+      "restoration": {
+        "restored": "20: ip    pd | lo // GPIO20 = input"
+      },
+      "remote_exit": 0,
+      "exit": 0,
+      "elapsed_s": 2.6077304328791797,
+      "host_log_observations_after_arm_s": {
+        "arm": -0.0005368762649595737,
+        "hit": 0.6598315387964249,
+        "header": 0.8044194388203323
+      },
+      "header1": "META samplerate: 100000000",
+      "header2": "META trigger: 3355431",
+      "samples": 33554432,
+      "inspection_exit": 0,
+      "trigger_index": 3355431,
+      "hardware_counts": {
+        "remain": 0,
+        "aligned_actual": 33554432,
+        "emitted": 33554432
+      },
+      "reopen_exit": 0,
+      "raw_sha256": "8da6cf7b7ebe0e0eb757f4721daff246868b9e25c15c16a3b6bc47ea6df53933"
+    },
+    {
+      "action": "upload",
+      "scheduled_offset_from_arm_s": 0.98,
+      "timeout_s": 1.0,
+      "gpio": {
+        "ready": 330389.415898103,
+        "before": "20: ip    pd | lo // GPIO20 = input",
+        "active": "20: op -- pd | lo // GPIO20 = output"
+      },
+      "clock_sync": {
+        "host_minus_pi": 2280814.6866157087,
+        "rtt": 0.0048252590931952
+      },
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-7",
+        "--samples",
+        "33554432",
+        "--trigger",
+        "6:r",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "1s",
+        "--on-timeout",
+        "upload",
+        "-v"
+      ],
+      "arm_observed_after_launch_s": 0.8503221329301596,
+      "pulse": {
+        "pulse_before": 330391.280770098,
+        "pulse_after": 330391.283341388,
+        "low_again": 330391.290870499
+      },
+      "pulse_host_interval_after_arm_s": [
+        0.9800828415900469,
+        0.9826541314832866
+      ],
+      "restoration": {
+        "restored": "20: ip    pd | lo // GPIO20 = input"
+      },
+      "remote_exit": 0,
+      "exit": 0,
+      "elapsed_s": 3.1298237750306726,
+      "host_log_observations_after_arm_s": {
+        "arm": 0.0008382447995245457,
+        "hit": 1.0163001068867743,
+        "header": 1.285109390038997
+      },
+      "header1": "META samplerate: 100000000",
+      "header2": "META trigger: 3355452",
+      "samples": 33554432,
+      "inspection_exit": 0,
+      "trigger_index": 3355452,
+      "hardware_counts": {
+        "remain": 0,
+        "aligned_actual": 33554432,
+        "emitted": 33554432
+      },
+      "reopen_exit": 0,
+      "raw_sha256": "ac9a13584391167d29a18c2e59f74cf657b4d8b3d33f027c3da99f464c7983f2"
+    },
+    {
+      "action": "upload",
+      "scheduled_offset_from_arm_s": 1.02,
+      "timeout_s": 1.0,
+      "gpio": {
+        "ready": 330394.625916844,
+        "before": "20: ip    pd | lo // GPIO20 = input",
+        "active": "20: op -- pd | lo // GPIO20 = output"
+      },
+      "clock_sync": {
+        "host_minus_pi": 2280814.6865582177,
+        "rtt": 0.0047585670836269855
+      },
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-7",
+        "--samples",
+        "33554432",
+        "--trigger",
+        "6:r",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "1s",
+        "--on-timeout",
+        "upload",
+        "-v"
+      ],
+      "arm_observed_after_launch_s": 0.8591817743144929,
+      "pulse": {
+        "pulse_before": 330396.539573129,
+        "pulse_after": 330396.542170344,
+        "low_again": 330396.549741343
+      },
+      "pulse_host_interval_after_arm_s": [
+        1.0200833873823285,
+        1.0226806025020778
+      ],
+      "restoration": {
+        "restored": "20: ip    pd | lo // GPIO20 = input"
+      },
+      "remote_exit": 0,
+      "exit": 0,
+      "elapsed_s": 3.228826423175633,
+      "host_log_observations_after_arm_s": {
+        "arm": 0.0006431816145777702,
+        "hit": 1.1175749357789755,
+        "header": 1.3248651269823313
+      },
+      "header1": "META samplerate: 100000000",
+      "header2": "META trigger: 3355433",
+      "samples": 33554432,
+      "inspection_exit": 0,
+      "trigger_index": 3355433,
+      "hardware_counts": {
+        "remain": 0,
+        "aligned_actual": 33554432,
+        "emitted": 33554432
+      },
+      "reopen_exit": 0,
+      "raw_sha256": "7c3ffeb814415f2402f4fba7a3cd74248e7d9ea423f6297556abda77b43e3fba"
+    },
+    {
+      "action": "upload",
+      "scheduled_offset_from_arm_s": 1.3,
+      "timeout_s": 1.0,
+      "gpio": {
+        "ready": 330399.868544706,
+        "before": "20: ip    pd | lo // GPIO20 = input",
+        "active": "20: op -- pd | lo // GPIO20 = output"
+      },
+      "clock_sync": {
+        "host_minus_pi": 2280814.6868352285,
+        "rtt": 0.005022104829549789
+      },
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-7",
+        "--samples",
+        "33554432",
+        "--trigger",
+        "6:r",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "1s",
+        "--on-timeout",
+        "upload",
+        "-v"
+      ],
+      "arm_observed_after_launch_s": 0.8578051938675344,
+      "pulse": {
+        "pulse_before": 330402.060790629,
+        "pulse_after": 330402.063381288,
+        "low_again": 330402.07094301
+      },
+      "pulse_host_interval_after_arm_s": [
+        1.3000888316892087,
+        1.302679490763694
+      ],
+      "restoration": {
+        "restored": "20: ip    pd | lo // GPIO20 = input"
+      },
+      "remote_exit": 0,
+      "exit": 0,
+      "elapsed_s": 2.555210920982063,
+      "host_log_observations_after_arm_s": {
+        "arm": -0.00039507588371634483,
+        "decision": 1.340769242029637,
+        "header": 1.3419021111913025
+      },
+      "header1": "META samplerate: 100000000",
+      "header2": "META trigger: 3355453",
+      "samples": 7239680,
+      "inspection_exit": 0,
+      "trigger_index": 3355453,
+      "hardware_counts": {
+        "remain": 26314655,
+        "aligned_actual": 7239680,
+        "emitted": 7239680
+      },
+      "reopen_exit": 0,
+      "raw_sha256": "e08ca56a25bbb6d49b6eb8cb12f7a50cca50d2d253712dcf4baff402cc025542"
+    },
+    {
+      "action": "upload",
+      "scheduled_offset_from_arm_s": 1.36,
+      "timeout_s": 1.0,
+      "gpio": {
+        "ready": 330404.186402085,
+        "before": "20: ip    pd | lo // GPIO20 = input",
+        "active": "20: op -- pd | lo // GPIO20 = output"
+      },
+      "clock_sync": {
+        "host_minus_pi": 2280814.6866776543,
+        "rtt": 0.004794444888830185
+      },
+      "command": [
+        "/tmp/dslcap-phase-b-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-7",
+        "--samples",
+        "33554432",
+        "--trigger",
+        "6:r",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "1s",
+        "--on-timeout",
+        "upload",
+        "-v"
+      ],
+      "arm_observed_after_launch_s": 0.8610664121806622,
+      "pulse": {
+        "pulse_before": 330406.439230855,
+        "pulse_after": 330406.44519016,
+        "low_again": 330406.455947364
+      },
+      "pulse_host_interval_after_arm_s": [
+        1.3601407003588974,
+        1.3661000053398311
+      ],
+      "restoration": {
+        "restored": "20: ip    pd | lo // GPIO20 = input"
+      },
+      "remote_exit": 0,
+      "exit": 0,
+      "elapsed_s": 2.4475321103818715,
+      "host_log_observations_after_arm_s": {
+        "arm": 0.0005971807986497879,
+        "decision": 1.3408596431836486,
+        "header": 1.3419978409074247
+      },
+      "header1": "META samplerate: 100000000",
+      "header2": "META trigger: none",
+      "samples": 3354624,
+      "inspection_exit": 0,
+      "trigger_index": null,
+      "hardware_counts": {
+        "remain": 30199039,
+        "aligned_actual": 3354624,
+        "emitted": 3354624
+      },
+      "reopen_exit": 0,
+      "raw_sha256": "8b11c0138fd1d184402632a5f93ed5f05ca41561af053f62ef604cc40166de89"
+    }
+  ],
+  "gpio_restored": {
+    "host": "pi133",
+    "gpio": 20,
+    "physical_pin": 38,
+    "analyzer_channel": 6,
+    "final_readback": "20: ip    pd | lo // GPIO20 = input",
+    "other_gpio_changes": false
+  },
+  "phase_b_status": "PASS B1 through B6"
+}

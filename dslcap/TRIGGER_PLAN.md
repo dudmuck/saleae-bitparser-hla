@@ -1,6 +1,12 @@
 # dslcap: triggered buffer-mode capture
 
-Status: proposal, 2026-10-07. Revised the same day for review
+Implementation status, 2026-10-07: **Phase B complete**, independently
+reviewed and hardware gates B.1–B.6 passed. See
+[TRIGGER_VALIDATION.md](TRIGGER_VALIDATION.md) for evidence and retained
+limitations. A2 continuous-clock ppm remains open. Phase C serial triggering
+and optional trigger-relative timestamps are not implemented by this wave.
+
+Plan review history: proposed 2026-10-07, revised the same day for review
 `dslcap-trigger-plan-review-20261007`: all seven findings were accepted and
 checked against the source. They are the capture state machine, the
 deterministic META header, the buffer drain policy, the forced-upload
