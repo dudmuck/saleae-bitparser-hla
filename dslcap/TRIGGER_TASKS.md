@@ -47,3 +47,48 @@ Decisions:
   design; a genuinely new dependency/plan requires operator review.
 
 Status: worker implementation assigned; independent review and live gates pending.
+
+## Parallel reference evidence
+
+[-] DSView agent dsview-1-3-2-ec owns task
+`dslcap-phase-b-golden-20261007`: actual DSView EP2 register images for
+100M/200M simple CH3 falling, 10% position, eight low channels. Temporary
+artifacts only, no repository edits or radio activity. It has exclusive
+analyzer access until it reports clean release. Lead and worker must not
+capture concurrently. Delivery/readiness and resulting exact settings are
+tracked in the secondopinion task; accepted delivery is not completion.
+
+[-] dslcap_worker acknowledged implementation handoff and is working offline.
+[ ] Lead integration checks after frozen worker handoff.
+[ ] Independent review cycle 1, not yet launched.
+[ ] B.1 golden-image comparison, B.2 condition/position captures,
+    B.3 placement, B.4 timeout/cancel/reopen, B.5 deadline races,
+    B.6 single/dual-radio Python/HLA checks. Do not substitute offline
+    tests for hardware evidence or mark an unrun gate complete.
+
+### Wave 1 implementation decisions
+
+Worker chose the full nominal buffer grace window (340 ms from 17 x 20 ms),
+explicitly not a hardware-status age bound. Packet/timeout commitment uses
+a shared mutex; callback owns copied header validation, converter limit and
+ordered META publication. Lead requires releasing that mutex before
+ds_stop_collect or callback-dependent driver calls, since stop joins the
+driver worker. Irreversible abort gates late packets; exact count/END cannot
+erase an explicit signal outcome. Forced-upload intent is published before
+WAIT_UPLOAD and reconciled against its TRUE/FALSE result before accepting
+short output. Buffer writer progress re-arms the watchdog; test-only timing
+scales are compiled in a separate fake core. Serial and t0 remain excluded.
+
+### B.1 reference side complete
+
+[x] DSView agent completed real GUI register logging at 100M/200M/400M.
+Task dslcap-phase-b-golden-20261007 revision 5 consumed and acknowledged;
+result hash 98c83008f8f40987fb2d5839985aa97c46aa0b5364c1aa360be040e8696eef47.
+Lead checked all three 372-byte image hashes and preserved raw hex/settings
+in TRIGGER_GOLDEN.json. 100M/200M: CH0-7, N=1000448; 400M: CH0-3,
+N=2000896. All use simple3:f, pos10, vth1.6, filter/RLE/loop/instant off.
+The reference tpos values are100032/100032/200064. DSView session restored
+byte-identical and USB released per owner. Lead now owns USB again.
+
+The dslcap comparison half of B.1 is still pending the worker's executable.
+Temporary shim, raw packets, logs and decoder: /tmp/dslcap-golden/.
