@@ -41,14 +41,14 @@ wiring may require the operator. No NVM writes are authorized.
 
 ## Subsequent work
 
-- [ ] G1-capture: implement capture configuration, cross-data conversion,
+- [x] G1-capture: implement capture configuration, cross-data conversion,
   bounded ring, writer, finite trimming and shutdown; focused offline tests.
 - [ ] G1-capture: Phase 1 signal/reference validation. Standalone output is
   one byte when all channels are below 8; otherwise two little-endian bytes,
   preserving physical bit positions. Python integration initially stays at
   eight channels. This resolves the original plan's 12/16-channel test
   requirements without adding a dependency or removing validation.
-- [ ] G1-capture: Phase 2 continuous, slow-consumer, overflow and reopen tests.
+- [x] G1-capture: Phase 2 continuous, slow-consumer, overflow and reopen tests.
 - [ ] G2-integration: Phase 3 Python backend, live stderr drain, documentation
   and real dual-SPI comparison. Assign exact files after capture contract is
   verified. Optional Phase 4 remains optional.
@@ -114,6 +114,12 @@ captures and the 16-channel internal pattern. Physical channel bits stay in
 their original positions; optional wide Python decoding remains deferred.
 No additional dependency or architectural change is introduced.
 
+Rate validation clarification: the pinned driver rounds its FPGA divider up
+but its readback can preserve an arbitrary in-range request. Reject rates
+outside the supported profile/mode set in addition to checking readback.
+This enforces the existing correct-timebase requirement (e.g. a 60M request
+must not label physically 50M samples as 60M).
+
 ## Phase 0 review — 2026-10-07
 
 Before its first review, Phase 0 is recorded as independent group G0-bringup:
@@ -129,7 +135,7 @@ not induced; the actual established upload routine was exercised explicitly.
 ## G1-capture: Phase 1 implementation handoff
 
 Owner: `dslcap_worker`, assignment `dslcap-capture-20261007`.
-Status: ready after G0 cycle 1 PASS, dispatch after bring-up commit.
+Status: in progress after G0 cycle 1 PASS and bring-up commit `47d9d6d`.
 Scope: `dslcap/main.c`, `dslcap/CMakeLists.txt`, new C headers/sources directly
 under `dslcap/`, `dslcap/tests/`, `dslcap/README.md`, `dslcap/.gitignore`.
 Do not edit PLAN.md, TASKS.md, REVIEW.md, PLAN_REVIEW.md, Python files,
@@ -178,3 +184,69 @@ open; do not claim cold startup proven. README examples use external timeout
 because reference FPGA polling is unbounded. No reviewer/worker USB tests
 remain active. Documentation was reconciled against current behavior and
 actual commands. G1 capture can proceed without an additional dependency.
+
+## G2-integration: Python backend handoff
+
+Owner: `dslcap_worker`, assignment `dslcap-python-20261007`.
+Status: dispatched; C implementation frozen, lead owns USB for long stream.
+Dependencies: capture CLI/META contract implemented and frozen for review.
+Scope: `sigrok_hla.py`, `sigrok_hla_readme.md`, new
+`tests/test_dslcap_backend.py` and test fixtures under `tests/dslcap/` only.
+Do not edit C/build files, fast_spi.py, dslcap PLAN/TASKS/REVIEW/VALIDATION,
+DSView sources, unrelated files, or Git metadata. Lead may run USB validation
+concurrently; worker must use fake subprocesses/offline fixtures only until
+hardware is explicitly handed back.
+
+Implement PLAN.md Phase 3 backend flags and derived channel command builder,
+preserving existing sigrok and Saleae behavior. Initial Python input remains
+8-bit; reject high channels clearly. The optional srd pipeline may be rejected
+with an explicit unsupported-mode error. Refactor raw producer command
+construction away from the shared numpy decoder. Drain child stderr live for
+both dslcap and sigrok-cli, preventing pipe deadlock, and propagate producer
+failures rather than silently reporting successful decode.
+
+Parse META safely when split across reads and use its samplerate for decoder
+and pin timestamps, warning on mismatch. Preserve HOLD/heap ordering and
+fast_spi interfaces. Cancellation must reap the child with bounded shutdown
+and release pipe readers; reader errors must surface. Validate contradictory
+backend/input/duration options before starting hardware.
+
+Verification: focused `python3 -m unittest discover -s tests -p
+'test_dslcap_backend.py'` (or documented equivalent) with actual fake
+subprocesses that emit fragmented headers, sample data and more than pipe
+capacity on stderr, nonzero exits, and interrupt/blocked-output behavior.
+Check builder channels/names/pins and unsupported combinations. Include a
+known synthetic SPI stream decoded through the shared engine, checking
+byte values and META-derived timing. Preserve existing backend regression
+coverage. No dependency additions; use installed tools and standard library
+test scaffolding. Update examples and supported/unsupported behavior.
+
+Return exact files/commands/exits, interface changes, tests and open real-HLA
+comparison gates. Coordinator reviews and commits; no live USB/GPIO actions
+while lead owns the analyzer.
+
+## G1 review and Phase 2 run — 2026-10-07
+
+Worker completed and froze the C capture scope; handoff reconciled from
+`/tmp/dslcap-capture-handoff.txt`. Lead rebuilt with RelWithDebInfo and all
+four CTest suites passed. G1 review cycle 1 starts with review-1 (same
+synthesizer, new independent task group; G0 remains at cycle 1 PASS).
+Lead started a 610-second 25M x 8 continuous capture to `/dev/null` with
+SIGINT/reopen checks; result pending. Worker proceeds only on disjoint G2
+Python files and performs no USB operations. GPIO18 restoration confirmed.
+
+## G1 disposition — 2026-10-07
+
+Cycle 1 review PASS; one Low signal-publication portability concern remains
+documented in REVIEW.md. Lead's additional byte oracle verified 170 ring
+wraps; reproducible verifier is `tests/review_ring_wrap.c`. The 610.063s
+continuous run passed with 15230320128 samples, ring high-water 483904 bytes,
+SIGINT exit 130 and immediate scan 0. Forced real FPGA overflow via scoped
+SIGSTOP/SIGCONT exited 10 with the required warning and immediate scan 0.
+Full evidence is in VALIDATION.md. No USB test remains running.
+
+Capture implementation is ready to commit. High physical inputs, independent
+DSView capture comparison and actual SPI/reference traffic remain open
+acceptance gates, not waived by the implementation PASS. The operator has
+been asked to add CH1/CH2/CH3 connections for a known-SPI test; confirmation
+is still pending. G2 worker continues offline while lead retains USB ownership.

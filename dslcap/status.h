@@ -1,0 +1,9 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+#ifndef DSLCAP_STATUS_H
+#define DSLCAP_STATUS_H
+enum dsl_capture_status {
+    DSL_CONFIG_ERROR = 8, DSL_RING_FULL = 9, DSL_FPGA_OVERFLOW = 10,
+    DSL_DEVICE_ERROR = 11, DSL_OUTPUT_ERROR = 12, DSL_DATA_ERROR = 13,
+    DSL_DRAIN_TIMEOUT = 14, DSL_DRIVER_TIMEOUT = 15
+};
+#endif

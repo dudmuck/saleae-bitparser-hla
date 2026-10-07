@@ -4,6 +4,9 @@
 #include <libusb.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
+#include <stdatomic.h>
+#include <unistd.h>
 
 extern xlog_writer *sr_log;
 static ds_device_handle active;
@@ -11,6 +14,15 @@ static int activation_count;
 static int last_error;
 static int released;
 static const char *scenario;
+static struct sr_channel channels[16];
+static GSList *channel_list;
+static uint64_t rate = 25000000, sample_limit;
+static int operation, setter_count;
+static atomic_int collecting, stop_requested;
+static pthread_t collect_thread;
+static int thread_started;
+static ds_datafeed_callback_t feed_callback;
+static dslib_event_callback_t event_callback;
 
 static int is(const char *value)
 {
@@ -29,6 +41,10 @@ int ds_lib_init(void)
 {
     scenario = getenv("DSLCAP_TEST_SCENARIO");
     fprintf(stderr, "FAKE init\n");
+    for (unsigned i = 0; i < 16; i++) {
+        channels[i].index = (uint16_t)i; channels[i].enabled = TRUE;
+        channel_list = g_slist_append(channel_list, &channels[i]);
+    }
     return is("init-fail") ? SR_ERR : SR_OK;
 }
 
@@ -37,6 +53,8 @@ int ds_lib_exit(void)
     if (is("init-fail"))
         abort(); // DSView's partial-init exit may use an uninitialized mutex.
     fprintf(stderr, "FAKE cleanup active=%llu\n", active);
+    if (thread_started) pthread_join(collect_thread, NULL);
+    g_slist_free(channel_list); channel_list = NULL;
     active = 0;
     return is("cleanup-fail") ? SR_ERR : SR_OK;
 }
@@ -144,4 +162,105 @@ int ds_release_actived_device(void)
     fprintf(stderr, "FAKE release\n");
     released = 1;
     return is("release-fail") ? SR_ERR : SR_OK;
+}
+
+int ds_set_actived_device_config(const struct sr_channel *ch, const struct sr_channel_group *group,
+                                 int key, GVariant *value)
+{
+    (void)ch; (void)group;
+    fprintf(stderr, "FAKE config=%d step=%d\n", key, ++setter_count);
+    if (is("config-set-fail")) return SR_ERR;
+    switch (key) {
+    case SR_CONF_OPERATION_MODE:
+        if (setter_count != 1) abort();
+        operation = g_variant_get_int16(value);
+        for (unsigned i = 0; i < 16; i++) channels[i].enabled = TRUE;
+        if (operation == LO_OP_INTEST) { rate = 100000000; sample_limit = 16777216; }
+        break;
+    case SR_CONF_CHANNEL_MODE:
+        if (setter_count != 2) abort();
+        for (unsigned i = 0; i < 16; i++) channels[i].enabled = TRUE;
+        break;
+    case SR_CONF_SAMPLERATE: if (setter_count != 3) abort(); rate = g_variant_get_uint64(value); break;
+    case SR_CONF_LIMIT_SAMPLES: if (setter_count != 4) abort(); sample_limit = g_variant_get_uint64(value); break;
+    default: break;
+    }
+    return SR_OK;
+}
+
+int ds_get_actived_device_config(const struct sr_channel *ch, const struct sr_channel_group *group,
+                                 int key, GVariant **value)
+{
+    (void)ch; (void)group;
+    if (is("config-read-fail")) return SR_ERR;
+    if (key == SR_CONF_SAMPLERATE) *value = g_variant_new_uint64(is("config-clamp") ? rate / 2 : rate);
+    else if (key == SR_CONF_LIMIT_SAMPLES) *value = g_variant_new_uint64(sample_limit);
+    else if (key == SR_CONF_VLD_CH_NUM) *value = g_variant_new_int16(is("config-valid-count") ? 1 : 16);
+    else return SR_ERR;
+    g_variant_ref_sink(*value);
+    return SR_OK;
+}
+
+int ds_enable_device_channel_index(int index, gboolean enabled)
+{
+    if (setter_count < (operation == LO_OP_INTEST ? 2 : operation == LO_OP_STREAM ? 6 : 5)) abort();
+    if (is("config-enable-fail")) return SR_ERR;
+    if (!is("config-enable-ignored")) channels[index].enabled = enabled;
+    return SR_OK;
+}
+
+GSList *ds_get_actived_device_channels(void) { return channel_list; }
+int ds_trigger_reset(void) { return SR_OK; }
+void ds_set_datafeed_callback(ds_datafeed_callback_t callback) { feed_callback = callback; }
+void ds_set_event_callback(dslib_event_callback_t callback) { event_callback = callback; }
+int ds_is_collecting(void) { return atomic_load(&collecting); }
+
+static void *collect(void *unused)
+{
+    (void)unused;
+    if (event_callback) event_callback(DS_EV_DEVICE_RUNNING);
+    unsigned count = 0;
+    for (unsigned i = 0; i < 16; i++) if (channels[i].enabled) count++;
+    uint8_t data[128] = {0};
+    for (unsigned i = 0; i < count; i++) memset(data + i * 8, (i & 1) ? 0xaa : 0x55, 8);
+    uint64_t groups = (sample_limit + 63) / 64;
+    if (is("capture-short")) groups = 1;
+    if (is("capture-hang")) {
+        while (!atomic_load(&stop_requested)) usleep(1000);
+    } else {
+        for (uint64_t i = 0; i < groups && !atomic_load(&stop_requested); i++) {
+            struct sr_datafeed_logic logic = {.length = count * 8,
+                .format = is("capture-format") ? LA_SPLIT_DATA : LA_CROSS_DATA, .data = data};
+            if (is("capture-partial")) logic.length--;
+            struct sr_datafeed_packet packet = {.type = is("capture-overflow") ? SR_DF_OVERFLOW : SR_DF_LOGIC,
+                .status = is("capture-status") ? SR_PKT_DATA_ERROR : SR_PKT_OK, .payload = &logic};
+            feed_callback(NULL, &packet);
+        }
+    }
+    if (!is("capture-no-end")) {
+        struct sr_datafeed_packet packet = {.type = SR_DF_END, .status = SR_PKT_OK};
+        feed_callback(NULL, &packet);
+    }
+    atomic_store(&collecting, 0);
+    if (event_callback) event_callback(is("capture-device-error") ? DS_EV_COLLECT_TASK_END_BY_ERROR :
+        is("capture-detach") ? DS_EV_COLLECT_TASK_END_BY_DETACHED :
+        is("capture-speed") ? DS_EV_DEVICE_SPEED_NOT_MATCH : DS_EV_COLLECT_TASK_END);
+    return NULL;
+}
+
+int ds_start_collect(void)
+{
+    if (is("capture-start-fail")) return SR_ERR;
+    atomic_store(&collecting, 1);
+    if (pthread_create(&collect_thread, NULL, collect, NULL)) abort();
+    thread_started = 1;
+    return SR_OK;
+}
+
+int ds_stop_collect(void)
+{
+    if (pthread_equal(pthread_self(), collect_thread)) abort();
+    atomic_store(&stop_requested, 1);
+    pthread_join(collect_thread, NULL); thread_started = 0;
+    return SR_OK;
 }

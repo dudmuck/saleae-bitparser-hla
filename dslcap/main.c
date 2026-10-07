@@ -8,6 +8,11 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "options.h"
+#include "capture.h"
+#include "driver_config.h"
+#include "control.h"
+#include "status.h"
 
 #define DEFAULT_FW_DIR "/usr/local/share/DSView/res"
 #define BITSTREAM "DSLogicPlus-pgl12-2.bin"
@@ -47,22 +52,6 @@ static void receive_log(const char *data, int length)
     if (g_strstr_len(data, length, "Security check failed!"))
         atomic_store(&security_fail, 1);
     fwrite(data, 1, (size_t)length, stderr);
-}
-
-static void usage(FILE *out)
-{
-    fprintf(out,
-        "Usage: dslcap [--scan] [--fw-dir DIR] [-v|-vv]\n"
-        "Phase 0: activate the single DSLogic Plus 2a0e:0034, verify\n"
-        "security, then reopen to check the configured FPGA's HDL version.\n"
-        "--scan          print the verified device and exit\n"
-        "--fw-dir DIR    bitstream directory (default " DEFAULT_FW_DIR ")\n"
-        "-v / -vv        informational / debug diagnostics on stderr\n"
-        "--help          show this help\n"
-        "Sample capture options are not implemented in Phase 0.\n");
-#ifdef DSLCAP_TEST_RELOAD_FPGA
-    fprintf(out, "HARDWARE TEST BINARY: reloads the volatile FPGA bitstream before reopen.\n");
-#endif
 }
 
 static int validate_firmware(const char *directory)
@@ -111,26 +100,15 @@ static int activate(ds_device_handle handle, const char *stage)
 
 int main(int argc, char **argv)
 {
-    const char *fw_dir = DEFAULT_FW_DIR;
-    int scan = 0, verbosity = 0, option;
-    static const struct option options[] = {
-        {"scan", no_argument, NULL, 's'},
-        {"fw-dir", required_argument, NULL, 'f'},
-        {"help", no_argument, NULL, 'h'},
-        {NULL, 0, NULL, 0}
-    };
-    while ((option = getopt_long(argc, argv, "vh", options, NULL)) != -1) {
-        switch (option) {
-        case 's': scan = 1; break;
-        case 'f': fw_dir = optarg; break;
-        case 'v': if (verbosity < 2) verbosity++; break;
-        case 'h': usage(stdout); return 0;
-        default: usage(stderr); return EXIT_USAGE;
-        }
-    }
-    if (optind != argc) {
-        usage(stderr);
-        return EXIT_USAGE;
+    struct dsl_options options;
+    int parse_result = dsl_parse_options(argc, argv, &options);
+    if (parse_result) return parse_result == 1 ? 0 : parse_result;
+    const char *fw_dir = options.fw_dir;
+    int scan = options.scan, verbosity = options.verbosity;
+    if (options.capture && !options.pattern &&
+        dsl_choose_mode(options.stream, options.rate, options.channels) < 0) {
+        fprintf(stderr, "dslcap: impossible samplerate/channel combination\n");
+        return DSL_CONFIG_ERROR;
     }
     int rc = validate_firmware(fw_dir);
     if (rc)
@@ -146,6 +124,11 @@ int main(int argc, char **argv)
                 verbosity == 1 ? XLOG_LEVEL_INFO : XLOG_LEVEL_DBG;
     ds_log_level(level);
     ds_log_set_context(log);
+    if (dsl_control_start()) {
+        fprintf(stderr, "dslcap: cannot start driver watchdog\n");
+        xlog_free_writer(sr_log); sr_log = NULL; xlog_free(log);
+        return EXIT_ACTIVATION;
+    }
 
     // Initialization scans immediately, so set the resource path first.
     ds_set_firmware_resource_dir(fw_dir);
@@ -225,9 +208,12 @@ int main(int argc, char **argv)
     }
     fprintf(stderr, "dslcap: explicit HDL version=0x%02x (expected 0x%02x)\n",
             hdl_version, EXPECTED_HDL_VERSION);
+    if (dsl_signal) rc = 128 + dsl_signal;
+    else if (options.capture) rc = dsl_capture(&options);
 cleanup:
     free(devices);
     if (library_initialized) {
+        dsl_control_bound(10);
         int exit_ret = ds_lib_exit();
         if (exit_ret != SR_OK) {
             fprintf(stderr, "dslcap: driver cleanup failed (%d)\n", exit_ret);
@@ -244,8 +230,10 @@ cleanup:
     xlog_free_writer(sr_log);
     sr_log = NULL;
     xlog_free(log);
+    dsl_control_finish();
+    if (dsl_signal && !rc) rc = 128 + dsl_signal;
     if (!rc) {
-        fprintf(stderr, "dslcap: 2a0e:0034 bring-up complete; driver HDL check passed on reopen\n");
+        if (!options.capture) fprintf(stderr, "dslcap: 2a0e:0034 bring-up complete; driver HDL check passed on reopen\n");
         if (scan && printf("2a0e:0034 DSLogic PLus bus=%u address=%u activated security=pass hdl=checked\n",
                            bus, address) < 0)
             rc = EXIT_CLEANUP;

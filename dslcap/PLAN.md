@@ -108,6 +108,10 @@ streams at up to 25 MSa/s, the same target as SIGROK_HLA_REALTIME_PLAN.md.
       `sigsession.cpp:582-583`) → VTH → per-channel enables. **Explicitly
       disable** every probe that wasn't requested.
    4. Check before starting:
+      - accept only samplerates supported by the pinned profile and selected
+        mode. The FPGA divider rounds up (`dsl.c:1078-1085`), while config
+        readback may retain an arbitrary requested rate; endpoint clamping
+        checks alone cannot prove the physical sample rate;
       - read back `SR_CONF_SAMPLERATE`. `dsl_adjust_samplerate`
         (`dsl.c:218-222`) clamps out-of-range rates silently, so exit
         non-zero if it differs from the request;
