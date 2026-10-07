@@ -504,3 +504,13 @@ unknown prior write-only state was not restored. No TX or GPIO driving.
 Task dslcap-pi134-rxirq-20261007 revision 4 completed and acknowledged.
 PI134_RXIRQ_VALIDATION.json records hashes and timing. No implementation
 change, new dependency or running test remains.
+
+### pi134 original wiring restored
+
+User restored CH12=BUSY/CH13=DIO8 and requested another RX-timeout test.
+With RXIRQ1 settings retained, CH13 captured the timeout rise/fall and CH12
+captured 12 BUSY pulses matching 12 SPI frames at 25M. Application verified
+TIMEOUT only and final IRQ 0/errors 0/STBY_RC. No reconfiguration or calibration
+was needed. Task dslcap-pi134-originalirq-20261007 revision 4 completed and
+acknowledged; no active test remains. README now shows the restored mapping.
+Evidence: VALIDATION.md and PI134_ORIGINALIRQ_VALIDATION.json.

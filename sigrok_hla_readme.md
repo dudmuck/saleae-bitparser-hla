@@ -114,15 +114,15 @@ With the bench's BUSY and DIO8 connections, log all four status inputs:
 ```bash
 ./sigrok_hla.py --dslogic --dslcap /tmp/dslcap-build/dslcap \
     --hla-path ~/HLA/saleae_lr2021 --spi 0,1,2,3 --spi 8,9,10,11 \
-    -C 4=pi133_busy,5=pi133_dio8,13=pi134_busy,12=pi134_dio8 \
+    -C 4=pi133_busy,5=pi133_dio8,12=pi134_busy,13=pi134_dio8 \
     --int-pin pi133_dio8 --extra-pin pi134_dio8 \
     --extra-pin pi133_busy --extra-pin pi134_busy \
     --samplerate 25M --continuous --hex
 ```
 
 On each Pi, BUSY is physical pin 12 (GPIO18), and DIO8 is physical pin 29
-(GPIO5). Following the pi134 lead swap, CH13 is pi134 BUSY and CH12 is
-pi134 DIO8; pi133 remains CH4 BUSY and CH5 DIO8.
+(GPIO5). With the original pi134 wiring restored, CH12 is pi134 BUSY and
+CH13 is pi134 DIO8; pi133 remains CH4 BUSY and CH5 DIO8.
 Both Pi grounds connect to the analyzer. This selects exactly 12
 inputs, mask `0x3f3f`, with two-byte samples at 25 MSa/s. Both pin options
 log edges interleaved with decoded SPI; `--int-pin` is not a hardware trigger.

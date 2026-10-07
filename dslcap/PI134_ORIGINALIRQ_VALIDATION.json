@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-07",
+  "capture": {
+    "command": [
+      "python3",
+      "sigrok_hla.py",
+      "--dslogic",
+      "--dslcap",
+      "/tmp/dslcap-lead-review/dslcap",
+      "--spi",
+      "0,1,2,3",
+      "--spi",
+      "8,9,10,11",
+      "--samplerate",
+      "25M",
+      "-C",
+      "4=pi133_busy,5=pi133_dio8,12=pi134_busy,13=pi134_dio8",
+      "--int-pin",
+      "pi133_dio8",
+      "--extra-pin",
+      "pi134_dio8",
+      "--extra-pin",
+      "pi133_busy",
+      "--extra-pin",
+      "pi134_busy",
+      "--time",
+      "90s",
+      "--hla-path",
+      "/home/wroberts/HLA/saleae_lr2021",
+      "--hex",
+      "-vv"
+    ],
+    "exit": 0,
+    "elapsed_s": 91.419190434739,
+    "stop_reason": "finite_capture"
+  },
+  "mask": "0x3f3f",
+  "samplerate": 25000000,
+  "pi134_busy_channel": 12,
+  "pi134_dio8_channel": 13,
+  "dio8_events": [
+    [
+      20.31288564,
+      "rising"
+    ],
+    [
+      23.98371092,
+      "falling"
+    ]
+  ],
+  "set_rx_time_s": 20.3026048,
+  "clear_irq_time_s": 23.9836888,
+  "rx_to_irq_ms": 10.28084,
+  "irq_high_s": 3.67082528,
+  "clear_to_fall_us": 22.12,
+  "busy_pulses": 12,
+  "spi_frames": 12,
+  "timestamp_ordered": true,
+  "samples": 2250000000,
+  "output_bytes": 4500000026,
+  "ring_high_water": 1164032,
+  "task": "dslcap-pi134-originalirq-20261007",
+  "revision": 4,
+  "result_sha256": "4c8bf5b1e480d7e8d0e0ae989213877ebae8e91e217963ddfc93be79e32f3f05",
+  "acknowledged": true,
+  "final_state": {
+    "mode": "STBY_RC",
+    "irq": 0,
+    "errors": 0
+  },
+  "configuration": "RXIRQ1 configuration retained; no recalibration or reconfiguration this run. pi133 untouched.",
+  "artifacts": {
+    "/tmp/dslcap-pi134-originalirq1.stdout": "0b5ecfe93f8f8430023557597a6d0862d83d09474ff94461fb0db0989d0ac39a",
+    "/tmp/dslcap-pi134-originalirq1.stderr": "e075ea018cd61608b023d331f85dec87e3d839bfa2e3191de1adeac1e7aed69f",
+    "/tmp/dslcap-pi134-originalirq1.json": "708c370bee12e90c3b352a68a2330b2f86cc4394c28bf084ea0e1e0a8772881e"
+  }
+}

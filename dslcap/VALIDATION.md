@@ -553,3 +553,30 @@ firmware, GPIO, driver, package or source changes occurred; no activity remains.
 Lead independently checked the saved SPI/pin output against the application
 report. Task `dslcap-pi134-rxirq-20261007` revision 4 was consumed and
 acknowledged. Evidence: [PI134_RXIRQ_VALIDATION.json](PI134_RXIRQ_VALIDATION.json).
+
+## pi134 original wiring restored / IRQ repeat — 2026-10-07
+
+The user restored CH12=BUSY and CH13=DIO8. ORIGINALIRQ1 repeated one
+10 ms RX timeout using the retained RXIRQ1 calibration and IRQ configuration,
+without reconfiguration. Application preflight and the immediate execution
+gate showed IRQ 0/errors 0/STBY_RC; no intervening application activity was known.
+The write-only settings cannot be read back, but the subsequent physical
+interrupt confirms a working source with the restored wiring.
+
+At 25 MSa/s, mask 0x3f3f, CH13 rose 10.28084 ms after the SetRx frame began
+and fell 22.12 us after ClearIrq TIMEOUT began. IRQ high duration was 3.67082528 s,
+including the application inspection/cleanup round trip. CH12 logged 12 BUSY
+pulses matching 12 SPI frames; all timestamps were ordered. The 90-second
+pipeline exited 0 with 2250000000 samples/4500000026 bytes, ring high-water
+1164032 and no overflow. pi133 logged no activity.
+
+Application result: TIMEOUT only, errors 0, followed by verified cleanup to
+IRQ 0/errors 0/STBY_RC. No recalibration, configuration, TX, reset, GPIO, service,
+source or dependency changes occurred. RXIRQ1's documented LoRa/DIO8 settings
+remain configured. No test remains active. The original CH12 BUSY / CH13 IRQ
+wiring now passes; the earlier failure is consistent with unknown IRQ routing,
+though that earlier write-only configuration cannot be reconstructed.
+
+Lead checked physical edges and decoded commands against the application report.
+Task `dslcap-pi134-originalirq-20261007` revision 4 was consumed and acknowledged.
+Evidence: [PI134_ORIGINALIRQ_VALIDATION.json](PI134_ORIGINALIRQ_VALIDATION.json).
