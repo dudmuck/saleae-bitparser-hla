@@ -74,6 +74,83 @@ int dsl_parse_duration(const char *text, double *seconds, int allow_zero)
     return 0;
 }
 
+static char trigger_condition(char value)
+{
+    switch (value) {
+    case 'r': case 'R': return 'R';
+    case 'f': case 'F': return 'F';
+    case '1': case 'h': return '1';
+    case '0': case 'l': return '0';
+    case 'e': return 'C';
+    default: return 0;
+    }
+}
+
+int dsl_parse_serial(const char *text, struct dsl_serial_trigger *serial)
+{
+    // Every DSView argument is generated later from this fixed parsed state.
+    char buffer[161];
+    if (!text || !*text || strlen(text) >= sizeof(buffer)) return -1;
+    memcpy(buffer, text, strlen(text) + 1);
+    struct dsl_serial_trigger parsed = {0};
+    unsigned seen = 0;
+    char *term = buffer;
+    for (;;) {
+        char *next = strchr(term, ',');
+        if (next) *next++ = '\0';
+        char *value = strchr(term, '=');
+        if (!value || value == term || !value[1]) return -1;
+        *value++ = '\0';
+        unsigned field;
+        const char *keys[] = {"start", "stop", "clock", "data", "value", "bits"};
+        for (field = 0; field < 6 && strcmp(term, keys[field]); field++) {}
+        if (field == 6 || (seen & (1u << field))) return -1;
+        seen |= 1u << field;
+        if (field < 4 || field == 5) {
+            char *end;
+            if (!isdigit((unsigned char)*value)) return -1;
+            errno = 0;
+            unsigned long number = strtoul(value, &end, 10);
+            if (errno) return -1;
+            if (field == 5) {
+                if (*end || number < 1 || number > 16) return -1;
+                parsed.bits = (unsigned)number;
+            } else {
+                if (number > 15) return -1;
+                parsed.channels[field] = (uint8_t)number;
+                if (field < 3) {
+                    if (*end != ':' || !end[1] || end[2]) return -1;
+                    char condition = trigger_condition(end[1]);
+                    if (!condition || (field == 2 && condition != 'R' && condition != 'F')) return -1;
+                    parsed.conditions[field] = condition;
+                } else if (*end) return -1;
+            }
+        } else {
+            unsigned base;
+            if (value[0] != '0') return -1;
+            if (value[1] == 'x' || value[1] == 'X') base = 16;
+            else if (value[1] == 'b' || value[1] == 'B') base = 2;
+            else return -1;
+            value += 2;
+            if (!*value) return -1;
+            unsigned number = 0;
+            for (; *value; value++) {
+                int digit = isdigit((unsigned char)*value) ? *value - '0' :
+                    tolower((unsigned char)*value) >= 'a' && tolower((unsigned char)*value) <= 'f' ?
+                    tolower((unsigned char)*value) - 'a' + 10 : -1;
+                if (digit < 0 || (unsigned)digit >= base || number > (65535u - (unsigned)digit) / base) return -1;
+                number = number * base + (unsigned)digit;
+            }
+            parsed.value = (uint16_t)number;
+        }
+        if (!next) break;
+        term = next;
+    }
+    if (seen != 63 || parsed.value >= (1u << parsed.bits)) return -1;
+    *serial = parsed;
+    return 0;
+}
+
 static int parse_trigger(const char *text, struct dsl_options *o)
 {
     if (o->trigger || !text || !*text) return -1;
@@ -129,6 +206,7 @@ void dsl_usage(void)
          "              [--mode stream|buffer] [--vth V]\n"
          "              [--trigger CH:COND,...] [--trigger-pos 0..90]\n"
          "              [--trigger-timeout T] [--on-timeout fail|upload] [--drain-timeout S]\n"
+         "              [--serial-trigger start=CH:C,stop=CH:C,clock=CH:r|f,data=CH,value=0xV|0bV,bits=1..16]\n"
          "       dslcap --test-pattern\n"
          "Rates/sample counts accept K/M/G suffixes; time accepts s/ms/us.\n"
          "Defaults: 25M, channels 0-7, stream, VTH 1.6V. No options: bring-up only.\n"
@@ -143,7 +221,7 @@ int dsl_parse_options(int argc, char **argv, struct dsl_options *o)
 {
     *o = (struct dsl_options){.fw_dir = "/usr/local/share/DSView/res",
         .rate = 25000000, .channels = 0xff, .vth = 1.6, .stream = 1, .trigger_pos = 10, .drain_timeout = 30};
-    enum { RATE = 256, CHANNELS, SAMPLES, TIME, CONTINUOUS, MODE, VTH, PATTERN, TRIGGER, POS, TIMEOUT, ON_TIMEOUT, DRAIN };
+    enum { RATE = 256, CHANNELS, SAMPLES, TIME, CONTINUOUS, MODE, VTH, PATTERN, TRIGGER, POS, TIMEOUT, ON_TIMEOUT, DRAIN, SERIAL };
     static const struct option options[] = {
         {"scan", no_argument, NULL, 's'}, {"fw-dir", required_argument, NULL, 'f'},
         {"help", no_argument, NULL, 'h'}, {"samplerate", required_argument, NULL, RATE},
@@ -151,7 +229,7 @@ int dsl_parse_options(int argc, char **argv, struct dsl_options *o)
         {"time", required_argument, NULL, TIME}, {"continuous", no_argument, NULL, CONTINUOUS},
         {"mode", required_argument, NULL, MODE}, {"vth", required_argument, NULL, VTH},
         {"test-pattern", no_argument, NULL, PATTERN},
-        {"trigger", required_argument, NULL, TRIGGER}, {"trigger-pos", required_argument, NULL, POS},
+        {"trigger", required_argument, NULL, TRIGGER}, {"serial-trigger", required_argument, NULL, SERIAL}, {"trigger-pos", required_argument, NULL, POS},
         {"trigger-timeout", required_argument, NULL, TIMEOUT}, {"on-timeout", required_argument, NULL, ON_TIMEOUT},
         {"drain-timeout", required_argument, NULL, DRAIN}, {NULL, 0, NULL, 0}};
     int option, duration_seen = 0, trigger_modifiers = 0, drain_seen = 0;
@@ -188,6 +266,9 @@ int dsl_parse_options(int argc, char **argv, struct dsl_options *o)
             if (errno || end == optarg || *end || !isfinite(o->vth) || o->vth < 0 || o->vth > 2.5) goto invalid;
             o->capture = 1; break;
         case TRIGGER: if (parse_trigger(optarg, o)) goto invalid; o->capture = 1; break;
+        case SERIAL:
+            if (o->trigger || dsl_parse_serial(optarg, &o->serial_trigger)) goto invalid;
+            o->trigger = o->serial = o->capture = 1; break;
         case POS: {
             if (!isdigit((unsigned char)*optarg)) goto invalid;
             errno = 0;
@@ -214,6 +295,9 @@ int dsl_parse_options(int argc, char **argv, struct dsl_options *o)
         (drain_seen && o->stream) || (o->trigger && (o->stream || o->continuous || o->pattern))) goto invalid;
     for (unsigned ch = 0; ch < 16; ch++)
         if (o->trigger_conditions[ch] && !(o->channels & (1u << ch))) goto invalid;
+    if (o->serial)
+        for (unsigned role = 0; role < 4; role++)
+            if (!(o->channels & (1u << o->serial_trigger.channels[role]))) goto invalid;
     if (o->pattern) {
         o->channels = 0xffff; o->stream = 0; o->continuous = 0;
     } else {

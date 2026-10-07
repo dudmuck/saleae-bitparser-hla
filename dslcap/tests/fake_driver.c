@@ -23,7 +23,11 @@ static uint64_t rate = 25000000, sample_limit;
 static int operation, setter_count;
 static atomic_int collecting, stop_requested;
 static pthread_t collect_thread;
-static int thread_started, trigger_enabled, trigger_step;
+static int thread_started, trigger_enabled, trigger_mode;
+static unsigned trigger_step;
+static char serial_values[4][2][16];
+static uint32_t serial_counts[4][2];
+static unsigned char serial_logic[4], serial_inv[4][2];
 static uint64_t running_ns;
 static atomic_int upload_requested;
 static ds_datafeed_callback_t feed_callback;
@@ -225,11 +229,56 @@ int ds_enable_device_channel_index(int index, gboolean enabled)
 GSList *ds_get_actived_device_channels(void) { return channel_list; }
 int ds_trigger_reset(void) { trigger_step = 0; trigger_enabled = 0; return SR_OK; }
 int ds_trigger_set_pos(uint16_t position) { assert(trigger_step++ == 0 && position <= 90); return SR_OK; }
-int ds_trigger_set_mode(uint16_t mode) { assert(trigger_step++ == 1 && mode == SIMPLE_TRIGGER); return SR_OK; }
+int ds_trigger_set_mode(uint16_t mode) { assert(trigger_step++ == 1 && (mode == SIMPLE_TRIGGER || mode == SERIAL_TRIGGER));
+    trigger_mode = mode; return SR_OK; }
 int ds_trigger_probe_set(uint16_t probe, unsigned char first, unsigned char second)
 { assert(trigger_step >= 2 && !trigger_enabled && probe < 16 && channels[probe].enabled && second == 'X');
   assert(first == 'R' || first == 'F' || first == '1' || first == '0' || first == 'C'); trigger_step++; return SR_OK; }
-int ds_trigger_set_en(uint16_t enabled) { assert(trigger_step >= 3 && enabled == 1); trigger_enabled = 1; return SR_OK; }
+int ds_trigger_set_stage(uint16_t stage)
+{ assert(trigger_mode == SERIAL_TRIGGER && trigger_step++ == 2 && stage == 0 && !trigger_enabled);
+  memset(serial_counts, 0, sizeof(serial_counts)); return SR_OK; }
+int ds_trigger_stage_set_value(uint16_t stage, uint16_t probes, char *first, char *second)
+{
+    assert(trigger_mode == SERIAL_TRIGGER && !trigger_enabled && stage < 4 && probes == 16 && trigger_step++ == 3u + stage);
+    assert(strlen(first) == 31 && strlen(second) == 31);
+    for (unsigned side = 0; side < 2; side++) {
+        const char *value = side ? second : first;
+        for (unsigned i = 0; i < 16; i++) {
+            assert(i == 15 || value[2*i + 1] == ' ');
+            assert(strchr("XRF01C", value[2*i]));
+            serial_values[stage][side][15-i] = value[2*i];
+        }
+    }
+    return is("serial-config-value-fail") ? SR_ERR : SR_OK;
+}
+int ds_trigger_stage_set_logic(uint16_t stage, uint16_t probes, unsigned char logic)
+{ assert(!trigger_enabled && probes == 16 && stage < 4 && trigger_step++ == 7u + stage && logic == 1);
+  serial_logic[stage] = logic; return is("serial-config-logic-fail") ? SR_ERR : SR_OK; }
+int ds_trigger_stage_set_inv(uint16_t stage, uint16_t probes, unsigned char first, unsigned char second)
+{ assert(!trigger_enabled && probes == 16 && stage < 4 && trigger_step++ == 11u + stage && !first && !second);
+  serial_inv[stage][0] = first; serial_inv[stage][1] = second;
+  return is("serial-config-inv-fail") ? SR_ERR : SR_OK; }
+int ds_trigger_stage_set_count(uint16_t stage, uint16_t probes, uint32_t first, uint32_t second)
+{ assert(!trigger_enabled && probes == 16 && !second);
+  assert((stage == 1 && trigger_step == 15 && first == 1) || (stage == 3 && trigger_step == 16 && first <= 15));
+  trigger_step++; serial_counts[stage][0] = first; serial_counts[stage][1] = second;
+  return is("serial-config-count-fail") ? SR_ERR : SR_OK; }
+int ds_trigger_set_en(uint16_t enabled)
+{
+    assert(trigger_step >= 3 && enabled == 1);
+    if (trigger_mode == SERIAL_TRIGGER) {
+        assert(trigger_step == 17);
+        for (unsigned stage = 0; stage < 4; stage++) {
+            char first[17], second[17];
+            for (unsigned i = 0; i < 16; i++) { first[i] = serial_values[stage][0][15-i]; second[i] = serial_values[stage][1][15-i]; }
+            first[16] = second[16] = 0;
+            fprintf(stderr, "FAKE serial stage=%u value0=%s value1=%s logic=%u inv=%u/%u count=%u/%u\n",
+                stage, first, second, serial_logic[stage], serial_inv[stage][0], serial_inv[stage][1],
+                serial_counts[stage][0], serial_counts[stage][1]);
+        }
+    }
+    trigger_enabled = 1; return SR_OK;
+}
 static uint64_t now_ns(void)
 { struct timespec t; clock_gettime(CLOCK_MONOTONIC, &t); return (uint64_t)t.tv_sec * 1000000000 + t.tv_nsec; }
 int ds_get_actived_device_status(struct sr_status *status, gboolean progress)

@@ -106,8 +106,40 @@ advancing the decoder's watermark. Timestamps remain relative to capture
 start. An untriggered forced upload reports `Untriggered capture (forced
 upload)` and emits no trigger marker. Producer timeout/signal failures
 retain their exit codes even if the second META line never arrived. A
-successful producer missing that line is a protocol error. Serial triggers
-and trigger-relative `--t0` are not implemented.
+successful producer missing that line is a protocol error. Trigger-relative
+`--t0` remains unsupported.
+
+### DSLogic serial triggers
+
+Use `--serial-trigger` instead of `--trigger` to match a clocked bit value:
+
+```bash
+./sigrok_hla.py --dslogic --dslcap /tmp/dslcap-build/dslcap \
+  --dsl-mode buffer --samplerate 400M --samples 1M \
+  --spi CLK,MISO,MOSI,nSS -C 0=CLK,1=MISO,2=MOSI,3=nSS \
+  --serial-trigger 'start=nSS:f,stop=nSS:r,clock=CLK:r,data=MOSI,value=0x1c35,bits=16' \
+  --trigger-timeout 5s --hla-path /path/to/HLA
+```
+
+Fields start, stop, clock, data, value and bits are required exactly once, in
+any order. Names resolve through `-C` case insensitively; numeric indices work.
+Start/stop accept simple trigger conditions; clock requires rising or falling
+edge (`r`/`R`/`f`/`F`), and data is a bare name/index. Value requires `0x` or
+`0b` (uppercase prefixes accepted), fitting bits1..16. Shared role channels
+are permitted; simple and serial specifications are mutually exclusive.
+Resolved start/stop/clock/data join the same producer/width channel union,
+including inputs not used by SPI decoding or pin logging. All normal buffer
+lane, explicit finite-duration, timeout/action, metadata and drain rules apply.
+
+MSB-first shift order is assumed until hardware comparison: most recent bit
+is the value LSB. Generated stage3 compares the low N bits; unused upper bits
+are X (use DSView's bit editor with upper X for a short-width comparison).
+The register can match the last N bits anywhere after start, including later
+payload data, until stop clears it; this is not an opcode-only filter.
+Source-derived offline stage tests, including0x1c35, are not a real DSView
+register golden or proof of hardware bit/byte order. Live order and opcode
+validation remain separate gates. Serial requests use the same exact two-line
+META parsing and chronological trigger marker, keeping capture-start timestamps.
 
 ### Common prerequisites
 

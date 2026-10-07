@@ -84,6 +84,9 @@ if(BUILD_TESTING)
         "-DFIRMWARE=${CMAKE_CURRENT_BINARY_DIR}/test-firmware"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/bringup.cmake")
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    add_test(NAME serial_contract COMMAND "${Python3_EXECUTABLE}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_serial.py" "$<TARGET_FILE:dslcap_fake>"
+        "${CMAKE_CURRENT_BINARY_DIR}/test-firmware")
     add_test(NAME trigger_contract COMMAND "${Python3_EXECUTABLE}"
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_trigger.py" "$<TARGET_FILE:dslcap_fake>"
         "${CMAKE_CURRENT_BINARY_DIR}/test-firmware")

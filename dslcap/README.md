@@ -185,8 +185,48 @@ Consumers must choose one or two lines from the request, never inspect binary
 samples for another header. Any nonzero exit marks output incomplete,
 including failures after metadata or samples have already been emitted.
 Known terminal conditions use signal > device > data > trigger timeout >
-drain stall precedence. Serial triggers and trigger-relative `--t0` are
-reserved for later phases and are rejected in this implementation.
+drain stall precedence. Serial triggers share this lifecycle and framing, as
+described below. Trigger-relative `--t0` remains unsupported and is rejected.
+
+## Serial buffer triggers
+
+`--serial-trigger` selects a serial trigger instead of a simple AND trigger:
+
+```sh
+/tmp/dslcap-build/dslcap --mode buffer --samplerate 400M --channels 0-3 \
+  --samples 1M --serial-trigger 'start=3:f,stop=3:r,clock=0:r,data=2,value=0x1c35,bits=16' \
+  --trigger-pos 10 --trigger-timeout 5s > /tmp/serial.raw
+```
+
+All six fields are required exactly once, in any order. Start and stop use the
+same conditions as simple triggers; clock accepts only `r`/`R` or `f`/`F`.
+Data is a bare physical channel. Bits must be 1..16; value requires a hexadecimal
+`0x` or binary `0b` prefix and must fit that width (uppercase prefixes also
+work). All four role channels must be captured and fit the physical rate lanes.
+Roles may share a channel, as start/stop normally share nSS. Serial and simple
+triggers are mutually exclusive; serial capture requires finite buffer mode
+and rejects test patterns. Existing trigger-position, timeout/action, drain,
+exact two-line META and exit-status rules apply unchanged.
+
+Configuration follows DSView 1.3.2's serial template: global stage selector0
+(default UI stage count1); stage0=start/stop, stage1=clock/all-X,
+stage2=data-channel marker/all-X, stage3=compare value/all-X. Logic is AND,
+non-contiguous, with no inversion; stage1 count1 and stage3 count(bits-1).
+The trigger is enabled last. Fixed sixteen-probe strings put the value LSB in
+probe0 and unused upper16-bits positions at X. For bits<16 the matching DSView
+reference is the bit editor with upper X positions; its hex helper instead
+zero-pads all16 positions.
+
+MSB-first serial order is assumed: the most recently shifted bit is the value
+LSB. The asymmetric16-bit value0x1c35 distinguishes bit reversal0xac38,
+byte swap0x351c, and both0x38ac. Offline tests pin the parsed value and generated
+stage state; they do not prove hardware shift order or constitute a real DSView
+register golden. Those live comparisons and opcode checks remain separate gates
+in [TRIGGER_PLAN.md](TRIGGER_PLAN.md).
+
+The shift register matches the last N bits anywhere after start, including
+payload bits later in the same transfer, until stop clears it. This is not an
+opcode-only filter. Timestamps remain relative to capture start.
 
 ## Bring-up
 

@@ -1,5 +1,45 @@
 # Trigger implementation tasks
 
+## C-serial-trigger — wave 1
+
+User authorized Phase C item 1: serial-trigger implementation and offline
+tests. Baseline b2c5369; spec TRIGGER_PLAN.md; read-only reference
+/home/wroberts/DSView-1.3.2. No new dependencies or live hardware work.
+DSView serial golden comparison, bit/byte-order and opcode hardware gates
+remain pending and are not implied by offline implementation acceptance.
+
+Ownership: dslcap_worker owns C/H, CMake, dslcap/tests, sigrok_hla.py,
+tests/test_dslcap*.py and the two user READMEs. DS_LEAD owns plan, ledger,
+integration and scoped commits. Independent reviewer owns SERIAL_REVIEW.md
+after frozen handoff, with no implementation, Git or hardware writes.
+Detailed handoff: /tmp/dslcap-phase-c-worker.md.
+
+Review budget for this distinct group: 1/3 consumed. Cycle 1 allocated before
+launching independent review-1 on the frozen wave. Allocate each cycle
+before launch; only FAIL in cycles 1/2 permits a scoped fix wave; cycle 3
+is terminal. Prior B and A2 review budgets remain unchanged.
+
+Status: worker delivered frozen /tmp/dslcap-phase-c-handoff.md; lead verified
+10/10 source fingerprints and clean diff whitespace. Worker reports CTest6/6
+and Python42 PASS. Independent review cycle1 PASS; no hardware tests run.
+
+review-1 independently built production/fake targets in /tmp/dslcap-c-review,
+passed 6/6 CTest groups (26.50s), 42 Python tests (17.472s), 132 additional
+C/Python parser comparisons and 10/10 frozen source hashes. Report:
+SERIAL_REVIEW.md. No High/Medium/Low findings; one Warning preserves the live
+gates. No fix wave needed. Lead inspected the complete baseline diff and
+rechecked fingerprints after review. Worker and reviewer are finished.
+
+Source decision: serial global stage value is 0, matching DSView's default
+stage combo value 1 minus 1. Serial roles remain stages 0..3, with AND=1,
+invert=0, non-contiguous and counts stage1=1, stage3=bits-1. Unused upper
+16-bits value positions are X to express a last-N-bit match. The equivalent
+DSView reference uses its bit editor with upper X; its hex helper instead
+zero-pads all 16 positions. The first future golden uses bits=16/value=0x1c35,
+avoiding that distinction. Source: DSView/pv/dock/triggerdock.cpp:306-408,
+1041-1065 and libsigrok4DSL/trigger.c reset defaults. Hardware semantics
+remain unverified until the separate Phase C live gates.
+
 ## B-simple-trigger — wave 1
 
 Started 2026-10-07 by explicit user authorization to start Phase B after

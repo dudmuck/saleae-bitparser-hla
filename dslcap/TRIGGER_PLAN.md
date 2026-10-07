@@ -5,8 +5,12 @@ reviewed and hardware gates B.1–B.6 passed. See
 [TRIGGER_VALIDATION.md](TRIGGER_VALIDATION.md) for evidence and retained
 limitations. A2 continuous-clock validation also passed, with independent
 review and restored wiring; see [A2_VALIDATION.md](A2_VALIDATION.md).
-Phase C serial triggering
-and optional trigger-relative timestamps are not implemented by this wave.
+Phase C serial-trigger implementation is now present in C and Python with
+offline coverage and independent review PASS; see
+[SERIAL_REVIEW.md](SERIAL_REVIEW.md). Real
+DSView serial register comparison, hardware bit/byte order and opcode tests
+remain open. See [TRIGGER_TASKS.md](TRIGGER_TASKS.md). Optional trigger-relative
+timestamps remain unimplemented.
 
 Plan review history: proposed 2026-10-07, revised the same day for review
 `dslcap-trigger-plan-review-20261007`: all seven findings were accepted and

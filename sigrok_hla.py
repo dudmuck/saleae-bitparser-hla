@@ -412,7 +412,39 @@ def _process_saleae_csv(csv_path, args, spi_analyzers, port_name_list):
 # sigrok backend
 # ---------------------------------------------------------------------------
 
-def resolve_channel_indices(args, spi_ports, include_triggers=False):
+def parse_serial_trigger(specification, to_index):
+    """Return validated fixed serial roles; names resolve through the caller."""
+    fields = {}
+    for term in specification.split(','):
+        parts = term.split('=')
+        if len(parts) != 2 or not parts[0] or not parts[1] or parts[0] in fields:
+            raise SystemExit('--serial-trigger requires unique nonempty key=value fields.')
+        fields[parts[0]] = parts[1]
+    if set(fields) != {'start', 'stop', 'clock', 'data', 'value', 'bits'}:
+        raise SystemExit('--serial-trigger requires start,stop,clock,data,value,bits exactly once.')
+    result = {}
+    for role in ('start', 'stop', 'clock'):
+        parts = fields[role].rsplit(':', 1)
+        conditions = ('r', 'R', 'f', 'F') if role == 'clock' else ('r', 'R', 'f', 'F', '1', 'h', '0', 'l', 'e')
+        if len(parts) != 2 or parts[1] not in conditions:
+            raise SystemExit(f'--serial-trigger {role} has an invalid condition; clock requires r/f.')
+        result[role] = (to_index(parts[0], '--serial-trigger ' + role), parts[1])
+    if ':' in fields['data']:
+        raise SystemExit('--serial-trigger data must be a bare channel name or index.')
+    result['data'] = to_index(fields['data'], '--serial-trigger data')
+    if not re.fullmatch(r'[0-9]+', fields['bits']) or len(fields['bits']) > 128:
+        raise SystemExit('--serial-trigger bits must be 1..16.')
+    result['bits'] = int(fields['bits'])
+    value = fields['value']
+    if len(value) > 130 or not re.fullmatch(r'0(?:[xX][0-9a-fA-F]+|[bB][01]+)', value):
+        raise SystemExit('--serial-trigger value requires hex 0x or binary 0b digits.')
+    result['value'] = int(value[2:], 16 if value[1].lower() == 'x' else 2)
+    if not 1 <= result['bits'] <= 16 or result['value'] >= 1 << result['bits']:
+        raise SystemExit('--serial-trigger value must fit bits (1..16).')
+    return result
+
+
+def resolve_channel_indices(args, spi_ports, include_triggers=False, include_serial=False):
     """Map the SPI ports' channel names to logic bit indices.
 
     The numpy engine reads packed samples where bit N is logic channel N, so
@@ -479,6 +511,15 @@ def resolve_channel_indices(args, spi_ports, include_triggers=False):
                     raise SystemExit('--trigger contains duplicate physical channels.')
                 seen.add(bit)
                 triggers.append((bit, fields[1]))
+        serial_specification = getattr(args, 'serial_trigger', None)
+        if specification is not None and serial_specification is not None:
+            raise SystemExit('--trigger and --serial-trigger are mutually exclusive.')
+        serial = parse_serial_trigger(serial_specification, to_index) if serial_specification is not None else None
+        if serial:
+            triggers += [serial[role] for role in ('start', 'stop', 'clock')]
+            triggers.append((serial['data'], ''))
+        if include_serial:
+            return resolved, pins, triggers, serial
         return resolved, pins, triggers
     return resolved, pins
 
@@ -525,7 +566,7 @@ def validate_backend_args(args, spi_ports):
         if (getattr(args, 'dslcap_verbose', 0) or getattr(args, 'vth', None) is not None or
                 getattr(args, 'dsl_mode', 'stream') != 'stream' or
                 any(getattr(args, key, None) is not None for key in
-                    ('trigger', 'trigger_pos', 'trigger_timeout', 'on_timeout', 'drain_timeout'))):
+                    ('trigger', 'serial_trigger', 'trigger_pos', 'trigger_timeout', 'on_timeout', 'drain_timeout'))):
             raise SystemExit('DSLogic capture options require --dslogic.')
         return
     if args.saleae or args.driver or args.input_file or args.input_format or args.transform:
@@ -535,15 +576,19 @@ def validate_backend_args(args, spi_ports):
     if not any((args.samples, args.time, args.continuous)):
         raise SystemExit('--dslogic requires --samples, --time or --continuous.')
     mode = getattr(args, 'dsl_mode', 'stream')
-    trigger = getattr(args, 'trigger', None)
+    simple = getattr(args, 'trigger', None)
+    serial = getattr(args, 'serial_trigger', None)
+    if simple is not None and serial is not None:
+        raise SystemExit('--trigger and --serial-trigger are mutually exclusive.')
+    trigger = simple if simple is not None else serial
     if trigger is not None and not trigger:
-        raise SystemExit('--trigger must contain at least one term.')
+        raise SystemExit('Trigger specification must contain at least one term.')
     if mode not in ('stream', 'buffer'):
         raise SystemExit('--dsl-mode must be stream or buffer.')
     if mode == 'buffer' and (args.continuous or not (args.samples or args.time)):
         raise SystemExit('--dsl-mode buffer requires explicit --samples or --time.')
     if trigger and mode != 'buffer':
-        raise SystemExit('--trigger requires --dsl-mode buffer.')
+        raise SystemExit('Triggers require --dsl-mode buffer.')
     if not trigger and any(getattr(args, key, None) is not None for key in
                            ('trigger_pos', 'trigger_timeout', 'on_timeout')):
         raise SystemExit('Trigger modifiers require --trigger.')
@@ -619,7 +664,7 @@ def build_dslcap_cmd(args, spi_ports):
     mapping, and must never be passed directly as the producer channel list.
     """
     validate_backend_args(args, spi_ports)
-    ports, pins, triggers = resolve_channel_indices(args, spi_ports, include_triggers=True)
+    ports, pins, triggers, serial = resolve_channel_indices(args, spi_ports, include_triggers=True, include_serial=True)
     bits = _used_channel_bits(ports, pins, triggers)
     rate = parse_samplerate(args.samplerate) if args.samplerate else 25_000_000
     cmd = [args.dslcap, '--samplerate', str(int(rate)), '--channels',
@@ -631,7 +676,11 @@ def build_dslcap_cmd(args, spi_ports):
         cmd += ['--time', f'{parse_duration(args.time):.12g}s']
     else:
         cmd += ['--continuous']
-    if triggers:
+    if serial:
+        terms = [f'{role}={serial[role][0]}:{serial[role][1]}' for role in ('start', 'stop', 'clock')]
+        terms += [f'data={serial["data"]}', f'value=0x{serial["value"]:x}', f'bits={serial["bits"]}']
+        cmd += ['--serial-trigger', ','.join(terms)]
+    elif triggers:
         cmd += ['--trigger', ','.join(f'{bit}:{condition}' for bit, condition in triggers)]
     for attribute, flag in (('trigger_pos', '--trigger-pos'), ('trigger_timeout', '--trigger-timeout'),
                             ('on_timeout', '--on-timeout'), ('drain_timeout', '--drain-timeout')):
@@ -955,7 +1004,8 @@ def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate, cmd=None):
 
     decoder = None
     sample_tail = b''
-    triggered = bool(getattr(args, 'dslogic', False) and getattr(args, 'trigger', None))
+    triggered = bool(getattr(args, 'dslogic', False) and
+                     (getattr(args, 'trigger', None) or getattr(args, 'serial_trigger', None)))
     prefix = MetaPrefix(samplerate, required=getattr(args, 'dslogic', False),
                         expected_lines=2 if triggered else 1)
     cmd = cmd if cmd is not None else build_sigrok_cmd(args, spi_ports)
@@ -1279,6 +1329,7 @@ def main():
     parser.add_argument('--dsl-mode', choices=('stream', 'buffer'), default='stream',
                         help='[dslogic] Capture mode (default: stream)')
     parser.add_argument('--trigger', help='[dslogic buffer] AND trigger NAME:COND,... (r/f/h/l/1/0/e)')
+    parser.add_argument('--serial-trigger', help='[dslogic buffer] start=CH:COND,stop=CH:COND,clock=CH:r|f,data=CH,value=0xV|0bV,bits=1..16')
     parser.add_argument('--trigger-pos', type=int, help='[dslogic trigger] Pre-trigger percent 0..90 (default: 10)')
     parser.add_argument('--trigger-timeout', help='[dslogic trigger] Wait timeout; absent waits indefinitely')
     parser.add_argument('--on-timeout', choices=('fail', 'upload'), help='[dslogic trigger] Timeout action (default: fail)')

@@ -65,6 +65,36 @@ static int get(int key, const GVariantType *type, GVariant **value)
     return 0;
 }
 
+static int configure_serial(const struct dsl_serial_trigger *serial)
+{
+    char values[4][2][32]; // Exactly 16 space-separated probe characters + NUL.
+    for (unsigned stage = 0; stage < 4; stage++)
+        for (unsigned side = 0; side < 2; side++) {
+            for (unsigned position = 0; position < 31; position++)
+                values[stage][side][position] = position & 1 ? ' ' : 'X';
+            values[stage][side][31] = '\0';
+        }
+    values[0][0][30 - 2 * serial->channels[0]] = serial->conditions[0];
+    values[0][1][30 - 2 * serial->channels[1]] = serial->conditions[1];
+    values[1][0][30 - 2 * serial->channels[2]] = serial->conditions[2];
+    values[2][0][30 - 2 * serial->channels[3]] = '0';
+    for (unsigned bit = 0; bit < serial->bits; bit++)
+        values[3][0][30 - 2 * bit] = serial->value & (1u << bit) ? '1' : '0';
+    // DSView's default stage selector is 1; commit_trigger stores selector-1.
+    // Serial roles are fixed at 0..3 independently of that advanced selector.
+    if (ds_trigger_set_stage(0) != SR_OK) return DSL_CONFIG_ERROR;
+    for (unsigned stage = 0; stage < 4; stage++)
+        if (ds_trigger_stage_set_value((uint16_t)stage, 16, values[stage][0], values[stage][1]) != SR_OK)
+            return DSL_CONFIG_ERROR;
+    for (unsigned stage = 0; stage < 4; stage++)
+        if (ds_trigger_stage_set_logic((uint16_t)stage, 16, 1) != SR_OK) return DSL_CONFIG_ERROR;
+    for (unsigned stage = 0; stage < 4; stage++)
+        if (ds_trigger_stage_set_inv((uint16_t)stage, 16, 0, 0) != SR_OK) return DSL_CONFIG_ERROR;
+    if (ds_trigger_stage_set_count(1, 16, 1, 0) != SR_OK ||
+        ds_trigger_stage_set_count(3, 16, serial->bits - 1, 0) != SR_OK) return DSL_CONFIG_ERROR;
+    return 0;
+}
+
 int dsl_configure(struct dsl_options *o)
 {
     int mode = o->pattern ? profile()->dev_caps.intest_channel :
@@ -143,15 +173,16 @@ int dsl_configure(struct dsl_options *o)
         o->trigger_effective = dsl_trigger_position(o->trigger_pos, o->arm_limit,
                 (profile()->dev_caps.hw_depth / (unsigned)enabled) & ~SAMPLES_ALIGN);
         if (ds_trigger_set_pos((uint16_t)o->trigger_pos) != SR_OK ||
-            ds_trigger_set_mode(SIMPLE_TRIGGER) != SR_OK) return DSL_CONFIG_ERROR;
+            ds_trigger_set_mode(o->serial ? SERIAL_TRIGGER : SIMPLE_TRIGGER) != SR_OK) return DSL_CONFIG_ERROR;
+        if (o->serial && configure_serial(&o->serial_trigger)) return DSL_CONFIG_ERROR;
         for (unsigned ch = 0; ch < 16; ch++)
             if (o->trigger_conditions[ch] && ds_trigger_probe_set((uint16_t)ch,
                     (unsigned char)o->trigger_conditions[ch], 'X') != SR_OK) return DSL_CONFIG_ERROR;
         if (o->timeout_upload && set(SR_CONF_BUFFER_OPTIONS, g_variant_new_int16(1) /* DSView dslogic.c private SR_BUF_UPLOAD */))
             return DSL_CONFIG_ERROR;
         if (ds_trigger_set_en(1) != SR_OK) return DSL_CONFIG_ERROR;
-        fprintf(stderr, "dslcap: simple AND trigger position=%u%% effective=%" PRIu64 " arm-limit=%" PRIu64 "\n",
-                o->trigger_pos, o->trigger_effective, o->arm_limit);
+        fprintf(stderr, "dslcap: %s trigger position=%u%% effective=%" PRIu64 " arm-limit=%" PRIu64 "\n",
+                o->serial ? "serial (MSB-first assumed)" : "simple AND", o->trigger_pos, o->trigger_effective, o->arm_limit);
     }
     fprintf(stderr, "dslcap: capture configured: %" PRIu64 " Hz, mask=0x%04x, unitsize=%d, %s, %s\n",
             o->rate, o->channels, o->channels & 0xff00 ? 2 : 1,
