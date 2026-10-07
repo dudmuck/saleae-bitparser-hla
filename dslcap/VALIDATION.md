@@ -97,7 +97,6 @@ running. Temporary source and timing log: `/tmp/dslcap-pi133-pulses.py` and
 
 - Dual-SPI LR1110/LR2021 HLA comparison with Saleae/Logic 2. The known
   single-port Pi burst and independent sigrok decode now pass (below).
-- Cold automatic FPGA upload, as recorded in the G0 review.
 
 Raw captures and full temporary logs are intentionally not committed.
 
@@ -317,3 +316,37 @@ neither fast_spi nor dslcap conversion code. It confirmed matching rates,
 physical masks, complete transaction signatures and high-channel pulse
 patterns, with no mismatches. Detailed independent evidence is in
 `/tmp/dslcap-dsview-worker-verification.json`.
+
+## Cold automatic FPGA startup — PASS
+
+Operator confirmed the DSLogic USB cable was disconnected for approximately
+ten seconds and reconnected, with DSView closed. The next analyzer open
+was the production frontend's `--scan -vv`, bounded by a 45-second timeout.
+It exited 0; the device re-enumerated from bus1/address6 to bus1/address12.
+The log explicitly records the automatic branch:
+
+```text
+Configure FPGA using "/usr/local/share/DSView/res/DSLogicPlus-pgl12-2.bin"
+FPGA configure done: 530620 bytes.
+Security check pass!
+```
+
+The normal verification reopen also passed security, and explicit HDL
+readback was 0x0e. This run used neither the forced-reload test helper nor
+any nonvolatile-memory operation. It closes the cold automatic-load gap
+retained by the earlier G0 review.
+
+A subsequent production capture, `--samplerate 25M --channels 0-7
+--samples 100001`, exited 0 with the correct META header and exactly 100001
+sample bytes. GPIO generators were stopped, so this is a post-load capture
+and lifecycle test, not another signal-content comparison. Immediate
+`--scan` after capture exited 0. No analyzer process remains running.
+
+Artifacts: `/tmp/dslcap-cold-scan.{stdout,stderr}`,
+`/tmp/dslcap-cold-capture.{raw,stderr}`,
+`/tmp/dslcap-cold-reopen.{stdout,stderr}`,
+`/tmp/dslcap-cold-validation.json`.
+Cold scan stderr SHA-256:
+`19f62576652317883b86f47b206ba81ccfe13055db4d30a7b23ec3fd711c4a1d`.
+Capture SHA-256:
+`4f05a2e95862ae22a069e5065a06c38cb1d371429c2977cf968d2e6e1d704fa3`.

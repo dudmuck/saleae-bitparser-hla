@@ -324,3 +324,16 @@ does not reopen a PASS implementation review or change the plan/dependencies.
 The Phase 1 DSView reference gate is now satisfied. Remaining gates are
 real LR1110/LR2021 dual-SPI comparison with Saleae/Logic 2 and cold automatic
 FPGA upload evidence.
+
+## Cold startup gate closed — 2026-10-07
+
+After the operator-confirmed ten-second USB disconnect/reconnect, the
+production frontend automatically uploaded 530620 FPGA bytes, passed
+security on initial open and reopen, and read HDL 0x0e. Scan exited 0.
+Subsequent 25M x 8 capture returned exactly 100001 samples with exit 0;
+immediate analyzer reopen also exited 0. No forced-upload helper or NVM
+operation was used. Full evidence is recorded in VALIDATION.md.
+
+The only remaining plan acceptance gate is the real LR1110/LR2021 dual-SPI
+HLA comparison with Saleae/Logic 2. The operator has been asked to identify
+the radio/reference capture setup; that information remains pending.
