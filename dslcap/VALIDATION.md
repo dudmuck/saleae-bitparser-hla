@@ -95,7 +95,8 @@ running. Temporary source and timing log: `/tmp/dslcap-pi133-pulses.py` and
 
 ## Open gates
 
-- Physical high-channel mapping and independent DSView capture comparison.
+- Independent DSView capture comparison. Representative physical high-channel
+  mapping (CH9/CH15) now passes in full and sparse capture modes (below).
 - Dual-SPI LR1110/LR2021 HLA comparison with Saleae/Logic 2. The known
   single-port Pi burst and independent sigrok decode now pass (below).
 - Cold automatic FPGA upload, as recorded in the G0 review.
@@ -197,3 +198,51 @@ Generator and both captures exited 0. Independent `pinctrl get 17,18,24,27`
 confirmed every driven pin restored to input/pull-down. No GPIO generator
 remains active. Artifacts: `/tmp/dslcap-known-spi*` and
 `/tmp/dslcap-python-signal-validation.json`; raw captures are not committed.
+
+## Physical CH9/CH15 mapping — PASS
+
+Operator connected separate Pi pins: DSLogic CH9 to pi133 GPIO5/physical
+pin29, and CH15 to GPIO6/physical pin31. Existing CH0–CH3 and ground remained
+connected. Both additional GPIOs were unclaimed inputs with pull-up before
+the test. No lead sharing or extra hardware was required.
+
+Lead drove GPIO5/GPIO6 through `00 -> 10 -> 11 -> 01`, holding these states
+for 11/23/37/53ms respectively, for a bounded 20 seconds. Expected CH9
+high/low intervals are 60/64ms; CH15 intervals are 90/34ms. This distinguishes
+the two physical inputs and detects swapped or incorrectly packed bits.
+These are software-timed pulses, not a precision frequency reference.
+
+All three captures used `--time 700ms` and exited 0:
+
+| Channels | Rate | Exact samples | Verified physical inputs |
+| --- | --- | --- | --- |
+| 0–11 | 25M | 17500000 | CH9: 12 edges |
+| 0–15 | 20M | 14000000 | CH9: 11 edges; CH15: 12 edges |
+| 0,3,9,15 | 25M | 17500000 | CH9: 11 edges; CH15: 11 edges |
+
+Lead parsed the required META header and little-endian uint16 samples,
+checked exact counts and zero disabled bits, and verified every complete
+pulse interval within 5ms of its programmed value. Observed CH9 high widths
+were 60.127–60.187ms and low widths 64.130–64.217ms; CH15 high widths were
+90.130–90.219ms and low widths 34.127–34.188ms. Full and sparse captures
+also preserved the exact four-state transition order. The 12-channel case
+correctly excludes CH15. This covers representative high physical bits;
+it does not claim every one of the 16 inputs was separately wired.
+
+Worker dslcap_worker independently parsed all three immutable captures
+without production converter code. It confirmed exact headers/counts,
+zero disabled bits, all pulse signatures and four-state ordering with no
+mismatches. Every complete pulse was within 2ms of nominal; actual overhead
+was approximately 0.13–0.22ms. Its temporary text/JSON reports are
+`/tmp/dslcap-high-worker-verification.{txt,json}`; the JSON also records
+capture SHA-256 hashes and complete edge intervals.
+
+The GPIO helper exited 0 and restored both pins to input with their original
+pull-up settings. Independent `pinctrl get 5,6` confirmed restoration.
+Immediate analyzer `--scan` exited 0 with both security checks passing and
+HDL 0x0e. No generator or capture remains running.
+
+Temporary evidence: `/tmp/dslcap-high-{12ch,16ch,sparse}.raw`, matching
+`.stderr` files, `/tmp/dslcap-high-capture.json`, `/tmp/dslcap-high-analysis.json`,
+`/tmp/dslcap-high-gpio.log`, and runner/helper
+`/tmp/dslcap-high-{test,gpio}.py`. Raw captures are intentionally not committed.

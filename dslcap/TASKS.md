@@ -283,3 +283,22 @@ FPGA upload evidence. Operator was asked to add CH9/CH15 for mapping and
 identify the radio/reference setup. These physical/reference gates prevent
 claiming the whole plan complete. No new dependency or plan change is needed
 for the work completed so far.
+
+## Additional physical mapping validation — 2026-10-07
+
+Operator supplied separate CH9→GPIO5/pin29 and CH15→GPIO6/pin31 connections
+on pi133. Lead drove distinct bounded pulse patterns and verified physical
+bit positions, exact sample counts, disabled-bit masking, pulse widths and
+four-state ordering in 12-channel, 16-channel and sparse captures. All
+captures passed; both Pi pins were restored to input/pull-up and analyzer
+reopen passed. See VALIDATION.md for exact evidence.
+
+The existing dslcap_worker was assigned independent read-only analysis of
+the immutable captures, with no hardware, implementation or Git access.
+This adds physical evidence, not a new implementation fix/review cycle.
+Worker independently confirmed all three captures with no metadata,
+sample-count, physical mapping, mask, state-order or pulse mismatches;
+report: `/tmp/dslcap-high-worker-verification.txt`. No product code changed.
+CH9/CH15 mapping is no longer blocked on wiring. Remaining acceptance gates
+are independent DSView capture comparison, real LR1110/LR2021 dual-SPI
+comparison with Saleae/Logic 2, and cold automatic FPGA upload evidence.
