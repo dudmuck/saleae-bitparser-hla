@@ -43,7 +43,7 @@ wiring may require the operator. No NVM writes are authorized.
 
 - [x] G1-capture: implement capture configuration, cross-data conversion,
   bounded ring, writer, finite trimming and shutdown; focused offline tests.
-- [ ] G1-capture: Phase 1 signal/reference validation. Standalone output is
+- [x] G1-capture: Phase 1 signal/reference validation. Standalone output is
   one byte when all channels are below 8; otherwise two little-endian bytes,
   preserving physical bit positions. Python integration initially stays at
   eight channels. This resolves the original plan's 12/16-channel test
@@ -302,3 +302,25 @@ report: `/tmp/dslcap-high-worker-verification.txt`. No product code changed.
 CH9/CH15 mapping is no longer blocked on wiring. Remaining acceptance gates
 are independent DSView capture comparison, real LR1110/LR2021 dual-SPI
 comparison with Saleae/Logic 2, and cold automatic FPGA upload evidence.
+
+## DSView reference comparison — 2026-10-07
+
+Operator saved all four required native DSView stream configurations and
+closed DSView. Lead restarted bounded generators, collected matching
+dslcap captures, and verified complete SPI bytes/clock counts, physical
+channel masks and pulse signatures. All four comparisons passed. Native
+archive decoding was checked against DSView's own save/sample source, not
+dslcap's conversion. The initial file accidentally enabled nine channels;
+the replacement exact-eight file is used for acceptance.
+
+Counts, tolerances, boundary-frame handling and temporary checker corrections
+are recorded in VALIDATION.md; durable hashes/summaries are in
+DSVIEW_COMPARISON.json. All generators ended, all six Pi pins were restored
+to inputs, and analyzer reopen passed. Worker independently inspected these
+same immutable files and confirmed all four comparisons with no mismatches,
+using no hardware or product edits. This validation
+does not reopen a PASS implementation review or change the plan/dependencies.
+
+The Phase 1 DSView reference gate is now satisfied. Remaining gates are
+real LR1110/LR2021 dual-SPI comparison with Saleae/Logic 2 and cold automatic
+FPGA upload evidence.

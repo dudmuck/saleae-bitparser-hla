@@ -1,0 +1,487 @@
+{
+  "purpose": "Independent DSView 1.3.2 versus dslcap stream comparison",
+  "date": "2026-10-07",
+  "method": "Separate captures of repeating Pi-generated SPI and GPIO signals; compare complete CS-bounded transactions and physical pulse signatures, not phase-aligned samples.",
+  "expected_mosi": "01 00 55 aa",
+  "expected_miso": "0f a5 5a c3",
+  "cases": [
+    {
+      "dsview_file": "/tmp/dsview-exact8-25M.dsl",
+      "dslcap_file": "/tmp/dslcap-reference-8ch.raw",
+      "dsview_sha256": "92f63ad7cc549305506a8563354cf96f162d111f5c64d6daeba2e51d23ee47f1",
+      "dslcap_sha256": "17c377755c358b5a15e5f99ed7d5da44accba1b07d65965977a30e4fc6c713ff",
+      "rate": 25000000,
+      "channels": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "dsview": {
+        "samples": 25000960,
+        "duration_s": 1.0000384,
+        "complete_spi_transactions": 11,
+        "pulses": {
+          "0": {
+            "edges": 768,
+            "0": {
+              "min_s": 0.00109172,
+              "max_s": 0.01442348,
+              "median_s": 0.00109992
+            },
+            "1": {
+              "min_s": 0.00108268,
+              "max_s": 0.00111384,
+              "median_s": 0.00108888
+            }
+          },
+          "3": {
+            "edges": 24,
+            "0": {
+              "min_s": 0.07288396,
+              "max_s": 0.0733408,
+              "median_s": 0.07329528
+            },
+            "1": {
+              "min_s": 0.01009316,
+              "max_s": 0.01012048,
+              "median_s": 0.01009978
+            }
+          }
+        }
+      },
+      "dslcap": {
+        "samples": 25000000,
+        "duration_s": 1.0,
+        "complete_spi_transactions": 11,
+        "pulses": {
+          "0": {
+            "edges": 789,
+            "0": {
+              "min_s": 0.0010394,
+              "max_s": 0.01428136,
+              "median_s": 0.00106708
+            },
+            "1": {
+              "min_s": 0.00106172,
+              "max_s": 0.00128544,
+              "median_s": 0.0010632
+            }
+          },
+          "3": {
+            "edges": 24,
+            "0": {
+              "min_s": 0.0712934,
+              "max_s": 0.07134172,
+              "median_s": 0.07131324
+            },
+            "1": {
+              "min_s": 0.01006644,
+              "max_s": 0.0100712,
+              "median_s": 0.010066760000000001
+            }
+          }
+        }
+      },
+      "result": "PASS"
+    },
+    {
+      "dsview_file": "/tmp/dsview-12ch-25M.dsl",
+      "dslcap_file": "/tmp/dslcap-reference-12ch.raw",
+      "dsview_sha256": "caac3f2ee58357a68f83748ca2d7d57f6b70b16c953e9253412554fd9198b4b8",
+      "dslcap_sha256": "e77aa412eb5733a6bf8d137e9c80a7f5a84857aec638de7c8b7afb7248708263",
+      "rate": 25000000,
+      "channels": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "dsview": {
+        "samples": 25000960,
+        "duration_s": 1.0000384,
+        "complete_spi_transactions": 11,
+        "pulses": {
+          "0": {
+            "edges": 767,
+            "0": {
+              "min_s": 0.00109004,
+              "max_s": 0.01439812,
+              "median_s": 0.0011004
+            },
+            "1": {
+              "min_s": 0.00108,
+              "max_s": 0.0011138,
+              "median_s": 0.00108896
+            }
+          },
+          "3": {
+            "edges": 24,
+            "0": {
+              "min_s": 0.07299,
+              "max_s": 0.07336716,
+              "median_s": 0.0733372
+            },
+            "1": {
+              "min_s": 0.01009304,
+              "max_s": 0.01010204,
+              "median_s": 0.01010018
+            }
+          },
+          "9": {
+            "edges": 16,
+            "0": {
+              "min_s": 0.06418752,
+              "max_s": 0.06419776,
+              "median_s": 0.06419098000000001
+            },
+            "1": {
+              "min_s": 0.06017068,
+              "max_s": 0.06018424,
+              "median_s": 0.06017908
+            }
+          }
+        }
+      },
+      "dslcap": {
+        "samples": 25000000,
+        "duration_s": 1.0,
+        "complete_spi_transactions": 11,
+        "pulses": {
+          "0": {
+            "edges": 780,
+            "0": {
+              "min_s": 0.00106548,
+              "max_s": 0.01440212,
+              "median_s": 0.00106912
+            },
+            "1": {
+              "min_s": 0.0010618,
+              "max_s": 0.00112648,
+              "median_s": 0.00106428
+            }
+          },
+          "3": {
+            "edges": 24,
+            "0": {
+              "min_s": 0.07130976,
+              "max_s": 0.07335228,
+              "median_s": 0.0718194
+            },
+            "1": {
+              "min_s": 0.01006528,
+              "max_s": 0.010103,
+              "median_s": 0.010080180000000001
+            }
+          },
+          "9": {
+            "edges": 16,
+            "0": {
+              "min_s": 0.06412856,
+              "max_s": 0.06419412,
+              "median_s": 0.0641312
+            },
+            "1": {
+              "min_s": 0.06012612,
+              "max_s": 0.06019344,
+              "median_s": 0.06014866
+            }
+          }
+        }
+      },
+      "result": "PASS"
+    },
+    {
+      "dsview_file": "/tmp/dsview-16ch-20M.dsl",
+      "dslcap_file": "/tmp/dslcap-reference-16ch.raw",
+      "dsview_sha256": "75a7214b319146554100fd8b7bac5a93134a9a01f119f85c6797661084baf10e",
+      "dslcap_sha256": "53042683c6d4264b975d207405fed770f73d34fe76e20129ac445ef9a2ef09c3",
+      "rate": 20000000,
+      "channels": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "dsview": {
+        "samples": 20000768,
+        "duration_s": 1.0000384,
+        "complete_spi_transactions": 11,
+        "pulses": {
+          "0": {
+            "edges": 769,
+            "0": {
+              "min_s": 0.001089,
+              "max_s": 0.01441155,
+              "median_s": 0.00109925
+            },
+            "1": {
+              "min_s": 0.00107975,
+              "max_s": 0.00116675,
+              "median_s": 0.00108815
+            }
+          },
+          "3": {
+            "edges": 24,
+            "0": {
+              "min_s": 0.07291915,
+              "max_s": 0.0734147,
+              "median_s": 0.07308275
+            },
+            "1": {
+              "min_s": 0.01009295,
+              "max_s": 0.01012085,
+              "median_s": 0.010102225
+            }
+          },
+          "9": {
+            "edges": 16,
+            "0": {
+              "min_s": 0.06417935,
+              "max_s": 0.0642237,
+              "median_s": 0.06420705
+            },
+            "1": {
+              "min_s": 0.0601757,
+              "max_s": 0.0601983,
+              "median_s": 0.060183225
+            }
+          },
+          "15": {
+            "edges": 16,
+            "0": {
+              "min_s": 0.0341683,
+              "max_s": 0.0342083,
+              "median_s": 0.034195249999999996
+            },
+            "1": {
+              "min_s": 0.0901812,
+              "max_s": 0.0902124,
+              "median_s": 0.0902052
+            }
+          }
+        },
+        "high_channel_state_order": "00 -> 10 -> 11 -> 01 -> 00"
+      },
+      "dslcap": {
+        "samples": 20000000,
+        "duration_s": 1.0,
+        "complete_spi_transactions": 11,
+        "pulses": {
+          "0": {
+            "edges": 768,
+            "0": {
+              "min_s": 0.0010889,
+              "max_s": 0.01441135,
+              "median_s": 0.00110035
+            },
+            "1": {
+              "min_s": 0.00108005,
+              "max_s": 0.00113125,
+              "median_s": 0.00108915
+            }
+          },
+          "3": {
+            "edges": 24,
+            "0": {
+              "min_s": 0.0728882,
+              "max_s": 0.07335195,
+              "median_s": 0.07327455
+            },
+            "1": {
+              "min_s": 0.0100905,
+              "max_s": 0.01012075,
+              "median_s": 0.010099375
+            }
+          },
+          "9": {
+            "edges": 16,
+            "0": {
+              "min_s": 0.0641789,
+              "max_s": 0.06420435,
+              "median_s": 0.06419105
+            },
+            "1": {
+              "min_s": 0.0601695,
+              "max_s": 0.0601854,
+              "median_s": 0.060181
+            }
+          },
+          "15": {
+            "edges": 16,
+            "0": {
+              "min_s": 0.03416725,
+              "max_s": 0.03418315,
+              "median_s": 0.034180875
+            },
+            "1": {
+              "min_s": 0.09018165,
+              "max_s": 0.09021455,
+              "median_s": 0.0901907
+            }
+          }
+        },
+        "high_channel_state_order": "00 -> 10 -> 11 -> 01 -> 00"
+      },
+      "result": "PASS"
+    },
+    {
+      "dsview_file": "/tmp/dsview-sparse-25M.dsl",
+      "dslcap_file": "/tmp/dslcap-reference-sparse.raw",
+      "dsview_sha256": "a77de118223d625e58f879d6c3ac52ba584d65900528293cb180c298dad23b6f",
+      "dslcap_sha256": "be27d53c81c0c79f1b9596d67d8bfec1dd6a8a423ac5eba095c98b13daf25009",
+      "rate": 25000000,
+      "channels": [
+        0,
+        3,
+        9,
+        15
+      ],
+      "dsview": {
+        "samples": 25000960,
+        "duration_s": 1.0000384,
+        "complete_spi_transactions": null,
+        "pulses": {
+          "0": {
+            "edges": 769,
+            "0": {
+              "min_s": 0.00108916,
+              "max_s": 0.0143964,
+              "median_s": 0.00109976
+            },
+            "1": {
+              "min_s": 0.00107964,
+              "max_s": 0.00112128,
+              "median_s": 0.00108876
+            }
+          },
+          "3": {
+            "edges": 24,
+            "0": {
+              "min_s": 0.0728674,
+              "max_s": 0.07336244,
+              "median_s": 0.07312492
+            },
+            "1": {
+              "min_s": 0.0100926,
+              "max_s": 0.01010224,
+              "median_s": 0.01010046
+            }
+          },
+          "9": {
+            "edges": 16,
+            "0": {
+              "min_s": 0.06417652,
+              "max_s": 0.06423448,
+              "median_s": 0.06418936
+            },
+            "1": {
+              "min_s": 0.06017376,
+              "max_s": 0.06022588,
+              "median_s": 0.06017746
+            }
+          },
+          "15": {
+            "edges": 16,
+            "0": {
+              "min_s": 0.0341702,
+              "max_s": 0.03418192,
+              "median_s": 0.03417626
+            },
+            "1": {
+              "min_s": 0.09017924,
+              "max_s": 0.09023968,
+              "median_s": 0.09019044
+            }
+          }
+        },
+        "high_channel_state_order": "00 -> 10 -> 11 -> 01 -> 00"
+      },
+      "dslcap": {
+        "samples": 25000000,
+        "duration_s": 1.0,
+        "complete_spi_transactions": null,
+        "pulses": {
+          "0": {
+            "edges": 768,
+            "0": {
+              "min_s": 0.00108948,
+              "max_s": 0.01439612,
+              "median_s": 0.00110024
+            },
+            "1": {
+              "min_s": 0.00107976,
+              "max_s": 0.00113456,
+              "median_s": 0.00108948
+            }
+          },
+          "3": {
+            "edges": 24,
+            "0": {
+              "min_s": 0.07290508,
+              "max_s": 0.07339608,
+              "median_s": 0.0732132
+            },
+            "1": {
+              "min_s": 0.0100924,
+              "max_s": 0.01010844,
+              "median_s": 0.01009992
+            }
+          },
+          "9": {
+            "edges": 16,
+            "0": {
+              "min_s": 0.06417468,
+              "max_s": 0.06422188,
+              "median_s": 0.0641876
+            },
+            "1": {
+              "min_s": 0.06017228,
+              "max_s": 0.06018268,
+              "median_s": 0.060174359999999996
+            }
+          },
+          "15": {
+            "edges": 16,
+            "0": {
+              "min_s": 0.03416644,
+              "max_s": 0.0341886,
+              "median_s": 0.03417788
+            },
+            "1": {
+              "min_s": 0.09017692,
+              "max_s": 0.09021068,
+              "median_s": 0.09018816
+            }
+          }
+        },
+        "high_channel_state_order": "00 -> 10 -> 11 -> 01 -> 00"
+      },
+      "result": "PASS"
+    }
+  ]
+}

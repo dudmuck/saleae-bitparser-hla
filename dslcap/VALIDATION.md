@@ -95,8 +95,6 @@ running. Temporary source and timing log: `/tmp/dslcap-pi133-pulses.py` and
 
 ## Open gates
 
-- Independent DSView capture comparison. Representative physical high-channel
-  mapping (CH9/CH15) now passes in full and sparse capture modes (below).
 - Dual-SPI LR1110/LR2021 HLA comparison with Saleae/Logic 2. The known
   single-port Pi burst and independent sigrok decode now pass (below).
 - Cold automatic FPGA upload, as recorded in the G0 review.
@@ -246,3 +244,76 @@ Temporary evidence: `/tmp/dslcap-high-{12ch,16ch,sparse}.raw`, matching
 `.stderr` files, `/tmp/dslcap-high-capture.json`, `/tmp/dslcap-high-analysis.json`,
 `/tmp/dslcap-high-gpio.log`, and runner/helper
 `/tmp/dslcap-high-{test,gpio}.py`. Raw captures are intentionally not committed.
+
+## Independent DSView stream comparison — PASS
+
+Operator captured the repeating Pi SPI and high-channel pulse signals in
+DSView 1.3.2 and saved native `.dsl` archives. The first file, named
+`/tmp/dsview-8ch-25M.dsl`, actually included CH9 and was retained as extra
+nine-channel evidence. A corrected exact-eight-channel file was supplied.
+All four required configurations were then verified against new dslcap
+captures using the same generator sources after DSView was closed:
+
+| DSView archive in /tmp | Rate | DSView samples | dslcap samples | Result |
+| --- | --- | --- | --- | --- |
+| dsview-exact8-25M.dsl | 25M | 25000960 | 25000000 | PASS, CH0–CH7 |
+| dsview-12ch-25M.dsl | 25M | 25000960 | 25000000 | PASS, CH0–CH11 |
+| dsview-16ch-20M.dsl | 20M | 20000768 | 20000000 | PASS, CH0–CH15 |
+| dsview-sparse-25M.dsl | 25M | 25000960 | 25000000 | PASS, CH0/3/9/15 |
+
+Every GUI archive records operation mode 1 (stream), the expected rate and
+exact enabled channel set. DSView's requested one-second captures contain
+1.0000384 seconds; dslcap trims to exactly one second. This is accounted
+for explicitly, rather than requiring identical capture lengths or phases.
+
+Lead verified the native format against the read-only DSView source:
+`pv/storesession.cpp` saves per-physical-channel `L-N/block` byte arrays;
+`pv/data/logicsnapshot.cpp:get_sample_self` selects sample bits LSB-first.
+The archive header/session provides counts, physical indices and sample
+rate. Each bitplane's full size matched the declared count. This extraction
+does not use dslcap's converter.
+
+In every 8/12/16-channel pair, each capture contains 11 complete CS-bounded
+transactions with exactly 32 rising clock edges. All MOSI bytes are
+`01 00 55 aa` and MISO bytes `0f a5 5a c3`. Capture-boundary partial frames
+are excluded. Initial exact-eight validation assumed 12 complete frames;
+inspection showed a clipped initial frame, and the corrected check uses
+complete CS boundaries. The exact-eight DSView stream also matched the
+independent sigrok decoder and shared NumPy decoder.
+
+Sparse captures intentionally exclude MISO/MOSI, so no SPI-byte claim is
+made for that case. Their clock/CS activity and physical CH9/CH15 pulse
+signatures agree. Both high channels follow `00 -> 10 -> 11 -> 01 -> 00`
+in the 16-channel and sparse pairs. Disabled bits in dslcap output are zero.
+CH9 high/low intervals agree with 60/64ms and CH15 with 90/34ms plus Pi
+software timing overhead. Across paired captures, clock high/low median
+differences are at most 32.84us; high-channel median differences are at most
+59.78us. CS-active medians differ by up to 1.983ms, consistent with the
+accumulated software-clock differences over a transfer. Comparison limits
+were 300us for clock medians and 5ms for other pulse medians. These separate
+software-timed runs establish signal structure and mapping, not a precision
+timebase calibration or sample-for-sample simultaneity.
+
+The temporary comparison checker initially used a uint16 disabled-bit mask
+against uint8 data and raised OverflowError. The mask was corrected to the
+input dtype's width; all four comparisons were then rerun successfully with
+checked subprocess return codes. No product code changed.
+
+All matching captures exited 0. Both bounded Pi helpers exited 0, and
+independent pin readback confirmed GPIO5/6 restored to input/pull-up and
+GPIO17/18/24/27 to input/pull-down. Immediate analyzer reopen passed both
+security checks and HDL 0x0e. No capture or generator remains active.
+
+Durable counts, pulse summaries and input SHA-256 hashes are recorded in
+[DSVIEW_COMPARISON.json](DSVIEW_COMPARISON.json). Raw files remain in /tmp.
+Temporary runners/checkers: `/tmp/dslcap-dsview-matched.py`,
+`/tmp/dsview-extract-check.py`, `/tmp/dsview-compare-captures.py`; detailed
+pair reports: `/tmp/dslcap-comparison-{8ch,12ch,16ch,sparse}.json`.
+
+Worker dslcap_worker independently checked archive CRCs, source-format
+references, file stability/hashes and all four matching dslcap payloads.
+Its separate bitplane unpacking and CS-bounded byte reconstruction uses
+neither fast_spi nor dslcap conversion code. It confirmed matching rates,
+physical masks, complete transaction signatures and high-channel pulse
+patterns, with no mismatches. Detailed independent evidence is in
+`/tmp/dslcap-dsview-worker-verification.json`.
