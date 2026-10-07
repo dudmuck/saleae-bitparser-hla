@@ -32,7 +32,8 @@ unit, so we drive it directly instead.
 dslcap (C, links libsigrok4DSL from /home/wroberts/DSView-1.3.2/)
     --samplerate 25M --channels 0-7 [--time 5s | --continuous] [--vth 1.6]
   -> "META samplerate: N\n" + raw samples on stdout, sigrok "-O binary" layout
-     (unitsize 1, bit i = channel i)
+     (unitsize 1 for channels 0..7; standalone validation uses unitsize 2
+      when any channel 8..15 is enabled; bit i = physical channel i)
   | sigrok_hla.py --dslogic ...  (existing run_sigrok_numpy / fast_spi path)
 ```
 
@@ -70,7 +71,7 @@ the device. Don't experiment with NVM writes.
 |---|---|
 | `--scan` | list devices and exit (bring-up check) |
 | `--samplerate R` | e.g. `25M`. Read back after configuring; any mismatch is fatal |
-| `--channels LIST` | physical channels, e.g. `0-7` or `0,1,2,3`. Any of the 16 inputs; phase 1 output is unitsize 1, so channels 0..7 |
+| `--channels LIST` | physical channels, e.g. `0-7` or `0,1,2,3`. Any of the 16 inputs; output is unitsize 1 if all are 0..7, otherwise little-endian unitsize 2 |
 | `--time T` / `--samples N` | finite capture → `SR_CONF_LIMIT_SAMPLES` |
 | `--continuous` | unbounded stream → `SR_CONF_LOOP_MODE` (stream mode only, non-zero limit) |
 | `--mode stream\|buffer` | `SR_CONF_OPERATION_MODE`, default stream |
@@ -124,8 +125,10 @@ streams at up to 25 MSa/s, the same target as SIGROK_HLA_REALTIME_PLAN.md.
    - Cross layout: blocks of 8 bytes, cycling through the enabled channels in
      ascending order. Each block holds 64 consecutive samples of one channel
      (`DSLOGIC_ATOMIC_*`, `dsl.h:83-86`; `LogicSnapshot::append_cross_payload`).
-     Transpose each group of `n_enabled × 8` bytes into 64 output bytes,
-     placing enabled channel k at bit `phys(k)`.
+     Transpose each group of `n_enabled × 8` bytes into 64 output samples,
+     placing enabled channel k at bit `phys(k)`. Each sample uses one byte
+     for channels 0..7, otherwise two little-endian bytes. Unselected bits
+     are zero. The 16-channel test pattern consequently uses two bytes.
    - Packets aren't aligned to block groups when `n_enabled × 8` doesn't
      divide the transfer size (e.g. 12 ch = 96 B), so carry the leftover bytes
      over to the next packet.
@@ -219,8 +222,10 @@ are recorded in `TASKS.md`.
    the Saleae Logic 8 (or a Logic 2 run). Run at `-vv` for a long capture to
    prove the stderr drain prevents the pipe stall.
 4. **Optional.**
-   - more than 8 channels: unitsize 2 output plus uint16 support in
-     `fast_spi` (`np.frombuffer(..., '<u2')`; the shifts already work)
+   - more than 8 channels in the Python integration: uint16 support in
+     `fast_spi` (`np.frombuffer(..., '<u2')`; the shifts already work).
+     Standalone dslcap unitsize 2 is required earlier for the Phase 1
+     12/16-channel, non-contiguous and internal-pattern validation cases.
    - buffer-mode bursts at 100-400 MSa/s, captured then decoded
    - triggers (`ds_trigger_*`)
 
