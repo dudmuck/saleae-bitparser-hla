@@ -52,8 +52,8 @@ wiring may require the operator. No NVM writes are authorized.
 - [ ] G2-integration: Phase 3 Python backend, live stderr drain, documentation
   and real dual-SPI comparison. Assign exact files after capture contract is
   verified. Optional Phase 4 remains optional.
-- [x] G0-bringup independent review cycle 1 PASS; see REVIEW.md. G1/G2
-  reviews remain pending and their review counters are zero.
+- [x] G0, G1 and G2 independent review cycle 1 PASS; see REVIEW.md.
+  Physical/reference acceptance gates remain separate from implementation review.
 
 ## Blocker — 2026-10-07
 
@@ -250,3 +250,36 @@ DSView capture comparison and actual SPI/reference traffic remain open
 acceptance gates, not waived by the implementation PASS. The operator has
 been asked to add CH1/CH2/CH3 connections for a known-SPI test; confirmation
 is still pending. G2 worker continues offline while lead retains USB ownership.
+
+## G2 review handoff — 2026-10-07
+
+C implementation committed as baee865. Worker froze G2 Python scope after
+20 focused offline tests passed. G2-integration, wave 1, review cycle 1 is
+assigned to review-1 as sole synthesizer, with no analysts. Review scope is
+sigrok_hla.py, sigrok_hla_readme.md, tests/test_dslcap_backend.py and the
+three fixtures under tests/dslcap/. Required contracts are the G2 assignment
+above and PLAN.md Phase 3. Reviewer may write only REVIEW.md; no USB/GPIO.
+Lead independently runs the focused unittest command and a 30-second -vv
+25M x 8 dual-port live smoke, followed by verified reopen. Real wired SPI,
+Saleae/Logic 2 HLA comparison and the prior physical reference gates remain
+open. Lead retains exclusive USB ownership. No implementation edits during
+review unless a scoped fix wave is assigned.
+
+## G2 disposition and signal validation — 2026-10-07
+
+Cycle 1 PASS, with one Medium repeated-interrupt cleanup finding preserved
+in REVIEW.md. Per the review workflow, PASS does not start an automatic fix
+wave. Worker is frozen/idle; no worker tests, hardware access or edits remain.
+Lead's 20 focused tests, 30-second verbose live dual-port throughput smoke,
+two-second physical pin logging, and known four-channel SPI tests passed.
+Both live SPI streams match the expected bytes; a saved raw capture's 11
+complete transactions also match an independent sigrok SPI decoder.
+All driven Pi pins are restored to inputs. Full evidence: VALIDATION.md.
+
+Implementation, tests and documentation are ready for scoped commit.
+Still required: high physical channel mapping, independent DSView capture,
+real LR1110/LR2021 dual-SPI comparison with Saleae/Logic 2, and cold automatic
+FPGA upload evidence. Operator was asked to add CH9/CH15 for mapping and
+identify the radio/reference setup. These physical/reference gates prevent
+claiming the whole plan complete. No new dependency or plan change is needed
+for the work completed so far.

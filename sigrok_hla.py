@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 """
-Live SPI capture with HLA decoding via sigrok-cli or Saleae Logic 2 automation.
+Live SPI capture with HLA decoding via sigrok-cli, dslcap or Saleae Logic 2.
 
-Two backends:
+Three backends:
   sigrok:  Uses sigrok-cli SPI protocol decoder (for sigrok-supported hardware)
   saleae:  Uses Saleae Logic 2 automation API (requires Logic 2 app with automation enabled)
+  dslogic: Uses dslcap for DSLogic Plus PGL12, with the shared NumPy decoder
 
 Examples:
+  # DSLogic Plus PGL12 - dual SPI, streaming at 25M
+  ./sigrok_hla.py --hla-path ~/HLA/saleae_lr2021 --dslogic \\
+      --dslcap /tmp/dslcap-build/dslcap --spi 0,1,2,3 --spi 4,5,6,7 \\
+      --samplerate 25M --time 5s
+
   # Saleae Logic 2 automation - single SPI port (channels 0-3)
   ./sigrok_hla.py --hla-path ~/HLA/saleae_lr2021 --saleae \\
       --spi 0,1,2,3 --samplerate 4M --time 5
@@ -40,6 +46,10 @@ import subprocess
 import sys
 import os
 import tempfile
+import math
+import queue
+import select
+import threading
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from saleae.analyzers import AnalyzerFrame
@@ -422,6 +432,7 @@ def resolve_channel_indices(args, spi_ports):
                     name_to_idx[name.strip()] = int(digits)
 
     def to_index(val, what):
+        val = str(val).strip()
         if val in name_to_idx:
             idx = name_to_idx[val]
         elif val.isdigit():
@@ -437,7 +448,7 @@ def resolve_channel_indices(args, spi_ports):
                     f"{what} '{val}': cannot map to a channel index. Name it in "
                     f"-C (e.g. -C 0={val},...) or give a channel number. "
                     f"Known: {', '.join(sorted(name_to_idx)) or '(none)'}")
-        if idx > 7:
+        if not 0 <= idx <= 7:
             raise SystemExit(
                 f"{what} '{val}': channel index {idx} exceeds 7; the packed "
                 "sample stream holds 8 channels.")
@@ -454,6 +465,294 @@ def resolve_channel_indices(args, spi_ports):
         pins.append((val, to_index(val, what)))
 
     return resolved, pins
+
+
+def validate_backend_args(args, spi_ports):
+    """Reject conflicting capture options before loading an HLA or producer."""
+    if sum(bool(value) for value in (args.samples, args.time, args.continuous)) > 1:
+        raise SystemExit('Choose only one of --samples, --time or --continuous.')
+    if args.driver and args.input_file:
+        raise SystemExit('Choose either -d live hardware or -i an input file.')
+    if args.input_format and not args.input_file:
+        raise SystemExit('-I requires an input file (-i).')
+    if args.saleae and any((args.driver, args.input_file, args.input_format, args.transform)):
+        raise SystemExit('--saleae cannot be combined with sigrok input/driver/transform options.')
+    if args.samplerate:
+        try:
+            rate = parse_samplerate(args.samplerate)
+        except ValueError:
+            raise SystemExit('Invalid --samplerate.')
+        if not math.isfinite(rate) or rate <= 0:
+            raise SystemExit('--samplerate must be finite and positive.')
+    for value, label, parser in ((args.samples, '--samples', parse_samplerate),
+                                  (args.time, '--time', parse_duration)):
+        if value is not None:
+            try:
+                number = parser(value)
+            except ValueError:
+                raise SystemExit(f'Invalid {label}.')
+            if not math.isfinite(number) or number <= 0:
+                raise SystemExit(f'{label} must be finite and positive.')
+    if not getattr(args, 'dslogic', False):
+        if getattr(args, 'dslcap_verbose', 0) or getattr(args, 'vth', None) is not None:
+            raise SystemExit('--vth/-v/--dslcap-verbose requires --dslogic.')
+        return
+    if args.saleae or args.driver or args.input_file or args.input_format or args.transform:
+        raise SystemExit('--dslogic cannot be combined with --saleae, -d, -i, -I or -T.')
+    if args.engine != 'numpy':
+        raise SystemExit('--dslogic supports --engine numpy; the srd pipeline is not implemented.')
+    if not any((args.samples, args.time, args.continuous)):
+        raise SystemExit('--dslogic requires --samples, --time or --continuous.')
+    resolve_channel_indices(args, spi_ports)
+    if args.channels:
+        labels = set()
+        for item in args.channels.split(','):
+            match = re.fullmatch(r'(?:D)?([0-7])\s*=\s*(.+)', item.strip(), re.IGNORECASE)
+            if not match or not match[2].strip():
+                raise SystemExit('--dslogic -C is a name mapping using indices 0..7, e.g. 0=SCLK.')
+            label = match[2].strip().casefold()
+            if label in labels:
+                raise SystemExit('--dslogic -C has ambiguous duplicate channel names.')
+            labels.add(label)
+    vth = getattr(args, 'vth', None)
+    if vth is not None and (not math.isfinite(vth) or not 0 <= vth <= 2.5):
+        raise SystemExit('--vth must be finite and within 0..2.5 V.')
+    for value, label, parser in ((args.samples, '--samples', parse_samplerate),
+                                  (args.time, '--time', parse_duration)):
+        if value is None:
+            continue
+        try:
+            number = parser(value)
+        except ValueError:
+            raise SystemExit(f'Invalid {label}.')
+        if not math.isfinite(number) or number <= 0:
+            raise SystemExit(f'{label} must be finite and positive.')
+        if label == '--samples' and (number != int(number) or number > 2**64 - 4096):
+            raise SystemExit('--samples must be a positive integer count within the producer limit.')
+    rate = parse_samplerate(args.samplerate) if args.samplerate else 25_000_000
+    if rate != int(rate) or rate > 2**64 - 1:
+        raise SystemExit('--samplerate must be an integer rate within the producer limit.')
+
+
+def build_dslcap_cmd(args, spi_ports):
+    """Build dslcap's physical channel list from resolved SPI and logged pins.
+
+    The dslcap --channels list is derived from bits referenced by -C names,
+    --spi, --int-pin and --extra-pin. sigrok_hla.py's -C/--channels is a name
+    mapping, and must never be passed directly as the producer channel list.
+    """
+    validate_backend_args(args, spi_ports)
+    ports, pins = resolve_channel_indices(args, spi_ports)
+    bits = {bit for port in ports for bit in port.values()} | {bit for _, bit in pins}
+    rate = parse_samplerate(args.samplerate) if args.samplerate else 25_000_000
+    cmd = [args.dslcap, '--samplerate', str(int(rate)), '--channels',
+           ','.join(str(bit) for bit in sorted(bits)), '--vth',
+           str(args.vth if args.vth is not None else 1.6)]
+    if args.samples:
+        cmd += ['--samples', str(int(parse_samplerate(args.samples)))]
+    elif args.time:
+        cmd += ['--time', f'{parse_duration(args.time):.12g}s']
+    else:
+        cmd += ['--continuous']
+    verbosity = min(getattr(args, 'dslcap_verbose', 0), 2)
+    if verbosity:
+        cmd += ['-' + 'v' * verbosity]
+    return cmd
+
+
+class CaptureError(RuntimeError):
+    """Producer/read failure; any already emitted decode may be partial."""
+
+
+class MetaPrefix:
+    """Incrementally separate optional/required META from byte samples."""
+    marker = b'META samplerate: '
+
+    def __init__(self, requested_rate, required=False):
+        self.rate = requested_rate
+        self.required = required
+        self.pending = bytearray()
+        self.ready = False
+
+    def feed(self, data, eof=False):
+        if self.ready:
+            return data
+        self.pending.extend(data)
+        length = min(len(self.pending), len(self.marker))
+        if self.pending[:length] != self.marker[:length]:
+            if self.required:
+                raise CaptureError('dslcap stream is missing its META samplerate header')
+            self.ready = True
+        else:
+            newline = self.pending.find(b'\n')
+            if newline >= 0:
+                header = bytes(self.pending[:newline + 1])
+                match = re.fullmatch(rb'META samplerate: ([1-9][0-9]*)\r?\n', header)
+                if not match or newline > 255:
+                    raise CaptureError('Malformed META samplerate header')
+                rate = int(match[1])
+                if rate > 2**64 - 1:
+                    raise CaptureError('META samplerate exceeds producer limit')
+                if rate != self.rate:
+                    print(f'Warning: META samplerate {rate} differs from requested '
+                          f'{self.rate:g}; using META for SPI and pin timing.', file=sys.stderr)
+                self.rate = rate
+                del self.pending[:newline + 1]
+                self.ready = True
+            elif len(self.pending) > 255:
+                raise CaptureError('META header is too long or has no newline')
+            elif eof:
+                if self.required or len(self.pending) >= len(self.marker):
+                    raise CaptureError('Truncated/missing META samplerate header')
+                self.ready = True  # Optional raw stream can end with a short prefix.
+        if self.ready:
+            data = bytes(self.pending)
+            self.pending.clear()
+            return data
+        return b''
+
+
+class CaptureProducer:
+    """Drain both child pipes concurrently and reap it on every exit path."""
+    CHUNK = 1 << 22
+
+    def __init__(self, cmd, name):
+        self.name = name
+        self.queue = queue.Queue(maxsize=64)
+        self.stop = threading.Event()
+        self.stderr_error = None
+        self.finished = False
+        try:
+            self.proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                         stderr=subprocess.PIPE, bufsize=0)
+        except OSError as error:
+            raise CaptureError(f'{name} could not start: {error}') from error
+        self.readers = [threading.Thread(target=self._read_stdout, daemon=True),
+                        threading.Thread(target=self._read_stderr, daemon=True)]
+        started = []
+        try:
+            for thread in self.readers:
+                thread.start()
+                started.append(thread)
+        except BaseException:
+            self.readers = started
+            self.finish(cancel=True)
+            raise
+
+    def _pipe_chunks(self, pipe):
+        fd = pipe.fileno()
+        os.set_blocking(fd, False)
+        while not self.stop.is_set():
+            if not select.select([fd], [], [], 0.1)[0]:
+                continue
+            try:
+                data = os.read(fd, self.CHUNK)
+            except BlockingIOError:
+                continue
+            if not data:
+                return
+            yield data
+
+    def _put(self, value):
+        while not self.stop.is_set():
+            try:
+                self.queue.put(value, timeout=0.1)
+                return
+            except queue.Full:
+                pass
+
+    def _read_stdout(self):
+        try:
+            for data in self._pipe_chunks(self.proc.stdout):
+                self._put(data)
+        except Exception as error:
+            self._put(CaptureError(f'{self.name} stdout reader failed: {error}'))
+        finally:
+            self._put(None)
+
+    def _read_stderr(self):
+        pending = bytearray()
+        try:
+            for data in self._pipe_chunks(self.proc.stderr):
+                pending.extend(data)
+                while pending:
+                    newline = pending.find(b'\n')
+                    if newline < 0 and len(pending) < 65536:
+                        break
+                    size = newline + 1 if newline >= 0 else 65536
+                    self._log(bytes(pending[:size]))
+                    del pending[:size]
+        except Exception as error:
+            self.stderr_error = CaptureError(f'{self.name} stderr reader failed: {error}')
+        finally:
+            if pending:
+                try:
+                    self._log(bytes(pending))
+                except Exception as error:
+                    self.stderr_error = CaptureError(f'{self.name} stderr forwarding failed: {error}')
+
+    def _log(self, data):
+        text = data.decode(errors='replace').rstrip('\n')
+        print(f'[{self.name} stderr] {text}', file=sys.stderr, flush=True)
+
+    def chunks(self):
+        while True:
+            if self.stderr_error:
+                raise self.stderr_error
+            try:
+                data = self.queue.get(timeout=0.1)
+            except queue.Empty:
+                continue
+            if data is None:
+                return
+            if isinstance(data, Exception):
+                raise data
+            yield data
+
+    def lines(self):
+        pending = bytearray()
+        for chunk in self.chunks():
+            pending.extend(chunk)
+            while b'\n' in pending:
+                newline = pending.index(b'\n') + 1
+                yield bytes(pending[:newline]).decode(errors='replace')
+                del pending[:newline]
+        if pending:
+            yield bytes(pending).decode(errors='replace')
+
+    def finish(self, cancel=False):
+        if self.finished:
+            return
+        try:
+            if cancel:
+                self.stop.set()
+                if self.proc.poll() is None:
+                    self.proc.terminate()
+            try:
+                code = self.proc.wait(timeout=3 if cancel else 15)
+            except subprocess.TimeoutExpired:
+                self.proc.kill()
+                self.proc.wait(timeout=3)
+                if not cancel:
+                    raise CaptureError(f'{self.name} did not exit after stdout closed; killed')
+        finally:
+            # On normal EOF first give the log drain a chance to read all
+            # buffered diagnostics. Cancellation wakes queue/select readers.
+            for thread in self.readers:
+                thread.join(timeout=1)
+            self.stop.set()
+            for thread in self.readers:
+                thread.join(timeout=1)
+            self.proc.stdout.close()
+            self.proc.stderr.close()
+            self.finished = True
+        if not cancel:
+            if self.stderr_error:
+                raise self.stderr_error
+            if any(thread.is_alive() for thread in self.readers):
+                raise CaptureError(f'{self.name} pipe reader did not stop')
+            if code:
+                raise CaptureError(f'{self.name} exited with status {code}; decoded output may be partial')
 
 
 def build_sigrok_cmd(args, spi_ports):
@@ -514,17 +813,14 @@ def build_sigrok_cmd(args, spi_ports):
 LINE_RE = re.compile(r'^(\d+)-(\d+)\s+spi-(\d+):\s+([0-9A-Fa-f]+(?:\s+[0-9A-Fa-f]+)*)$')
 
 
-def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate):
-    """Capture via sigrok-cli -O binary and decode with the vectorized engine.
+def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate, cmd=None):
+    """Decode a raw producer with the shared vectorized engine.
 
     sigrok-cli is run without any protocol decoder; this reads its raw sample
     stream and decodes SPI in NumPy, which keeps up with live capture. A
     reader thread with a deep queue decouples the pipe from decode work so a
     GC pause never back-pressures sigrok-cli into a USB overrun.
     """
-    import queue
-    import threading
-
     import numpy as np
 
     from fast_spi import MultiPortDecoder, PinLogger
@@ -536,7 +832,7 @@ def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate):
               f"mosi={p['mosi']} cs={p['cs']}", file=sys.stderr)
     for name, bit in log_pins:
         print(f"  pin {name}: bit {bit}", file=sys.stderr)
-    pin_logger = PinLogger(log_pins, samplerate) if log_pins else None
+    pin_logger = None
 
     Hla = _load_hla_class(args.hla_path)
     hla_map = {name: Hla() for name in port_name_list}
@@ -544,38 +840,18 @@ def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate):
     hex_bufs = {name: {'mosi': bytearray(), 'miso': bytearray()}
                 for name in port_name_list}
 
-    decoder = MultiPortDecoder(ports, samplerate, cpol=args.cpol, cpha=args.cpha)
-
-    cmd = build_sigrok_cmd(args, spi_ports)
+    decoder = None
+    prefix = MetaPrefix(samplerate, required=getattr(args, 'dslogic', False))
+    cmd = cmd if cmd is not None else build_sigrok_cmd(args, spi_ports)
     print(f"Running: {' '.join(cmd)}", file=sys.stderr)
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                            bufsize=0)
-
-    CHUNK = 1 << 22        # 4 MiB reads
     # Output is held back this long (in capture seconds) so a transaction
     # spanning a chunk boundary can finish before later events are printed.
     # Far longer than any SPI transfer, far shorter than a chunk.
     HOLD = 0.05
-    q = queue.Queue(maxsize=64)
-
-    def reader():
-        try:
-            while True:
-                buf = proc.stdout.read(CHUNK)
-                if not buf:
-                    break
-                q.put(buf)
-        except Exception as e:                          # pragma: no cover
-            print(f"[reader] {e}", file=sys.stderr)
-        finally:
-            q.put(None)
-
-    t = threading.Thread(target=reader, daemon=True)
-    t.start()
+    producer = CaptureProducer(cmd, 'dslcap' if getattr(args, 'dslogic', False) else 'sigrok')
 
     results_heap = []
     seq = 0
-    first = True
 
     want_hex = args.hex
 
@@ -625,18 +901,14 @@ def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate):
         if chunk_events:
             _flush_results_until(results_heap, chunk_events[-1][0] - HOLD)
 
-    try:
-        while True:
-            buf = q.get()
-            if buf is None:
-                break
-            if first:
-                # "-O binary" to a pipe prepends a "META samplerate: N\n" line.
-                if buf.startswith(b'META'):
-                    nl = buf.find(b'\n')
-                    if nl >= 0:
-                        buf = buf[nl + 1:]
-                first = False
+    def decode(buf):
+        nonlocal decoder, pin_logger
+        if not prefix.ready:
+            return
+        if decoder is None:
+            decoder = MultiPortDecoder(ports, prefix.rate, cpol=args.cpol, cpha=args.cpha)
+            pin_logger = PinLogger(log_pins, prefix.rate) if log_pins else None
+        if buf:
             chunk = np.frombuffer(buf, dtype=np.uint8)
             events = [(f.start_time, 'frame', (n, f))
                       for n, f in decoder.feed(chunk)]
@@ -644,21 +916,29 @@ def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate):
                 events += [(t, 'pin', (t, name, edge))
                            for t, name, edge in pin_logger.feed(chunk)]
             process(events)
+
+    complete = False
+    try:
+        for buf in producer.chunks():
+            decode(prefix.feed(buf))
+        producer.finish()  # Check child status before synthesizing final frames.
+        decode(prefix.feed(b'', eof=True))
+        complete = True
         process([(f.start_time, 'frame', (n, f)) for n, f in decoder.end()])
+        _flush_results(results_heap)
     except KeyboardInterrupt:
         print("\nInterrupted", file=sys.stderr)
-    finally:
         _flush_results(results_heap)
-        proc.terminate()
-        proc.wait()
-        stderr_out = proc.stderr.read().decode(errors='replace')
-        if stderr_out.strip():
-            print(f"[sigrok stderr] {stderr_out.strip()}", file=sys.stderr)
+        raise
+    finally:
+        if not complete:
+            producer.finish(cancel=True)
 
 
 def run_sigrok_backend(args, spi_ports, port_name_list):
     """Run capture and HLA decode using sigrok-cli."""
-    samplerate = parse_samplerate(args.samplerate) if args.samplerate else 1e6
+    dslogic = getattr(args, 'dslogic', False)
+    samplerate = parse_samplerate(args.samplerate) if args.samplerate else (25e6 if dslogic else 1e6)
     if args.input_format and 'samplerate=' in args.input_format:
         for part in args.input_format.split(':'):
             if part.startswith('samplerate='):
@@ -667,8 +947,12 @@ def run_sigrok_backend(args, spi_ports, port_name_list):
     print(f"Sample rate: {samplerate:.0f} Hz", file=sys.stderr)
 
     if getattr(args, 'engine', 'srd') == 'numpy':
-        run_sigrok_numpy(args, spi_ports, port_name_list, samplerate)
+        cmd = build_dslcap_cmd(args, spi_ports) if dslogic else build_sigrok_cmd(args, spi_ports)
+        run_sigrok_numpy(args, spi_ports, port_name_list, samplerate, cmd)
         return
+
+    if dslogic:
+        raise SystemExit('--dslogic supports only --engine numpy.')
 
     if args.int_pin or args.extra_pin:
         raise SystemExit('--int-pin/--extra-pin need the numpy engine '
@@ -688,18 +972,20 @@ def run_sigrok_backend(args, spi_ports, port_name_list):
     cmd = build_sigrok_cmd(args, spi_ports)
     print(f"Running: {' '.join(cmd)}", file=sys.stderr)
 
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                            text=True, bufsize=1)
+    producer = CaptureProducer(cmd, 'sigrok')
+    complete = False
     try:
-        parse_sigrok_output(proc, samplerate, hla_instances, port_names, args.hex)
+        from types import SimpleNamespace
+        parse_sigrok_output(SimpleNamespace(stdout=producer.lines()), samplerate,
+                            hla_instances, port_names, args.hex)
+        producer.finish()
+        complete = True
     except KeyboardInterrupt:
         print("\nInterrupted", file=sys.stderr)
+        raise
     finally:
-        proc.terminate()
-        proc.wait()
-        stderr_out = proc.stderr.read()
-        if stderr_out.strip():
-            print(f"[sigrok stderr] {stderr_out.strip()}", file=sys.stderr)
+        if not complete:
+            producer.finish(cancel=True)
 
 
 def parse_sigrok_output(proc, samplerate, hla_instances, port_names, hex_mode):
@@ -809,6 +1095,8 @@ def parse_samplerate(s):
 def parse_duration(s):
     """Parse a duration string like '5s', '100ms', '5' to seconds."""
     s = s.strip().lower()
+    if s.endswith('us'):
+        return float(s[:-2]) / 1_000_000
     if s.endswith('ms'):
         return float(s[:-2]) / 1000
     if s.endswith('s'):
@@ -838,13 +1126,22 @@ def parse_spi_port(spec):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Live SPI capture with HLA decoding (sigrok or Saleae Logic 2)',
+        description='Live SPI capture with HLA decoding (sigrok, DSLogic or Saleae Logic 2)',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__)
 
     # Backend selection
-    parser.add_argument('--saleae', action='store_true',
+    backend = parser.add_mutually_exclusive_group()
+    backend.add_argument('--saleae', action='store_true',
                         help='Use Saleae Logic 2 automation API (requires Logic 2 with automation enabled)')
+    backend.add_argument('--dslogic', action='store_true',
+                        help='Use dslcap for DSLogic Plus PGL12 (NumPy, channels 0..7)')
+    parser.add_argument('--dslcap', default='dslcap', metavar='PATH',
+                        help='[dslogic] dslcap executable (default: dslcap on PATH)')
+    parser.add_argument('--vth', type=float, default=None,
+                        help='[dslogic] Input threshold 0..2.5 V (default: 1.6)')
+    parser.add_argument('-v', '--dslcap-verbose', action='count', default=0,
+                        help='[dslogic] Producer information logging; repeat/-vv for debug')
     parser.add_argument('--saleae-port', type=int, default=10430,
                         help='Saleae automation server port (default: 10430)')
 
@@ -856,7 +1153,7 @@ def main():
     parser.add_argument('-I', '--input-format', type=str, default=None,
                         help='[sigrok] Input format (e.g., binary:numchannels=4:samplerate=1000000)')
     parser.add_argument('-C', '--channels', type=str, default=None,
-                        help='[sigrok] Channel list (e.g., 0=SCLK,1=MISO,2=MOSI,3=nSS)')
+                        help='[sigrok/dslogic] Channel name mapping (e.g., 0=SCLK,1=MISO,2=MOSI,3=nSS)')
     parser.add_argument('--samples', type=str, default=None,
                         help='[sigrok] Number of samples to capture')
     parser.add_argument('--continuous', action='store_true',
@@ -876,11 +1173,11 @@ def main():
                         help='[sigrok] Transform module applied before decoding, '
                              'e.g. deglitch:channels=SCLK,SCLK_B:clock_period=2.5:frame_pulses=8')
     parser.add_argument('--int-pin', type=str, default=None, metavar='NAME',
-                        help='[sigrok] Log transitions of an interrupt pin, '
+                        help='[sigrok/dslogic] Log transitions of an interrupt pin, '
                              'interleaved with decoded traffic (e.g. --int-pin int)')
     parser.add_argument('--extra-pin', type=str, default=[], action='append',
                         metavar='NAME',
-                        help='[sigrok] Log transitions of an extra pin '
+                        help='[sigrok/dslogic] Log transitions of an extra pin '
                              '(repeatable, e.g. --extra-pin busy --extra-pin dbg)')
     parser.add_argument('--engine', choices=['numpy', 'srd'], default='numpy',
                         help='[sigrok] SPI decode engine: "numpy" (default, '
@@ -903,6 +1200,7 @@ def main():
         parser.error('At least one --spi CLK,MISO,MOSI,CS is required')
 
     spi_ports = [parse_spi_port(spec) for spec in args.spi]
+    validate_backend_args(args, spi_ports)
 
     if len(spi_ports) == 1:
         port_name_list = ['SPI']
@@ -918,11 +1216,22 @@ def main():
     if args.saleae:
         run_saleae_backend(args, spi_ports, port_name_list)
     else:
-        if not args.driver and not args.input_file:
+        if not args.dslogic and not args.driver and not args.input_file:
             parser.error('sigrok backend requires -d (driver) or -i (input file). '
-                         'Use --saleae for Saleae Logic 2.')
+                         'Use --saleae for Logic 2 or --dslogic for DSLogic Plus.')
         run_sigrok_backend(args, spi_ports, port_name_list)
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except CaptureError as error:
+        print(f'Capture failed: {error}', file=sys.stderr)
+        sys.exit(1)
+    except KeyboardInterrupt:
+        sys.exit(130)
+    except BrokenPipeError:
+        # The shared engine's finally block has already reaped its producer.
+        with open(os.devnull, 'w') as sink:
+            os.dup2(sink.fileno(), sys.stdout.fileno())
+        sys.exit(0)

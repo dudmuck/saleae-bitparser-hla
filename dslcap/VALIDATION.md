@@ -96,7 +96,8 @@ running. Temporary source and timing log: `/tmp/dslcap-pi133-pulses.py` and
 ## Open gates
 
 - Physical high-channel mapping and independent DSView capture comparison.
-- Known SPI burst and dual-SPI HLA comparison with Saleae/Logic 2.
+- Dual-SPI LR1110/LR2021 HLA comparison with Saleae/Logic 2. The known
+  single-port Pi burst and independent sigrok decode now pass (below).
 - Cold automatic FPGA upload, as recorded in the G0 review.
 
 Raw captures and full temporary logs are intentionally not committed.
@@ -131,3 +132,68 @@ configuration, firmware/NVM change, or dependency was needed.
 
 Full result: `/tmp/dslcap-phase2-overflow.json`; stderr:
 `/tmp/dslcap-phase2-overflow.stderr`.
+
+## Phase 3 Python integration — implementation and live smoke PASS
+
+Worker handoff: `/tmp/dslcap-python-handoff.txt`. Lead independently ran
+`python3 -m unittest discover -s tests -p 'test_dslcap_backend.py' -v`:
+20 tests passed in 14.041s. Review-1 independently passed the same 20 tests
+in 14.123s and issued G2 cycle 1 PASS. REVIEW.md retains a Medium finding:
+a second interrupt during cleanup can leave a TERM-ignoring child alive and
+mark cleanup finished, preventing retry. Single-interrupt cleanup is tested;
+unconditional repeated-interrupt cleanup is not claimed. The review workflow
+does not initiate an automatic fix wave after PASS.
+
+Lead ran two SPI decoder ports (0,1,2,3 and 4,5,6,7) through `--dslogic
+--dslcap /tmp/dslcap-lead-review/dslcap -vv --samplerate 25M --time 30s
+--hla-path tests/dslcap`. The pipeline exited 0 after 31.381s, handling
+750000000 samples with ring high-water 500224 bytes. Immediate verified
+scan exited 0. No generated SPI traffic was active during this throughput
+smoke; it does not prove performance under heavy transaction traffic.
+Real stderr totaled 4177 bytes, so the approximately 198KiB fake-producer
+tests supply the pipe-capacity pressure evidence. Artifacts:
+`/tmp/dslcap-python-live.{json,stdout,stderr,scan}` and runner
+`/tmp/dslcap-python-live.py`.
+
+The existing GPIO18 pulse sequence was then repeated for ten seconds.
+A two-second Python capture at 25M with `--spi 1,2,3,4 --extra-pin 0`
+processed 50000000 samples, exited 0, and logged 462 physical CH0 edges.
+Intervals ranged from 2.06824ms to 7.19436ms, consistent with the requested
+2/3/5/7ms software-timed sequence. GPIO18 was restored and independently
+read back as input/pull-down. Artifacts: `/tmp/dslcap-python-pulses.*`.
+
+## Known physical SPI and reference decode — PASS
+
+Operator confirmed CH0→GPIO18/pin12, CH1→GPIO17/pin11,
+CH2→GPIO27/pin13, CH3→GPIO24/pin18, plus common ground.
+Lead drove these as CLK/MISO/MOSI/CS, CPOL0/CPHA0, with a bounded
+20-second gpiod sequence. Each transaction sent MOSI `01 00 55 aa` and
+MISO `0f a5 5a c3`. A live two-second 25M Python capture exited 0 and
+decoded 24 complete transactions, every byte matching both expected streams.
+This verifies the four connected channel roles and live shared decoder.
+
+A separate one-second 25M raw capture exited 0 with exactly 25000000
+sample bytes after META removal. The same saved samples were decoded by
+the shared NumPy engine and independently by installed sigrok-cli's SPI
+protocol decoder:
+
+```sh
+sigrok-cli -i /tmp/dslcap-known-spi.bin \
+  -I binary:numchannels=8:samplerate=25000000 \
+  -P spi:clk=0:miso=1:mosi=2:cs=3 \
+  -A spi=miso-transfer:mosi-transfer --protocol-decoder-samplenum
+```
+
+Both decoded 11 complete transactions with identical expected MOSI/MISO
+bytes. Capture-boundary partial transactions were excluded explicitly:
+sigrok emitted a partial starting transaction, and NumPy flushed one byte
+at EOF (`01`/`0f`) from the unfinished final transaction. The initial
+comparison assertion incorrectly included this EOF partial; the corrected
+comparison checks every complete transaction and the expected partial.
+This is an independent decoder comparison, not an independent DSView or
+Saleae hardware capture, and not real dual-radio traffic.
+
+Generator and both captures exited 0. Independent `pinctrl get 17,18,24,27`
+confirmed every driven pin restored to input/pull-down. No GPIO generator
+remains active. Artifacts: `/tmp/dslcap-known-spi*` and
+`/tmp/dslcap-python-signal-validation.json`; raw captures are not committed.

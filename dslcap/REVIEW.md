@@ -276,3 +276,125 @@ Counts: 0 Critical/Severe/High, 0 Medium, 1 Low, 2 Warnings, 0 Suggestions.
 This accepts the reviewed capture implementation with the explicit test
 and live-evidence gaps above; it does not declare all Phase 1/2 acceptance
 measurements complete.
+
+## G2 Cycle 1 - 2026-10-07
+
+Reviewing: Wave 1, **G2-integration**, group cycle **1 of 3**.
+Reviewer/synthesizer: **review-1**; analysts: none requested or missing.
+G0/G1 histories and counters remain unchanged. Scope: `sigrok_hla.py`,
+`sigrok_hla_readme.md`, `tests/test_dslcap_backend.py`, and fixtures
+`tests/dslcap/{fake_producer.py,DslcapTestHla.py,extension.json}`.
+Requirements: PLAN.md Phase 3 and current TASKS.md G2 assignment.
+Read the scoped Git diff and all implementation/test files; Git access
+was read-only. Only this review file was edited; no USB/GPIO access.
+
+### Critical / Severe / High
+
+- None.
+
+### Medium / Low / Warning
+
+- **Medium — empirically reproduced** [`../sigrok_hla.py:723`]: A repeated
+  interrupt during cancellation can leave a child alive and make cleanup
+  impossible to retry. If `proc.wait()` raises `KeyboardInterrupt`, the
+  `finally` block closes pipes and sets `finished=True` without killing or
+  reaping the child. A subsequent `finish(cancel=True)` returns immediately.
+  Reproduced with the real TERM-ignoring fixture, injecting KeyboardInterrupt
+  at the wait boundary: `child_alive=True, finished=True`, and still alive
+  after retry. Reviewer explicitly killed and reaped it afterward. Ensure
+  interrupted cleanup kills/reaps before declaring completion, and add a
+  repeated-interrupt regression. Normal single-interrupt and timeout paths
+  passed; this finding concerns interrupted cleanup itself.
+- **Warning — requires live validation**: Offline synthetic dual-SPI frames
+  and pin timing establish the shared decoding contract, but the required
+  actual dual LR1110/LR2021 HLA comparison with Saleae/Logic 2 remains open.
+  A live idle-input or CH0-only smoke cannot replace it. Prior physical
+  high-channel/DSView/cold-start gates also remain separately recorded.
+
+### Suggestion
+
+- None.
+
+### Spec Alignment
+
+`--dslogic` uses the shared NumPy engine and explicitly rejects srd and
+conflicting input backends. The builder derives a sorted unique physical
+capture mask from resolved SPI roles and logged pins, treating `-C` as a
+name mapping. Indices above 7 are rejected; standalone two-byte capture
+does not silently enter the one-byte Python decoder. Rate/time/sample and
+threshold validation occurs before producer launch. Default rate is 25M;
+verbosity reaches the producer with `-v`/`-vv`.
+
+META parsing handles fragmented prefixes, bounds the header, requires a
+valid positive rate for dslcap, and delays decoder/pin-logger construction
+until the effective rate is known. Legacy raw sigrok without META retains
+the requested rate. The same effective META rate drives both SPI and pin
+timestamps. HOLD, heap merge, HLA calls, and fast_spi interfaces are retained.
+
+### Cross-Task Consistency
+
+The Python command agrees with the reviewed C capture CLI and low-channel
+output contract. Prefix diagnostics use stderr; decoded results remain on
+stdout. Producer errors propagate before successful final-frame synthesis,
+and already emitted data is documented as potentially partial. Existing
+sigrok binary and srd command/annotation paths have focused regression
+coverage. Saleae acquisition implementation is unchanged; an independent
+mocked CLI dispatch check confirmed a valid Saleae time/rate/port invocation
+still reaches only `run_saleae_backend` with its arguments preserved.
+
+### Security And Operations
+
+The producer uses argument arrays, not a shell. Independent stdout/stderr
+reader threads drain pipes concurrently, with bounded stdout queue and
+nonblocking/select reads that can observe cancellation. Stderr is forwarded
+live with a producer prefix; sustained downstream stderr blocking is still
+the consumer's responsibility. Reader errors become capture failures.
+Normal cancellation sends TERM, waits three seconds, then kills/reaps;
+normal EOF with a non-exiting child is bounded at 15 seconds. Queue-full,
+decoder failure, single interrupt and stubborn-child cleanup are tested.
+The repeated-interrupt weakness above qualifies the claim of cleanup on
+every path. No dependency, firmware, GPIO, or device-source changes occur.
+
+### Verification And Test Adequacy
+
+Independent command:
+
+```sh
+python3 -m unittest discover -s tests -p 'test_dslcap_backend.py' -v
+```
+
+Exit 0: all 20 tests passed in 14.123 seconds. Tests use actual subprocess
+pipes and check >190KB of forwarded stderr, fragmented META, precise
+synthetic SPI bytes and pin timestamps, chronological dual-port output,
+producer nonzero exit, malformed/absent META, reader faults, saturated
+queue cancellation, TERM-ignoring child kill/reap, and decoder interruption.
+The CLI test includes an executable path containing a space. Raw sigrok,
+META sigrok and srd annotation behavior are covered.
+
+Additional independent offline checks, both command exits 0:
+
+- Mocked `main()` Saleae CLI dispatch with `--spi 0,1,2,3 --samplerate 4M
+  --time 5s`: exactly one Saleae call, no sigrok call, arguments retained.
+- Interrupted-finish diagnostic using the real `stubborn` subprocess and
+  `mock.patch.object(proc, 'wait', side_effect=KeyboardInterrupt)` during
+  cancellation: confirmed the Medium finding and explicitly reaped the
+  fixture with kill/wait after the observation. No fixture remains running.
+
+### Open Live Validation
+
+The lead's 30-second verbose 25M x 8 dual-port hardware smoke and reopen
+were pending at assignment. The finalized worker handoff
+`/tmp/dslcap-python-handoff.txt` was read before completion: it reports the
+same 20-test success, successful py_compile/help/diff checks, no hardware
+access and no new dependency. It explicitly leaves sustained real pipeline
+performance and real dual-SPI comparison open; its unconditional cleanup
+claim is qualified by the reproduced repeated-interrupt finding above.
+Real wired SPI/HLA/reference comparisons must be recorded separately from
+synthetic verification.
+
+### Verdict: PASS
+
+No Critical, Severe, or High finding remains and all executed test commands
+passed. Counts: 0 Critical/Severe/High, 1 Medium, 0 Low, 1 Warning,
+0 Suggestions. This verdict accepts the reviewed integration with the
+repeated-interrupt weakness and physical validation gaps retained explicitly.

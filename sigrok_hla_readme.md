@@ -4,12 +4,13 @@ Live SPI capture with HLA decoding, directly from USB hardware. An alternative t
 
 ## Backends
 
-Two capture backends are supported:
+Three capture backends are supported:
 
 | Backend | Flag | Hardware | How it works |
 |---------|------|----------|--------------|
 | **Saleae** | `--saleae` | Saleae Logic 8, Pro 8, Pro 16 | Connects to Logic 2 app via automation API (gRPC on port 10430) |
-| **sigrok** | `-d DRIVER` | sigrok-supported analyzers | Runs sigrok-cli as subprocess with SPI protocol decoder |
+| **sigrok** | `-d DRIVER` | sigrok-supported analyzers | Runs sigrok-cli with the shared NumPy decoder, or the optional srd SPI decoder |
+| **DSLogic** | `--dslogic` | DSLogic Plus PGL12 (`2a0e:0034`) | Runs dslcap with the shared NumPy decoder |
 
 Both backends work with the Saleae Logic 8 (21a9:1004). The **sigrok backend** uses the `saleae-logic-pro` driver (requires libsigrok built from source with Logic 8 support). The **Saleae backend** uses the Logic 2 app's automation API.
 
@@ -47,10 +48,26 @@ LDFLAGS="-Wl,-rpath,/mnt/foo/libsigrok/.libs -Wl,-rpath,/mnt/foo/libsigrokdecode
 ./configure --prefix=$HOME/.local && make -j$(nproc) && make install
 ```
 
-### Both backends
+### DSLogic backend
+
+Build the standalone C producer using [dslcap's instructions](dslcap/README.md).
+Pass its path with `--dslcap PATH`, or put `dslcap` on PATH. The default
+firmware resource directory is `/usr/local/share/DSView/res`; the producer
+verifies activation/security/HDL before capturing. Save captures and close
+DSView before using the analyzer.
+
+The Python backend uses the existing NumPy engine. It accepts physical
+channels 0–7 only; standalone dslcap's wider two-byte output is not supported
+here. `--engine srd`, `-d`, `-i`, `-I`, `-T` and `--saleae` cannot be combined
+with `--dslogic`. Select exactly one of `--samples`, `--time`, or
+`--continuous`. The default rate is 25M, threshold 1.6 V; `--vth V` accepts
+0–2.5 V. Impossible hardware rates/channel counts are rejected by dslcap.
+
+### Common prerequisites
 
 - A Saleae High Level Analyzer (HLA) directory containing `HighLevelAnalyzer.py`
 - Python 3
+- NumPy for the default vectorized engine; optional Numba accelerates byte packing
 
 ## Pin Layout
 
@@ -63,6 +80,75 @@ The default pin mapping (matching `bw1/digital.csv`):
 Specified as `--spi CLK,MISO,MOSI,CS` (channel numbers for Saleae, channel names for sigrok).
 
 ## Usage
+
+### DSLogic backend
+
+Single SPI port:
+
+```bash
+./sigrok_hla.py --dslogic --dslcap /tmp/dslcap-build/dslcap \
+    --hla-path ~/HLA/saleae_lr2021 --spi 0,1,2,3 --samplerate 25M --time 5s
+```
+
+Dual SPI, continuous capture with producer debug diagnostics:
+
+```bash
+./sigrok_hla.py --dslogic --dslcap /tmp/dslcap-build/dslcap -vv \
+    --hla-path ~/HLA/saleae_lr2021 --spi 0,1,2,3 --spi 4,5,6,7 \
+    --samplerate 25M --continuous --hex
+```
+
+Named channels and a logged interrupt:
+
+```bash
+./sigrok_hla.py --dslogic --dslcap /tmp/dslcap-build/dslcap \
+    --hla-path ~/HLA/saleae_lr2021 \
+    -C 0=SCLK,1=MISO,2=MOSI,3=nSS,4=INT \
+    --spi SCLK,MISO,MOSI,nSS --int-pin INT --samplerate 25M --samples 1M
+```
+
+`-C/--channels` maps names to physical bits; it is not a dslcap capture list.
+The backend derives a sorted unique producer `--channels` list from the SPI
+roles and `--int-pin`/`--extra-pin` references. Unreferenced named signals
+are not captured. Duplicate names and references above channel 7 fail before
+starting the producer. SPI roles may use numbers or mapped names; name lookup
+is case insensitive. `D0=SCLK` mapping syntax is also accepted.
+
+`-v`/`--dslcap-verbose` enables information logs; repeat it or use `-vv` for
+debug. These flags require `--dslogic`. The default keeps producer error logs,
+including its security-pass evidence.
+
+Both raw producers and the srd subprocess drain stderr concurrently, prefixing
+live diagnostics with `[dslcap stderr]` or `[sigrok stderr]`. This prevents
+child stderr from filling while decoding waits on stdout. The raw decoder
+parses fragmented META headers before initializing SPI and pin timestamps.
+If META disagrees with the requested rate, it warns and uses the reported
+rate for both. dslcap requires a valid META header; legacy sigrok raw input
+without META retains the configured rate. HOLD/heap ordering and fast_spi
+interfaces remain shared.
+
+Producer nonzero exits, malformed/missing required META, and pipe reader
+errors fail the command with a diagnostic. Already printed results may be
+partial; check the process exit status. Ctrl-C returns 130 after cleanup and
+prints already completed queued results. Cancellation sends TERM, waits up
+to three seconds, then kills/reaps a stubborn child; queue/select readers
+are stopped and pipes closed. Downstream pipe closure also cleans up the
+producer. A producer closing stdout but failing to exit gets a bounded
+15-second wait before kill. Valid sigrok and Saleae flows remain available.
+
+Offline verification:
+
+```bash
+python3 -m unittest discover -s tests -p 'test_dslcap_backend.py' -v
+```
+
+Tests use fake subprocesses only: fragmented META, synthetic single/dual SPI
+bytes and rate-derived pin timing, stderr exceeding pipe capacity, producer
+failure, read faults, saturated queues and stubborn-child cancellation.
+They also exercise sigrok raw input and srd annotation regressions. The
+DSLogic examples describe supported syntax; real dual-SPI HLA comparison
+against Saleae/Logic 2 and verbose live capture remain validation gates until
+recorded in [dslcap/VALIDATION.md](dslcap/VALIDATION.md).
 
 ### Saleae backend
 
