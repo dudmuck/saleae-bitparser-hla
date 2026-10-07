@@ -337,3 +337,43 @@ operation was used. Full evidence is recorded in VALIDATION.md.
 The only remaining plan acceptance gate is the real LR1110/LR2021 dual-SPI
 HLA comparison with Saleae/Logic 2. The operator has been asked to identify
 the radio/reference capture setup; that information remains pending.
+
+## G3-wide-dslogic: dual-radio wiring extension — 2026-10-07
+
+Operator supplied topology: pi133 CH0/1/2/3=SCLK/MISO/MOSI/NSS;
+pi134 CH8/9/10/11 in the same order. Retain 25MHz/12-channel-capable
+stream mode; normal SPI8MHz, later kernel10MHz. Future status channels
+are deferred. This activates the original plan's optional uint16 path
+without adding a dependency. G3 is a new feature group, not a restart of
+the completed G2 review or its outstanding nonblocking findings.
+
+Implementation owner: existing dslcap_worker. Scope: sigrok_hla.py,
+sigrok_hla_readme.md, tests/test_dslcap_backend.py, tests/test_dslcap_wide.py,
+and tests/dslcap fixtures as needed. No C, fast_spi, PLAN/TASKS/REVIEW,
+VALIDATION, Git, USB, Pi or application edits/access. Lead owns orchestration
+and hardware. Contract: DSLogic-only physical indices0..15, width inferred
+from exact producer channel union, little-endian uint16, odd-byte carry,
+truncated-sample error at EOF, effective META rate shared with pin logger,
+unchanged decoder API/HOLD/order, preserved existing sigrok/Saleae defaults.
+
+Required evidence: dual SPI on0..3/8..11 with pin edges above7; exact bytes,
+timestamps and inter-port/pin order under deterministic odd and random byte
+splits; truncated EOF and upstream failure cleanup; derived CLI mask and
+width; negative indices/out-of-range input; all existing focused tests.
+Use installed NumPy and standard library only. No speculative decoder
+rewrite or generic width option. Return frozen exact files/tests and risks.
+G3 review cycle counter starts at0 (maximum3), independent review after
+worker handoff; no review is assigned yet.
+
+Application coordination uses secondopinion task
+`dslcap-dual-radio-20261007`, owned in
+`/mnt/foo/nfs_share_for_pis/hydra_develop`, assigned by exact name to
+hydra-develop-9f, UUID75e80b13-b652-47db-a4d6-ff7d836a30d4.
+Requester is Codex thread01a1175b-44f6-7970-af20-92cd25ebca89. This is
+the public directory's current verified identity; the user supplied a
+different short identity/socket, so none was guessed or substituted.
+Initial request is preparation only: topology, SPI mode/rate, repeatable
+commands, HLA/reference paths and bench availability. Worker must await
+lead GO before generating activity, retain application ownership, and
+restore temporary state. Delivery is queued, not completion. Consume and
+acknowledge messages/results on this same durable task.

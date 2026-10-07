@@ -158,6 +158,33 @@ streams at up to 25 MSa/s, the same target as SIGROK_HLA_REALTIME_PLAN.md.
 
 ## sigrok_hla.py changes
 
+### Dual-radio wiring extension — authorized 2026-10-07
+
+The operator has connected pi133 SPI to physical CH0/1/2/3
+(SCLK/MISO/MOSI/NSS) and pi134 SPI to CH8/9/10/11 in the same order.
+The previously optional uint16 Python path is now required by this wiring.
+Implement it for `--dslogic` only: infer unitsize from the same physical
+channel union used to build the producer command (one byte below CH8,
+otherwise two little-endian bytes). Carry an odd trailing byte across pipe
+reads after META parsing and reject a leftover byte at EOF. Feed uint16
+arrays to the existing SPI decoder and pin logger without changing their
+interfaces, ordering or effective-rate timing. Preserve current sigrok and
+Saleae behavior; generic wide-driver inference is outside this extension.
+
+Capture must retain the 12-channel-capable 25MHz stream profile for both
+the 8MHz application clock and later 10MHz kernel clock tests. Select only
+the connected SPI channels initially; do not silently lower sample rate.
+Future IRQ/BUSY inputs may use remaining physical bits, subject to the
+profile's maximum enabled count. Enabling all 16 simultaneously at25MHz is
+not supported. Validate actual bytes/clock counts; these sample ratios do
+not by themselves establish reliable decoding of arbitrary timing margins.
+
+Application control belongs to the operator-named hydra-develop-9f agent,
+reached through secondopinion in its hydra_develop checkout. Lead owns the
+USB analyzer and coordinates a bounded capture/traffic window. No direct
+Pi GPIO test drive, application changes by lead, new dependencies or NVM
+writes are required. Existing external bench ownership must be respected.
+
 - `--dslogic` backend flag (plus `--dslcap PATH`, default `dslcap` on PATH,
   and `--vth`). It reuses `-C` names, `--spi`, `--samplerate`, `--time`,
   `--continuous`, `--int-pin` and `--extra-pin`.
