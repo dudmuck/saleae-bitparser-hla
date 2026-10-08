@@ -1,0 +1,123 @@
+{
+  "implementation_comparison_commit": "01b9694",
+  "settings": {
+    "rate_hz": 100000000,
+    "enabled_channels": "0-7",
+    "requested_samples": 1000448,
+    "position_percent": 10,
+    "vth_volts": 1.6,
+    "serial_spec": "start=3:f,stop=3:r,clock=0:r,data=2,value=0x1c35,bits=16"
+  },
+  "stimulus": {
+    "mosi_hex": "00 02 00 1c 35 00",
+    "owner": "hydra-develop-26",
+    "simple_window_utc": [
+      "2026-10-08T00:23:45.007Z",
+      "2026-10-08T00:23:45.049Z"
+    ],
+    "serial_window_utc": [
+      "2026-10-08T00:26:18.580Z",
+      "2026-10-08T00:26:18.912Z"
+    ]
+  },
+  "outcome": "Real DSView simple trigger succeeded; serial trigger did not fire; forced upload FPGA hit bit0. Same serial no-hit behavior as dslcap; cause unproven.",
+  "runs": [
+    {
+      "kind": "simple",
+      "register_sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+      "register_hex": "a5f5a5f501000100020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_matches_reference": true,
+      "arm_epoch": 1791418966.766483,
+      "header_epoch": 1791419025.045616,
+      "header_prefix_hex": "55555555d3860100208d9f0000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "header_line": "1791419025.045616 TRIG_HEADER ep=0x86 status=0 xfer=512 total_in=512 len=64 data=55555555d3860100208d9f0000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "header_fields": {
+        "check_id": 1431655765,
+        "real_pos": 100051,
+        "ram_saddr": 10456352,
+        "remain_cnt_l": 0,
+        "remain_cnt_h": 0,
+        "fpga_status": 1
+      },
+      "header_is_first_IN": true,
+      "IN_completion_lines": [
+        "1791419025.045616 TRIG_HEADER ep=0x86 status=0 xfer=512 total_in=512 len=64 data=55555555d3860100208d9f0000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "1791419025.067428 BULK_IN_CB ep=0x86 status=0 xfer=1048576 total_in=1049088 len=0"
+      ],
+      "stop_markers": [],
+      "log_path": "/tmp/dslcap-c-dsview-live/run_simple.complete.log",
+      "log_sha256": "75becd309cd8c186c7808ec5e6659d485382934702fafc7372ef87de28ef42ad",
+      "dsview_output_sha256": "298762c03a653a996469484a7b24bfd0f3d821997881159b39b1819dce879234",
+      "actual_aligned_samples": 1000448
+    },
+    {
+      "kind": "serial",
+      "register_sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+      "register_hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff0000fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001000000351c000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_matches_reference": true,
+      "arm_epoch": 1791419137.855177,
+      "header_epoch": 1791419240.305438,
+      "header_prefix_hex": "55555555df86010000734a003fbd0d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "header_line": "1791419240.305438 TRIG_HEADER ep=0x86 status=0 req=512 xfer=512 seq_total_in=512 len=64 data=55555555df86010000734a003fbd0d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "header_fields": {
+        "check_id": 1431655765,
+        "real_pos": 100063,
+        "ram_saddr": 4879104,
+        "remain_cnt_l": 900415,
+        "remain_cnt_h": 0,
+        "fpga_status": 0
+      },
+      "header_is_first_IN": true,
+      "IN_completion_lines": [
+        "1791419240.305438 TRIG_HEADER ep=0x86 status=0 req=512 xfer=512 seq_total_in=512 len=64 data=55555555df86010000734a003fbd0d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "1791419240.327212 BULK_IN_CB ep=0x86 status=0 req=1048576 xfer=1048576 seq_total_in=1049088 len=0"
+      ],
+      "stop_markers": [
+        "=== MARK before Stop 1791419239.650606814"
+      ],
+      "log_path": "/tmp/dslcap-c-dsview-live/run_serial.complete.log",
+      "log_sha256": "42e133d58dd76af70a4a4e2a39bb33e1e613b5817b5661cb3d5db18cb6f7e540",
+      "dsview_output_sha256": "90c9016009350c50221f13814fa45d8802dd31b740f17fb8101ee6219c7ea9b0",
+      "actual_aligned_samples": 99328
+    }
+  ],
+  "dsview_task": "dslcap-c-dsview-live-20261008",
+  "radio_task": "dslcap-c-dsview-radio-20261008",
+  "restoration": {
+    "dsview": {
+      "revision": 5,
+      "result_sha256": "98a5e8b2aabbeeb81871ed587f8556f016a02311ee41a3e642e9550456fa3e87",
+      "usb_released_utc": "2026-10-08T00:27:56.273Z",
+      "session_sha256": "6c70ae530ddb3bbeb2a7b7266fea272319a05933d0ad340a2013cfd71a57e2e2",
+      "config_sha256": "df9584ef2aeef800628350fb27794811cd65e1bea93511f212b8be7e3295b952",
+      "settings_restored": true
+    },
+    "radio": {
+      "revision": 5,
+      "result_sha256": "7b54ed851cad16489d9b439f9c467e97a005d29ef0a9502306b0029ecc3b6496",
+      "verified_utc_approx": "2026-10-08T00:28:18Z",
+      "mode": "STBY_XOSC",
+      "system_irq": 0,
+      "errors": 0,
+      "tx_fifo_level": 0,
+      "fifo_flags_rx": "0x03",
+      "fifo_flags_tx": "0x27",
+      "application": "idle",
+      "pi134": "untouched"
+    }
+  },
+  "limitations": [
+    "No .dsl file or full logic payload saved in this test; no independent DSView waveform decode.",
+    "Header classified by endpoint/completion length/first-IN ordering/DSView logs, not magic alone.",
+    "GUI-seeded register match proves selected configuration; no hardware root cause established."
+  ],
+  "artifact_hashes": {
+    "usbshim_live.c": "035ffef0e166776762229903fc6c2ba68091848c03de6b67f8e552ae5e0b4603",
+    "usbshim_live.so": "e32bf6b7c04787198e880f8f8631cef37f22c2ed1e35c1ace8232d4d8849452b",
+    "usbshim_live_v1.so": "04351fcef896ce31ac0c101a0f0c8b85beb190967f73f1252ee332f9bd71eef8",
+    "run_serial.before_stop.log": "5b396ccbe14359254ca69bddadbcc60fd1f7a643eebf7125412d875ebac5b4a7",
+    "before_stop.txt": "9113528d5728018279bb7f8bef3e0fa12a2a6cd23e65ba69054e18412764a90c",
+    "after_stop.txt": "ab2d3740d73616b88eab7c7864a51a22830a334a7de8cf1b83138ec70a421edc",
+    "usb_released.txt": "49f73b8be0c941dd417503a8582118c82ab0986f706504bf4eb2665839aa8804"
+  }
+}

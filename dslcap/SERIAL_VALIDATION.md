@@ -6,6 +6,10 @@
 match was observed. This is not evidence for a different bit order and is not
 Phase C hardware acceptance. Production code was not changed during testing.
 
+Follow-up: real DSView also missed the same serial pattern while its simple
+NSS control triggered naturally. See DSVIEW_SERIAL_RESPONSE.md for actual FPGA
+header status evidence and restoration. The root cause remains unproven.
+
 ## Register comparison
 
 Real DSView 1.3.2 GUI arm/cancel sessions used the auto-loaded device profile,

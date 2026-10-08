@@ -12,7 +12,10 @@ passed at100M/200M/400M. Hardware bit-order validation is **blocked**: all four
 isolated patterns and an exact-reference positive retry timed out, despite
 passing NSS controls. No serial order or opcode acceptance is claimed; see
 [SERIAL_VALIDATION.md](SERIAL_VALIDATION.md) and
-[TRIGGER_TASKS.md](TRIGGER_TASKS.md). Optional trigger-relative
+[TRIGGER_TASKS.md](TRIGGER_TASKS.md). A subsequent real DSView live test also
+failed to trigger serially while its NSS control passed; see
+[DSVIEW_SERIAL_RESPONSE.md](DSVIEW_SERIAL_RESPONSE.md). Cause remains unproven.
+Optional trigger-relative
 timestamps remain unimplemented.
 
 Plan review history: proposed 2026-10-07, revised the same day for review
@@ -805,6 +808,8 @@ serial template (stage roles and counts above; logic = AND, non-contiguous,
 Validation update: C.1 passed; C.2 attempted and blocked on the missing
 positive match at100M. C.3 remains pending. Preserve source mapping until a
 controlled diagnosis establishes the cause; four misses do not establish order.
+Real DSView subsequently reproduced the missing serial hit on the same pattern,
+with actual header hit bit0 after forced upload and a successful simple control.
 
 1. **Golden image:** B.1-style comparison against DSView's serial tab with
    an identical setup, including value `0x1c35`/`bits=16`, so the

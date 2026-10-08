@@ -4,6 +4,20 @@
 
 ### Live comparison follow-up
 
+After the blocker was committed as01b9694, user authorized testing real DSView
+against the same live pattern. Completed tasks: `dslcap-c-dsview-live-20261008`
+(DSView owner, exclusiveUSB) and `dslcap-c-dsview-radio-20261008` (radio owner,
+baseline then namedGO only). First simple NSS control then serial1c35/16, same
+100M CH0-7 settings and padded FIFO frame. No production edits/dependencies.
+Response comparison completed: DSView simple control naturally hit (actual
+FPGA status1, real_pos100051), serial waited over60s after emission and returned
+status0 only after Stop/forced upload. Actual EP2 matched references. Both
+tasks completed revision5, consumed/acknowledged; DSView settings restored and
+USB released, pi133 baseline restored, pi134 untouched. No production change.
+DSVIEW_SERIAL_RESPONSE.md/JSON preserve evidence, including no saved .dsl
+waveform and the distinction between USB completion status and FPGA hit bit.
+Prior bit-order blocker remains in force and is reproduced in real DSView.
+
 User authorized register comparison then bit-order validation after d6dfd2e.
 DSView owner has exclusive USB for real serial reference task
 `dslcap-c-golden-20261007` in /home/wroberts/DSView-1.3.2; lead must wait for
