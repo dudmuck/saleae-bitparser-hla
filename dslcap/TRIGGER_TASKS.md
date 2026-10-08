@@ -2,6 +2,32 @@
 
 ## C-serial-trigger — wave 1
 
+### Short-width and slow-clock diagnosis
+
+User authorized shorter matches and slower SPI clocks after 61963d2.
+DSView owner held exclusive USB under `dslcap-e-dsview-20261008`; radio owner
+coordinated pi133 under `dslcap-e-radio-20261008`. Tested 1-bit value 1
+and 8-bit value 0x35 at the existing 8 MHz requested SPI speed, then
+16-bit value 0x1c35 at 1 MHz and 100 kHz, each with a simple NSS control.
+Carrier frame 00 02 00 1C 35 00 and DSView 100 MS/s CH0-7,
+N=1000448, position 10% stayed fixed. Upper unused match bits were X.
+Lead coordinated arm, emission, bounded observation, Stop if necessary,
+and restoration; true FPGA header status determined each hit.
+The app overrides speed per transfer. A temporary stdlib spidev one-shot
+with per-transfer speed was independently reviewed and used for slow cases;
+integer return-count validation was added before use. No source rebuild,
+service restart, new dependency or persistent device-setting change.
+No GPIO/RF/reset/config writes; pi134 untouched.
+Lead owns durable evidence and commits; existing worker independently
+verified raw records. All six cases were checked: 1-bit and 8-bit
+serial hits at original speed, both slow NSS controls passed, 16-bit misses
+at both 1 MHz and 100 kHz. The 8-bit hit is exactly the last bit of 0x35.
+No implementation change or new formal review cycle. See
+SERIAL_WIDTH_CLOCK.md/JSON for evidence, limitations and restoration.
+Both tasks completed revision 5, consumed and acknowledged. DSView settings
+restored and USB released; radio baseline and original 8 MHz app preserved,
+temporary Pi helper removed. No operator intervention was needed.
+
 ### Live comparison follow-up
 
 After the blocker was committed as01b9694, user authorized testing real DSView

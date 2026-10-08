@@ -1,0 +1,851 @@
+{
+  "baseline_commit": "61963d2",
+  "application": "/home/wroberts/DSView-1.3.2",
+  "settings": {
+    "rate_hz": 100000000,
+    "channels": "0-7",
+    "samples": 1000448,
+    "position_percent": 10,
+    "vth_volts": 1.6,
+    "serial_roles": "start=3:f,stop=3:r,clock=0:r,data=2"
+  },
+  "stimulus_hex": "0002001c3500",
+  "runs": [
+    {
+      "case": "b1",
+      "spi_requested_hz": 8000000,
+      "trigger": "serial",
+      "bits": 1,
+      "value": 1,
+      "arm_epoch": 1791419987.653869,
+      "register_hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbfffefffffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001000000010000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000800010000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_sha256": "25019f1c4b35284675f71c7e226abe43d36385f7eed6f8186a0cb2476e09bfc6",
+      "stages": [
+        {
+          "count": 0,
+          "edge0": 8,
+          "edge1": 8,
+          "index": 0,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65527,
+          "mask1": 65527,
+          "value0": 0,
+          "value1": 8
+        },
+        {
+          "count": 1,
+          "edge0": 1,
+          "edge1": 0,
+          "index": 1,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65534,
+          "mask1": 65535,
+          "value0": 1,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 2,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65531,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 3,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65534,
+          "mask1": 65535,
+          "value0": 1,
+          "value1": 0
+        }
+      ],
+      "global_stage": 0,
+      "header": {
+        "after_force_seconds": null,
+        "after_stop_seconds": null,
+        "aligned_samples": 1000448,
+        "check_id": 1431655765,
+        "epoch": 1791420038.469187,
+        "meaningful_trigger_sample": 100089,
+        "ram_saddr": 6370080,
+        "real_pos_raw": 100089,
+        "remaining": 0,
+        "status_word": 1,
+        "triggered": true
+      },
+      "callbacks": [
+        {
+          "ep": 134,
+          "epoch": 1791420038.469187,
+          "label": "TRIG_HEADER",
+          "prefix": "55555555f98601002033610000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "req": 512,
+          "status": 0,
+          "xfer": 512
+        },
+        {
+          "ep": 134,
+          "epoch": 1791420038.490951,
+          "label": "BULK_IN_CB",
+          "prefix": null,
+          "req": 1048576,
+          "status": 0,
+          "xfer": 1048576
+        }
+      ],
+      "stop_marks": [],
+      "force_stop_times": [],
+      "log_path": "/tmp/dslcap-e-dsview/run_b1.complete.log",
+      "log_sha256": "b9f3735e3e24d15b368132fc7c776f40fdd1918494069b12f70a6a6798facf49",
+      "independent_report_sha256": "b88da4f8041c6745d72afbe138b3e9512c9f895fc67c2463e915ca6a279eb20f",
+      "natural_completion": true,
+      "emission": {
+        "clock": "host",
+        "utc_start": "2026-10-08T00:40:38.380Z",
+        "utc_end": "2026-10-08T00:40:38.473Z",
+        "path": "mcp_radio",
+        "receipt": {
+          "app_status": 0
+        }
+      }
+    },
+    {
+      "case": "b8",
+      "spi_requested_hz": 8000000,
+      "trigger": "serial",
+      "bits": 8,
+      "value": 53,
+      "arm_epoch": 1791420172.067293,
+      "register_hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff00fffffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001000000350000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000800010000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200000000000100000000000000070000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_sha256": "4176aa28329f8a65725dac84703217a2df8969326d60072b9e87f3df8903d0a1",
+      "stages": [
+        {
+          "count": 0,
+          "edge0": 8,
+          "edge1": 8,
+          "index": 0,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65527,
+          "mask1": 65527,
+          "value0": 0,
+          "value1": 8
+        },
+        {
+          "count": 1,
+          "edge0": 1,
+          "edge1": 0,
+          "index": 1,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65534,
+          "mask1": 65535,
+          "value0": 1,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 2,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65531,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 7,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 3,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65280,
+          "mask1": 65535,
+          "value0": 53,
+          "value1": 0
+        }
+      ],
+      "global_stage": 0,
+      "header": {
+        "after_force_seconds": null,
+        "after_stop_seconds": null,
+        "aligned_samples": 1000448,
+        "check_id": 1431655765,
+        "epoch": 1791420223.416533,
+        "meaningful_trigger_sample": 100087,
+        "ram_saddr": 16287488,
+        "real_pos_raw": 100087,
+        "remaining": 0,
+        "status_word": 1,
+        "triggered": true
+      },
+      "callbacks": [
+        {
+          "ep": 134,
+          "epoch": 1791420223.416533,
+          "label": "TRIG_HEADER",
+          "prefix": "55555555f78601000087f80000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "req": 512,
+          "status": 0,
+          "xfer": 512
+        },
+        {
+          "ep": 134,
+          "epoch": 1791420223.438443,
+          "label": "BULK_IN_CB",
+          "prefix": null,
+          "req": 1048576,
+          "status": 0,
+          "xfer": 1048576
+        }
+      ],
+      "stop_marks": [],
+      "force_stop_times": [],
+      "log_path": "/tmp/dslcap-e-dsview/run_b8.complete.log",
+      "log_sha256": "31e30a9a68e59d6c287d721f0a881633579f4cae1e604e3029bbf2bb95570f87",
+      "independent_report_sha256": "626965b7b1470646af06b1761d63e02589f848557fbf9e0a80c1d9a5cfba99ff",
+      "natural_completion": true,
+      "raw_dump_sha256": "cf4d6dc0c132b57bd0dd37316ad6bffbfa134a3c369f7e9a68cb1d7d41774640",
+      "raw_dump_bytes": 1048576,
+      "waveform": {
+        "samples": 1000448,
+        "transactions": [
+          {
+            "bit_count": 48,
+            "bit_offset_origin": "first selected rising edge after nss assertion",
+            "first_rising_sample": 99537,
+            "index": 0,
+            "last_rising_sample": 100202,
+            "matches": [
+              0
+            ],
+            "miso_hex": "04 52 00 00 00 00",
+            "mosi_hex": "00 02 00 1c 35 00",
+            "nss_assert_sample": 99051,
+            "nss_release_sample": 100460,
+            "partial_left": false,
+            "partial_right": false,
+            "trailing_miso_bits": "",
+            "trailing_mosi_bits": ""
+          }
+        ],
+        "within_byte_clock_period_histogram": {
+          "12": 9,
+          "13": 33
+        },
+        "within_byte_mean_period_samples": 12.785714285714286,
+        "source_setting_serial_matches": [
+          {
+            "delta_from_trigger_samples": 0,
+            "end_bit_offset": 39,
+            "end_sample": 100087,
+            "start_bit_offset": 32,
+            "start_sample": 99997,
+            "transaction": 0,
+            "value": 53,
+            "width": 8
+          }
+        ]
+      },
+      "emission": {
+        "clock": "host",
+        "utc_start": "2026-10-08T00:43:43.304Z",
+        "utc_end": "2026-10-08T00:43:43.420Z",
+        "path": "mcp_radio",
+        "receipt": {
+          "app_status": 0
+        }
+      }
+    },
+    {
+      "case": "ctl1M",
+      "spi_requested_hz": 1000000,
+      "trigger": "simple",
+      "bits": null,
+      "value": null,
+      "arm_epoch": 1791420360.536032,
+      "register_hex": "a5f5a5f501000100020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+      "stages": [
+        {
+          "count": 0,
+          "edge0": 8,
+          "edge1": 0,
+          "index": 0,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65527,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 1,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65535,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 2,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65535,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 3,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65535,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        }
+      ],
+      "global_stage": 0,
+      "header": {
+        "after_force_seconds": null,
+        "after_stop_seconds": null,
+        "aligned_samples": 1000448,
+        "check_id": 1431655765,
+        "epoch": 1791420388.28903,
+        "meaningful_trigger_sample": 100082,
+        "ram_saddr": 10874528,
+        "real_pos_raw": 100082,
+        "remaining": 0,
+        "status_word": 1,
+        "triggered": true
+      },
+      "callbacks": [
+        {
+          "ep": 134,
+          "epoch": 1791420388.28903,
+          "label": "TRIG_HEADER",
+          "prefix": "55555555f2860100a0eea50000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "req": 512,
+          "status": 0,
+          "xfer": 512
+        },
+        {
+          "ep": 134,
+          "epoch": 1791420388.310832,
+          "label": "BULK_IN_CB",
+          "prefix": null,
+          "req": 1048576,
+          "status": 0,
+          "xfer": 1048576
+        }
+      ],
+      "stop_marks": [],
+      "force_stop_times": [],
+      "log_path": "/tmp/dslcap-e-dsview/run_ctl1M.complete.log",
+      "log_sha256": "52841d39122e4fae180a46026b88ed948df9b2fcaf0de28cdce89b63defdcfb5",
+      "independent_report_sha256": "554bd8f9f443aacab953eb90f08ddafb712de1e67a057b116cb761e9593e4579",
+      "natural_completion": true,
+      "raw_dump_sha256": "d8a70dd9096ef11dfdd9f00785916850d5c43a4b0e2ac67377eb6f40f7dc41d4",
+      "raw_dump_bytes": 1048576,
+      "waveform": {
+        "samples": 1000448,
+        "transactions": [
+          {
+            "bit_count": 48,
+            "bit_offset_origin": "first selected rising edge after nss assertion",
+            "first_rising_sample": 100495,
+            "index": 0,
+            "last_rising_sample": 105695,
+            "matches": [
+              0
+            ],
+            "miso_hex": "04 52 00 00 00 00",
+            "mosi_hex": "00 02 00 1c 35 00",
+            "nss_assert_sample": 100082,
+            "nss_release_sample": 107324,
+            "partial_left": false,
+            "partial_right": false,
+            "trailing_miso_bits": "",
+            "trailing_mosi_bits": ""
+          }
+        ],
+        "within_byte_clock_period_histogram": {
+          "100": 42
+        },
+        "within_byte_mean_period_samples": 100.0,
+        "source_setting_serial_matches": []
+      },
+      "emission": {
+        "clock": "pi133",
+        "utc_start": "2026-10-08T00:46:28.280687Z",
+        "utc_end": "2026-10-08T00:46:28.280795Z",
+        "path": "temporary_spidev_helper",
+        "receipt": {
+          "ioctl_return": 6,
+          "miso_hex": "045200000000"
+        }
+      }
+    },
+    {
+      "case": "s16_1M",
+      "spi_requested_hz": 1000000,
+      "trigger": "serial",
+      "bits": 16,
+      "value": 7221,
+      "arm_epoch": 1791420531.394596,
+      "register_hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff0000fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001000000351c000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+      "stages": [
+        {
+          "count": 0,
+          "edge0": 8,
+          "edge1": 8,
+          "index": 0,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65527,
+          "mask1": 65527,
+          "value0": 0,
+          "value1": 8
+        },
+        {
+          "count": 1,
+          "edge0": 1,
+          "edge1": 0,
+          "index": 1,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65534,
+          "mask1": 65535,
+          "value0": 1,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 2,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65531,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 15,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 3,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 0,
+          "mask1": 65535,
+          "value0": 7221,
+          "value1": 0
+        }
+      ],
+      "global_stage": 0,
+      "header": {
+        "after_force_seconds": 0.00042510032653808594,
+        "after_stop_seconds": 0.7384824752807617,
+        "aligned_samples": 99328,
+        "check_id": 1431655765,
+        "epoch": 1791420635.929212,
+        "meaningful_trigger_sample": null,
+        "ram_saddr": 8426144,
+        "real_pos_raw": 100056,
+        "remaining": 900415,
+        "status_word": 0,
+        "triggered": false
+      },
+      "callbacks": [
+        {
+          "ep": 134,
+          "epoch": 1791420635.929212,
+          "label": "TRIG_HEADER",
+          "prefix": "55555555d8860100a09280003fbd0d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "req": 512,
+          "status": 0,
+          "xfer": 512
+        },
+        {
+          "ep": 134,
+          "epoch": 1791420635.950993,
+          "label": "BULK_IN_CB",
+          "prefix": null,
+          "req": 1048576,
+          "status": 0,
+          "xfer": 1048576
+        }
+      ],
+      "stop_marks": [
+        1791420635.1907296
+      ],
+      "force_stop_times": [
+        1791420635.928787
+      ],
+      "log_path": "/tmp/dslcap-e-dsview/run_s16_1M.complete.log",
+      "log_sha256": "87b7d3fd8c113a20d41e2a10c86aa788886f5e2dec4b0a8727caf34282bd6e17",
+      "independent_report_sha256": "b213fbbecb9202ca56795bd1d937b61e258b4c04ea5ff3883a3ad6a7d8b9ba40",
+      "natural_completion": false,
+      "raw_dump_sha256": "9b37030c27c593245ca3cddef2228b601492b0d329e6035728799dc428e30c1f",
+      "raw_dump_bytes": 1048576,
+      "waveform": {
+        "samples": 99328,
+        "transactions": [],
+        "within_byte_clock_period_histogram": {},
+        "within_byte_mean_period_samples": null,
+        "source_setting_serial_matches": []
+      },
+      "emission": {
+        "clock": "pi133",
+        "utc_start": "2026-10-08T00:49:20.164593Z",
+        "utc_end": "2026-10-08T00:49:20.164703Z",
+        "path": "temporary_spidev_helper",
+        "receipt": {
+          "ioctl_return": 6,
+          "miso_hex": "045200000000"
+        }
+      }
+    },
+    {
+      "case": "ctl100k",
+      "spi_requested_hz": 100000,
+      "trigger": "simple",
+      "bits": null,
+      "value": null,
+      "arm_epoch": 1791420772.334025,
+      "register_hex": "a5f5a5f501000100020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+      "stages": [
+        {
+          "count": 0,
+          "edge0": 8,
+          "edge1": 0,
+          "index": 0,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65527,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 1,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65535,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 2,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65535,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 3,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65535,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        }
+      ],
+      "global_stage": 0,
+      "header": {
+        "after_force_seconds": null,
+        "after_stop_seconds": null,
+        "aligned_samples": 1000448,
+        "check_id": 1431655765,
+        "epoch": 1791420797.03676,
+        "meaningful_trigger_sample": 100065,
+        "ram_saddr": 9364160,
+        "real_pos_raw": 100065,
+        "remaining": 0,
+        "status_word": 1,
+        "triggered": true
+      },
+      "callbacks": [
+        {
+          "ep": 134,
+          "epoch": 1791420797.03676,
+          "label": "TRIG_HEADER",
+          "prefix": "55555555e1860100c0e28e0000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "req": 512,
+          "status": 0,
+          "xfer": 512
+        },
+        {
+          "ep": 134,
+          "epoch": 1791420797.058867,
+          "label": "BULK_IN_CB",
+          "prefix": null,
+          "req": 1048576,
+          "status": 0,
+          "xfer": 1048576
+        }
+      ],
+      "stop_marks": [],
+      "force_stop_times": [],
+      "log_path": "/tmp/dslcap-e-dsview/run_ctl100k.complete.log",
+      "log_sha256": "bfde8ef4f0e24ee4809fe9843f32b80564d6b0f362d6424761ebf9f00122ca41",
+      "independent_report_sha256": "758ffc622572afc3498830ec8558014f754b0f070600af5fdc1dd4771c8f3c5e",
+      "natural_completion": true,
+      "raw_dump_sha256": "94af76b9285b070fa41266745b466202955d3cfc5434308d01c9d6bf107c849b",
+      "raw_dump_bytes": 1048576,
+      "waveform": {
+        "samples": 1000448,
+        "transactions": [
+          {
+            "bit_count": 48,
+            "bit_offset_origin": "first selected rising edge after nss assertion",
+            "first_rising_sample": 101800,
+            "index": 0,
+            "last_rising_sample": 153799,
+            "matches": [
+              0
+            ],
+            "miso_hex": "04 52 00 00 00 00",
+            "mosi_hex": "00 02 00 1c 35 00",
+            "nss_assert_sample": 100065,
+            "nss_release_sample": 156356,
+            "partial_left": false,
+            "partial_right": false,
+            "trailing_miso_bits": "",
+            "trailing_mosi_bits": ""
+          }
+        ],
+        "within_byte_clock_period_histogram": {
+          "1000": 42
+        },
+        "within_byte_mean_period_samples": 1000.0,
+        "source_setting_serial_matches": []
+      },
+      "emission": {
+        "clock": "pi133",
+        "utc_start": "2026-10-08T00:53:17.028248Z",
+        "utc_end": "2026-10-08T00:53:17.028844Z",
+        "path": "temporary_spidev_helper",
+        "receipt": {
+          "ioctl_return": 6,
+          "miso_hex": "045200000000"
+        }
+      }
+    },
+    {
+      "case": "s16_100k",
+      "spi_requested_hz": 100000,
+      "trigger": "serial",
+      "bits": 16,
+      "value": 7221,
+      "arm_epoch": 1791420935.578078,
+      "register_hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff0000fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001000000351c000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+      "stages": [
+        {
+          "count": 0,
+          "edge0": 8,
+          "edge1": 8,
+          "index": 0,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65527,
+          "mask1": 65527,
+          "value0": 0,
+          "value1": 8
+        },
+        {
+          "count": 1,
+          "edge0": 1,
+          "edge1": 0,
+          "index": 1,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65534,
+          "mask1": 65535,
+          "value0": 1,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 2,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65531,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 15,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 3,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 0,
+          "mask1": 65535,
+          "value0": 7221,
+          "value1": 0
+        }
+      ],
+      "global_stage": 0,
+      "header": {
+        "after_force_seconds": 0.0004119873046875,
+        "after_stop_seconds": 0.9365756511688232,
+        "aligned_samples": 99328,
+        "check_id": 1431655765,
+        "epoch": 1791421033.792058,
+        "meaningful_trigger_sample": null,
+        "ram_saddr": 11174944,
+        "real_pos_raw": 100071,
+        "remaining": 900415,
+        "status_word": 0,
+        "triggered": false
+      },
+      "callbacks": [
+        {
+          "ep": 134,
+          "epoch": 1791421033.792058,
+          "label": "TRIG_HEADER",
+          "prefix": "55555555e78601002084aa003fbd0d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "req": 512,
+          "status": 0,
+          "xfer": 512
+        },
+        {
+          "ep": 134,
+          "epoch": 1791421033.816078,
+          "label": "BULK_IN_CB",
+          "prefix": null,
+          "req": 1048576,
+          "status": 0,
+          "xfer": 1048576
+        }
+      ],
+      "stop_marks": [
+        1791421032.8554823
+      ],
+      "force_stop_times": [
+        1791421033.791646
+      ],
+      "log_path": "/tmp/dslcap-e-dsview/run_s16_100k.complete.log",
+      "log_sha256": "6d5ffb7c98e8719b0a9b337155d4ffaca60144be41dfd6e2cd17ef2cec2b42f4",
+      "independent_report_sha256": "30c7cfc8a65a86e3c8845e982b64198c0322cf59f21c921edae763e7321a91ad",
+      "natural_completion": false,
+      "raw_dump_sha256": "9b37030c27c593245ca3cddef2228b601492b0d329e6035728799dc428e30c1f",
+      "raw_dump_bytes": 1048576,
+      "waveform": {
+        "samples": 99328,
+        "transactions": [],
+        "within_byte_clock_period_histogram": {},
+        "within_byte_mean_period_samples": null,
+        "source_setting_serial_matches": []
+      },
+      "emission": {
+        "clock": "pi133",
+        "utc_start": "2026-10-08T00:56:06.265242Z",
+        "utc_end": "2026-10-08T00:56:06.265839Z",
+        "path": "temporary_spidev_helper",
+        "receipt": {
+          "ioctl_return": 6,
+          "miso_hex": "045200000000"
+        }
+      }
+    }
+  ],
+  "artifact_hashes": {
+    "usbshim_live.c": "61b3e96be2a0b660af9e5748aced27c1e21510ceb794d953abaf35d23fc3f2b4",
+    "usbshim_live.so": "13c7dab04585d9230f153b81b7e4fb983424889fbb037f0ab2bb5ae90110012b",
+    "usbshim_live_b1.c": "9508e2dda231150d557bae016d4e5de42e4cf101b478c4a2339b58269a66b595",
+    "usbshim_live_b1.so": "578d40ff98260f390607b20f0252f1d4c38701a24c2f1bd033c60c539cee2f89",
+    "evidence.py": "8121fd6736f22b663b2493e75aef76759c0a846b1c20084b02c14d0ffcfe92bb",
+    "test_evidence.py": "c5f0a49ea8d9f996673b8c0698345fba164af7450d2f492e156dfdaecc438524",
+    "helper-v2-reviewed.py": "c14587b4caf695c08db4abdc581c61226c38524ee687a301fa5a38d80a149e71",
+    "test_helper.py": "aecf65cd9dbc1574491663c7adf945b210575c7adb896eb1dfc09fc8d5cdc5f8"
+  },
+  "tasks": [
+    "dslcap-e-dsview-20261008",
+    "dslcap-e-radio-20261008"
+  ],
+  "restoration": {
+    "dsview": {
+      "revision": 5,
+      "result_sha256": "cc1fc6e323080de9c6e4be1f092cf57454f15002c04d89e86ec64a1110bf9eae",
+      "usb_released_utc": "2026-10-08T00:57:36.753Z",
+      "session_config_restored": true,
+      "lead_verified_no_usb_holder_or_capture_process": true
+    },
+    "radio": {
+      "revision": 5,
+      "result_sha256": "647f2955f5e26518c873ad01f0ab8b768813b58f6b37981afa96bcdaa4c7b63f",
+      "verified_utc_approx": "2026-10-08T00:58:44Z",
+      "mode": "STBY_XOSC",
+      "system_irq": 0,
+      "errors": 0,
+      "tx_fifo_level": 0,
+      "fifo_flags_rx": "03",
+      "fifo_flags_tx": "27",
+      "spi_mode": 0,
+      "spi_bits": 8,
+      "spi_lsb_first": false,
+      "spi_default_hz": 8000000,
+      "app_per_transfer_hz": 8000000,
+      "app_pid_unchanged": 7973,
+      "helper_removed": true,
+      "pi134": "untouched"
+    }
+  },
+  "outcome": "Short1/8-bit values naturally trigger at original speed;16-bit1c35 misses at1MHz/100kHz with passing controls. Root cause and general width limit unproven.",
+  "limitations": [
+    "One acquisition per case; diagnostic, not reliability acceptance.",
+    "No full raw payload for b1.",
+    "Slow controls and failed serial captures are separate acquisitions; late forced windows overwrite earlier traffic.",
+    "Clock measurements use nominal analyzer100MHz; Pi and host timestamps not assumed tightly synchronized.",
+    "No dslcap short-width live rerun in this matrix; full16-bit order/opcode acceptance remains open."
+  ]
+}

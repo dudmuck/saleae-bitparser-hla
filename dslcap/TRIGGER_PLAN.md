@@ -14,7 +14,13 @@ passing NSS controls. No serial order or opcode acceptance is claimed; see
 [SERIAL_VALIDATION.md](SERIAL_VALIDATION.md) and
 [TRIGGER_TASKS.md](TRIGGER_TASKS.md). A subsequent real DSView live test also
 failed to trigger serially while its NSS control passed; see
-[DSVIEW_SERIAL_RESPONSE.md](DSVIEW_SERIAL_RESPONSE.md). Cause remains unproven.
+[DSVIEW_SERIAL_RESPONSE.md](DSVIEW_SERIAL_RESPONSE.md). A width/clock follow-up
+found natural DSView hits for 1-bit and 8-bit matches at requested 8 MHz, but
+the 16-bit 0x1c35 match still missed at measured 1 MHz and 100 kHz, with passing
+NSS controls. The 8-bit hit lands exactly on the final matching clock edge.
+See [SERIAL_WIDTH_CLOCK.md](SERIAL_WIDTH_CLOCK.md). This narrows the diagnosis;
+it does not close the original 16-bit bit-order/opcode gates or establish a
+general width limit. Cause remains unproven.
 Optional trigger-relative
 timestamps remain unimplemented.
 
