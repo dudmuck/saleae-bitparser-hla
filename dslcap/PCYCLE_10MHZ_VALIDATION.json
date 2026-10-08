@@ -1,0 +1,432 @@
+{
+ "date_utc": "2026-10-08",
+ "baseline_commit": "ade7382",
+ "scope": "DSLogic Plus decoding of two LR2021 SPI buses at 10 MHz SCLK (pi133/pi134, kernel lr2021_pcycle ping-pong), 12 channels at 25 MS/s",
+ "outcome": "PASS: on pi133 every sampled SCLK phase was >= 47.5 ns at 2.5 ns resolution (>= ~45 ns allowing one grid interval); pi134 at 10 ns resolution is consistent (means ~49 ns lows) but not bounded as tightly. Two complete 2000-exchange prbs9 runs decoded byte-exact on both buses at 25 MS/s without deglitch.",
+ "bench": {
+  "pi133": "initiator, lr2021_pcycle kernel module, core 500 MHz, SCLK 10 MHz",
+  "pi134": "responder, same",
+  "traffic_owner": "lr2021_kernel_packet_cycle lead session (bench/run_pp.sh)",
+  "analyzer_owner": "saleae-binparser-64",
+  "user_clearance": "user cleared analyzer and bench use 2026-10-08 09:22 PDT"
+ },
+ "run_a": {
+  "command": "BENCH_FREE=1 bench/run_pp.sh COUNT=20000 RESTORE=0 TAG=dslcap_duty",
+  "capture_window_utc": "16:24:31-16:24:39",
+  "captures": {
+   "pi133": "dslcap buffer 400M CH0-3 N=16777216 trigger 3:f pos 10%, x3",
+   "pi134": "dslcap buffer 100M CH8-11 N=4194304 trigger 11:f pos 10%, x3"
+  },
+  "analysis": "dslcap/tools/duty_analyze.py; within-byte lows only (<= 0.75 period)",
+  "results": {
+   "a100_1": {
+    "samplerate": 100000000,
+    "frames": 162,
+    "clocks_per_frame": {
+     "16": 45,
+     "32": 36,
+     "40": 9,
+     "48": 45,
+     "80": 9,
+     "4104": 18
+    },
+    "duty": 0.5111319856818731,
+    "high": {
+     "n": 78984,
+     "min_ns": 50.0,
+     "mean_ns": 51.11604882001418,
+     "max_ns": 60.0
+    },
+    "low_within_byte": {
+     "n": 78291,
+     "min_ns": 40.0,
+     "mean_ns": 48.88952753190022,
+     "max_ns": 50.0
+    },
+    "raw_sha256": "7c93c278799cda9a191e75a4013a4e2eb9b80a55c1bd63db1ff699a7a929e9f0"
+   },
+   "a100_2": {
+    "samplerate": 100000000,
+    "frames": 163,
+    "clocks_per_frame": {
+     "16": 45,
+     "32": 37,
+     "40": 9,
+     "48": 45,
+     "80": 9,
+     "4104": 18
+    },
+    "duty": 0.5089461771364276,
+    "high": {
+     "n": 79016,
+     "min_ns": 50.0,
+     "mean_ns": 50.899058418548144,
+     "max_ns": 60.0
+    },
+    "low_within_byte": {
+     "n": 78319,
+     "min_ns": 40.0,
+     "mean_ns": 49.10966687521547,
+     "max_ns": 50.0
+    },
+    "raw_sha256": "d45d7e66d658f2e8dfe758d8eee547111df55d7a995c0c6fe79ae26f3b4fb2ae"
+   },
+   "a100_3": {
+    "samplerate": 100000000,
+    "frames": 162,
+    "clocks_per_frame": {
+     "16": 45,
+     "32": 36,
+     "40": 9,
+     "48": 45,
+     "80": 9,
+     "4104": 18
+    },
+    "duty": 0.5189747547409125,
+    "high": {
+     "n": 78984,
+     "min_ns": 50.0,
+     "mean_ns": 51.89506735541376,
+     "max_ns": 60.0
+    },
+    "low_within_byte": {
+     "n": 78291,
+     "min_ns": 40.0,
+     "mean_ns": 48.100292498499186,
+     "max_ns": 50.0
+    },
+    "raw_sha256": "865d896f8ee706a9f3af0255c106e24e199e396f2cd4edd9663b02a4a17b85c9"
+   },
+   "a400_1": {
+    "samplerate": 400000000,
+    "frames": 117,
+    "clocks_per_frame": {
+     "16": 36,
+     "32": 18,
+     "40": 18,
+     "48": 27,
+     "4104": 18
+    },
+    "duty": 0.5088021583441898,
+    "high": {
+     "n": 77040,
+     "min_ns": 50.0,
+     "mean_ns": 50.8810033748702,
+     "max_ns": 52.5
+    },
+    "low_within_byte": {
+     "n": 76590,
+     "min_ns": 47.5,
+     "mean_ns": 49.120544457500976,
+     "max_ns": 50.0
+    },
+    "raw_sha256": "f9909fe44a50ae722d3f3ea2d80f7436f65f5e093a2fcaf113349e71ef907b27"
+   },
+   "a400_2": {
+    "samplerate": 400000000,
+    "frames": 117,
+    "clocks_per_frame": {
+     "16": 36,
+     "32": 18,
+     "40": 18,
+     "48": 27,
+     "4104": 18
+    },
+    "duty": 0.5085150566285562,
+    "high": {
+     "n": 77040,
+     "min_ns": 50.0,
+     "mean_ns": 50.85173286604361,
+     "max_ns": 52.5
+    },
+    "low_within_byte": {
+     "n": 76590,
+     "min_ns": 47.5,
+     "mean_ns": 49.148713931322625,
+     "max_ns": 50.0
+    },
+    "raw_sha256": "731d0aa0405f9ef5b32493897af651655855f5716634dfdfae4df66e7ab97f44"
+   },
+   "a400_3": {
+    "samplerate": 400000000,
+    "frames": 117,
+    "clocks_per_frame": {
+     "16": 36,
+     "32": 18,
+     "40": 18,
+     "48": 27,
+     "4104": 18
+    },
+    "duty": 0.509020133653698,
+    "high": {
+     "n": 77040,
+     "min_ns": 50.0,
+     "mean_ns": 50.90238836967809,
+     "max_ns": 52.5
+    },
+    "low_within_byte": {
+     "n": 76590,
+     "min_ns": 47.5,
+     "mean_ns": 49.098348348348345,
+     "max_ns": 50.0
+    },
+    "raw_sha256": "6d1b080d977d40b89ace46504f15a66cfea79dc67bd38732f33891b898d4c9c6"
+   }
+  },
+  "note": "Widths are on the sample grid (pi133 2.5 ns, pi134 10 ns). pi134 recorded 8694, 6973 and 14873 within-byte lows at 40 ns in its three captures; with means ~48-49 ns these are consistent with ~49 ns phases quantized to 40/50 ns, but the 100 MS/s data does not prove every pi134 phase exceeds 40 ns. The empirical evidence for both buses at 25 MS/s is the byte-exact RUN B/RUN C decode.",
+  "rf_loss_question": "lead reported request seq 3740 lost ~16:24:32Z; captured pi133 windows held seqs 3544-3552, 4061-4069, 4585-4593; seq 3740 fell during USB upload/re-arm, analyzer inputs are passive; no evidence linking the loss to the analyzer",
+  "coverage": "six buffer captures of 41.94304 ms each (0.252 s total, ~0.126 s per board) taken 16:24:31-16:24:39Z, during ~92 s of continuous ping-pong stimulus (stimulus timing from the traffic owner)"
+ },
+ "run_b": {
+  "command": "BENCH_FREE=1 SWAP=0 BUILD=0 bench/run_pp.sh COUNT=2000 RESTORE=0 TAG=dslcap_raw",
+  "kernel_results_dir": "/mnt/foo/nfs_share_for_pis/lr2021_kernel_packet_cycle/results/20261008_092947_ppx_pi134-pi133_auto_settx_fs_D6400_N2000_dslcap_raw_r1",
+  "kernel_counts": {
+   "responder_req_rx": 2000,
+   "reply_tx": 2000,
+   "missed": 0,
+   "crc_errors": 0,
+   "mismatch": 0,
+   "initiator_reply_rx": 2000,
+   "reply_missed": 0,
+   "echo_mismatch": 0
+  },
+  "capture": {
+   "format": "dslcap-raw-v1",
+   "command": [
+    "/tmp/dslcap-phase-c-build/dslcap",
+    "--samplerate",
+    "25000000",
+    "--channels",
+    "0,1,2,3,4,5,8,9,10,11,12,13",
+    "--vth",
+    "1.6",
+    "--mode",
+    "stream",
+    "--time",
+    "90s"
+   ],
+   "channels": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "unitsize": 2,
+   "meta_lines": 1,
+   "start_utc": "2026-10-08T16:29:32.355321+00:00",
+   "exit": 0,
+   "bytes": 4500000026,
+   "end_utc": "2026-10-08T16:31:03.431355+00:00"
+  },
+  "decode": {
+   "plain": {
+    "seconds": 13,
+    "output_sha256": "4ae289ad5d7efa7d6ab2945e07792cd6e239737b43adbf25e8788c7a6dc8fb89"
+   },
+   "deglitch": {
+    "seconds": 20,
+    "transform": "deglitch:channels=0,8:clock_period=2.5:frame_pulses=8",
+    "output_identical_to_plain": true,
+    "counters": {
+     "0": {
+      "suppressed": 0,
+      "split": 0,
+      "inserted": 0,
+      "unresolved": 0
+     },
+     "8": {
+      "suppressed": 0,
+      "split": 0,
+      "inserted": 0,
+      "unresolved": 0
+     }
+    }
+   }
+  },
+  "checker": {
+   "tool": "dslcap/tools/check_pcycle.py --expect 2000",
+   "sha256": "0e8835c9e3a3189f14c5b38d7f4ba07b4e947812eee3a4df172380dc3fb95a49",
+   "stats": {
+    "SPI_B transfers": 36125,
+    "other (short) commands": 54178,
+    "SPI transfers": 26060,
+    "zero FIFO prefills": 3,
+    "SPI_B write reply": 2004,
+    "SPI write request": 2000,
+    "SPI read reply": 2000,
+    "SPI_B read request": 2000,
+    "SPI_B reads not written on SPI": 0,
+    "SPI write occurrences not read on SPI_B": 0,
+    "SPI distinct payloads never read on SPI_B": 0,
+    "SPI unread write seqs on SPI_B": [],
+    "SPI reads not written on SPI_B": 0,
+    "SPI_B write occurrences not read on SPI": 4,
+    "SPI_B distinct payloads never read on SPI": 2,
+    "SPI_B unread write seqs on SPI": [
+     0,
+     1,
+     2000,
+     2001
+    ],
+    "CMD_FAIL lines": 0,
+    "dict-error lines": 0,
+    "DECODE ERROR lines": 0
+   },
+   "problems": [],
+   "bad_examples": [],
+   "verdict": "PASS",
+   "expect": 2000,
+   "requester": "SPI",
+   "responder": "SPI_B",
+   "echo_lag": 2
+  },
+  "coverage": {
+   "pi133_request_writes": "2000, seq 0..1999 each once",
+   "pi134_request_reads": "2000, byte-identical to pi133 writes",
+   "pi134_reply_writes": "2004 occurrences, written resp_seq 0,1,0,1,2..2001: resp_seq 0/1 staged in the negative control and again for the run; 2000/2001 forward-staged at the end. Occurrence accounting leaves four unread writes (0,1,2000,2001); two distinct payloads (2000/2001) were never read.",
+   "pi133_reply_reads": "2000 distinct resp_seq 0..1999, each byte-identical to a pi134 write; echo 0xFFFFFFFF for resp_seq 0/1 and resp_seq - 2 after (two replies pre-staged)"
+  },
+  "hashes": {
+   "runB.raw": "68c82efa5b7e6d3b9a23e76f92306a109f0eb60631bc385deca77b374adbf790",
+   "runB.raw.json": "b07d1df4d14a4b5695902b8265174e169896eb2b9f92fdec05e1348fc31c8184",
+   "runB.plain.out": "4ae289ad5d7efa7d6ab2945e07792cd6e239737b43adbf25e8788c7a6dc8fb89",
+   "runB.check.json": "31b8394f45c329f7d6038f32bc27e80748695bf54b747be09443fa2038b1152c",
+   "runB.capture.log": "0874c6572d1fd60ab02869d2d46786f0d6b956a42722a9f44831471c8a4812e2",
+   "kernel_stats": {
+    "init_stats.txt": "cc72a627fa501d9c71df3d2baa4f54d7f6240760315cbd31dff049eeefb04799",
+    "resp_negctl_stats.txt": "ad3b02d8795fde0aed0507efe1fa3c88951d1d62961856e2c1a467de804e5b3b",
+    "resp_stats.txt": "0b3c8f6a0646663baaa3513093733e8d090f9c069f1fac40c7cc9c898bca396c"
+   }
+  },
+  "capture_log": "/mnt/foo/dslcap-captures/runB.capture.log (dslcap stderr: samples=2250000000, output bytes=4500000026, ring high-water=1983872)",
+  "capture_stats": {
+   "samples": 2250000000,
+   "ring_high_water": 1983872
+  }
+ },
+ "limitations": [
+  "Two 2000-exchange runs, plus 0.252 s of high-rate duty sampling during ~92 s of stimulus, on this bench, wiring and threshold (1.6 V); not a guarantee for other duty, wiring or temperature.",
+  "Raw captures stay on local disk (/mnt/foo/dslcap-captures), not committed.",
+  "Live (non-replay) decode of this traffic was not run; replay decode used the same decoder."
+ ],
+ "tools": {
+  "gen_pp": "dslcap/tools/gen_pp.py: synthetic 12-ch ping-pong raw file + expected transfers",
+  "check_decode": "dslcap/tools/check_decode.py: byte-exact check against gen_pp expected transfers",
+  "check_pcycle": "dslcap/tools/check_pcycle.py: prbs9/cross-bus check of real pcycle --hex output",
+  "duty_analyze": "dslcap/tools/duty_analyze.py: SCLK phase widths in nSS frames"
+ },
+ "run_c": {
+  "purpose": "PP_THROUGHPUT_PLAN T0 auto cell for the traffic owner; also checked byte-exact here",
+  "user_clearance": "user cleared RUN C 2026-10-08 09:50 PDT",
+  "command": "BENCH_FREE=1 bench/run_pp.sh COUNT=2000 RESTORE=0 SWAP=0 BUILD=0 INIT_RX=auto WITNESS=2 TAG=T0_auto_cap",
+  "wiring": "CH4 moved by the user at 09:38 PDT from pi133 BUSY to pi134 DIO11 (pin 18, GPIO24) RX-path witness; other channels unchanged",
+  "kernel_results_dir": "/mnt/foo/nfs_share_for_pis/lr2021_kernel_packet_cycle/results/20261008_095105_ppx_pi134-pi133_auto_auto_fs_D6400_N2000_T0_auto_cap_r1",
+  "kernel_counts": "req_rx/reply_rx 2000, 0 missed/CRC/mismatch (traffic owner report)",
+  "capture": {
+   "format": "dslcap-raw-v1",
+   "command": [
+    "/tmp/dslcap-phase-c-build/dslcap",
+    "--samplerate",
+    "25000000",
+    "--channels",
+    "0,1,2,3,4,5,8,9,10,11,12,13",
+    "--vth",
+    "1.6",
+    "--mode",
+    "stream",
+    "--time",
+    "90s"
+   ],
+   "channels": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "unitsize": 2,
+   "meta_lines": 1,
+   "start_utc": "2026-10-08T16:50:45.303554+00:00",
+   "exit": 0,
+   "bytes": 4500000026,
+   "end_utc": "2026-10-08T16:52:16.366500+00:00"
+  },
+  "capture_stats": {
+   "samples": 2250000000,
+   "ring_high_water": 2590720
+  },
+  "checker": {
+   "tool": "dslcap/tools/check_pcycle.py --expect 2000",
+   "sha256": "0e8835c9e3a3189f14c5b38d7f4ba07b4e947812eee3a4df172380dc3fb95a49",
+   "stats": {
+    "SPI_B transfers": 36131,
+    "other (short) commands": 58184,
+    "SPI transfers": 30060,
+    "zero FIFO prefills": 3,
+    "SPI_B write reply": 2004,
+    "SPI write request": 2000,
+    "SPI read reply": 2000,
+    "SPI_B read request": 2000,
+    "SPI_B reads not written on SPI": 0,
+    "SPI write occurrences not read on SPI_B": 0,
+    "SPI distinct payloads never read on SPI_B": 0,
+    "SPI unread write seqs on SPI_B": [],
+    "SPI reads not written on SPI_B": 0,
+    "SPI_B write occurrences not read on SPI": 4,
+    "SPI_B distinct payloads never read on SPI": 2,
+    "SPI_B unread write seqs on SPI": [
+     0,
+     1,
+     2000,
+     2001
+    ],
+    "CMD_FAIL lines": 0,
+    "dict-error lines": 0,
+    "DECODE ERROR lines": 0
+   },
+   "problems": [],
+   "bad_examples": [],
+   "verdict": "PASS",
+   "expect": 2000,
+   "requester": "SPI",
+   "responder": "SPI_B",
+   "echo_lag": 2
+  },
+  "dio11_edges": 4004,
+  "hashes": {
+   "runC.raw": "43fe5709852178e7a707a22c1b3f6e4ffe4b4634546b05d824b0e3d6d55d137e",
+   "runC.raw.json": "835974f3b6e1a354f9e799321a0e234c087235f335b055d2314846cae6b1700b",
+   "runC.plain.out": "1fa689c1c9e48ce108f7587b18f9c915efee839d2e6c0e4cef5fab3bfe87eccc",
+   "runC.check.json": "5ca4268cab7e6bb452fc7f3461ac57b9f27871d609201e8b88c251e234f3995f",
+   "runC.capture.log": "dd46c0f15652efa3dab140602afb1cce8297ab9120752ea1efcd4a9db4a65678",
+   "kernel_stats": {
+    "init_stats.txt": "94cc28a7b05a4134b4d170e12df489f92ef39c635a6b5f4685397f8ad1dd71c1",
+    "resp_negctl_stats.txt": "43c586d7a78e72a0ef62927242120ff79bc328ce28b227d31850e467cc075ff9",
+    "resp_stats.txt": "73334d3a4257aaa20f5caceaf9a3cacf7058b8e8b335a0752a3b98ba2b0c8e20"
+   }
+  }
+ },
+ "durable_review": {
+  "reviewer": "dslcap_worker Codex thread 01a1175b-6787-7232-92a6-a80ffff3dcd4",
+  "cycle1": "DURABLE_FAIL: DOC-1..3, VERIFY-1..4 and low text fixes; no packet-data defect",
+  "fixes": "duty coverage and margin scope corrected; occurrence accounting; strict check_pcycle (--expect contract, pairing, exact prefill size, no-traffic fail); check_decode error/structure verdict; duty_analyze width from record/--width; tests/test_dslcap_tools.py",
+  "cycle2": "DURABLE_FAIL: VERIFY-1a (role payloads, staging multiset), VERIFY-2a (short FIFO transfers), one doc reference; RUN B/C data verified",
+  "cycle2_fixes": "full-run contract checks request PRBS from byte 4 and reply PRBS+echo for every occurrence incl. unread staged writes; responder write seqs must equal 0..N+lag-1 once (+ optional negative-control prefix); any malformed FIFO opcode transfer fails; N>0, lag>=0",
+  "cycle3": "DURABLE_PASS, no remaining findings (report sha256 5e1cf4d86e826221defeb5a8c4cc2d1b27f9d381ab4bb5504cc70ec3c8faaea1)"
+ }
+}

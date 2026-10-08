@@ -193,20 +193,24 @@ the 12-channel-capable 25M stream profile; it does not lower the requested
 rate. Up to four additional selected inputs can fit this profile, subject to
 wiring and decoder requirements. Selecting all 16 at 25M fails.
 
-With the bench's BUSY and DIO8 connections, log all four status inputs:
+With the bench's status connections, log all four status inputs:
 
 ```bash
 ./sigrok_hla.py --dslogic --dslcap /tmp/dslcap-build/dslcap \
     --hla-path ~/HLA/saleae_lr2021 --spi 0,1,2,3 --spi 8,9,10,11 \
-    -C 4=pi133_busy,5=pi133_dio8,12=pi134_busy,13=pi134_dio8 \
+    -C 4=pi134_dio11,5=pi133_dio8,12=pi134_busy,13=pi134_dio8 \
     --int-pin pi133_dio8 --extra-pin pi134_dio8 \
-    --extra-pin pi133_busy --extra-pin pi134_busy \
+    --extra-pin pi134_dio11 --extra-pin pi134_busy \
     --samplerate 25M --continuous --hex
 ```
 
 On each Pi, BUSY is physical pin 12 (GPIO18), and DIO8 is physical pin 29
-(GPIO5). With the original pi134 wiring restored, CH12 is pi134 BUSY and
-CH13 is pi134 DIO8; pi133 remains CH4 BUSY and CH5 DIO8.
+(GPIO5). CH5 is pi133 DIO8, CH12 pi134 BUSY and CH13 pi134 DIO8. Since
+2026-10-08 09:38 PDT, CH4 is pi134 physical pin 18 (GPIO24), the LR2021's DIO11.
+It toggles only when `lr2021_pcycle` drives it as an RF-switch witness
+(`WITNESS=1`: high while the TX path is on; `WITNESS=2`: high while the RX path
+is on) and is otherwise static. pi133 BUSY is no longer captured; earlier
+validations recorded below used CH4 as pi133 BUSY.
 Both Pi grounds connect to the analyzer. This selects exactly 12
 inputs, mask `0x3f3f`, with two-byte samples at 25 MSa/s. Both pin options
 log edges interleaved with decoded SPI; `--int-pin` is not a hardware trigger.
@@ -289,14 +293,14 @@ after 20 s. Decode with `--dslogic -i FILE` and the same `-C`/`--spi`/pin option
 ```bash
 ./sigrok_hla.py --dslogic --dslcap /tmp/dslcap-build/dslcap \
     --hla-path ~/HLA/saleae_lr2021 --spi 0,1,2,3 --spi 8,9,10,11 \
-    -C 4=pi133_busy,5=pi133_dio8,12=pi134_busy,13=pi134_dio8 \
-    --extra-pin pi133_busy --extra-pin pi134_busy \
+    -C 4=pi134_dio11,5=pi133_dio8,12=pi134_busy,13=pi134_dio8 \
+    --extra-pin pi134_dio11 --extra-pin pi134_busy \
     --samplerate 25M --time 77s --raw-out /local/cell.raw
 
 ./sigrok_hla.py --dslogic -i /local/cell.raw \
     --hla-path ~/HLA/saleae_lr2021 --spi 0,1,2,3 --spi 8,9,10,11 \
-    -C 4=pi133_busy,5=pi133_dio8,12=pi134_busy,13=pi134_dio8 \
-    --extra-pin pi133_busy --extra-pin pi134_busy --hex
+    -C 4=pi134_dio11,5=pi133_dio8,12=pi134_busy,13=pi134_dio8 \
+    --extra-pin pi134_dio11 --extra-pin pi134_busy --hex
 ```
 
 Replay goes through the same decoder as live capture, and its output is
@@ -675,8 +679,12 @@ cycle and starts slipping bits at 40%, where a phase shrinks to one sample.
 With deglitch at 40% the corrupted transfers fall from 59 to 8 of 400; at 39%
 they fall from 321 to 127 of 400, so many remain wrong: the framing is
 restored, but data at a lost pulse cannot always be recovered. Treat deglitch as a mitigation; the margin
-that matters is the effective SCLK duty at the analyzer threshold. Whether
-the DSLogic sees 10 MHz SCLK with enough margin is not yet validated live.
+that matters is the effective SCLK duty at the analyzer threshold. On the
+pi133/pi134 bench the real 10 MHz SCLK measured 50.9% duty, with every sampled
+pi133 phase at least 47.5 ns at 400 MSa/s (pi134, measured at 100 MSa/s, is
+consistent). Two full 2000-exchange kernel ping-pong runs decoded byte-exact on
+both buses at 25 MSa/s without deglitch (deglitch made zero corrections); see
+[10 MHz kernel traffic](dslcap/VALIDATION.md#10-mhz-kernel-ping-pong-traffic--2026-10-08).
 
 ## Buffer and Memory
 

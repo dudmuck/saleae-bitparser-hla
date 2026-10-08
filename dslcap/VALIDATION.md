@@ -96,8 +96,15 @@ running. Temporary source and timing log: `/tmp/dslcap-pi133-pulses.py` and
 ## Open gates
 
 - Same-traffic Saleae/Logic 2 comparison remains unavailable. Live dual-radio
-  LR2021 operation on pi133/pi134 now passes (below); mixed LR1110/LR2021,
-  10MHz kernel-driver traffic and future IRQ/BUSY wiring were not exercised.
+  LR2021 operation on pi133/pi134 now passes (below), as does 10 MHz
+  kernel-driver ping-pong traffic ([10 MHz kernel traffic](#10-mhz-kernel-ping-pong-traffic--2026-10-08)).
+  Mixed LR1110/LR2021 and future IRQ/BUSY wiring were not exercised.
+
+**Current wiring (since 2026-10-08 09:38 PDT).** CH0–3 pi133 SPI, CH4 pi134
+DIO11 (physical pin 18, GPIO24; RF-switch witness driven by `lr2021_pcycle`),
+CH5 pi133 DIO8, CH8–11 pi134 SPI, CH12 pi134 BUSY, CH13 pi134 DIO8; mask
+`0x3f3f`. Before that, CH4 was pi133 BUSY (pin 12). Sections below record the
+wiring in use at the time of each test.
 
 Raw captures and full temporary logs are intentionally not committed.
 
@@ -580,3 +587,60 @@ though that earlier write-only configuration cannot be reconstructed.
 Lead checked physical edges and decoded commands against the application report.
 Task `dslcap-pi134-originalirq-20261007` revision 4 was consumed and acknowledged.
 Evidence: [PI134_ORIGINALIRQ_VALIDATION.json](PI134_ORIGINALIRQ_VALIDATION.json).
+
+## 10 MHz kernel ping-pong traffic — 2026-10-08
+
+**PASS.** At 25 MSa/s (2.5 samples per 10 MHz SCLK period) the DSLogic decoded
+two complete `lr2021_pcycle` ping-pong runs on both buses byte for byte,
+without deglitch. pi133 (initiator) and pi134 (responder) ran the production
+kernel driver with the core pinned at 500 MHz, so SCLK was 10 MHz. The
+lr2021_kernel_packet_cycle session ran all traffic; this session ran only the
+analyzer, after the user cleared both.
+
+**SCLK phase widths (RUN A).** Six nSS-triggered buffer captures of 41.9 ms
+each (0.252 s in total) were taken during about 92 s of continuous traffic:
+three of pi133 at 400 MSa/s on CH0–3 (2.5 ns grid), three of pi134 at
+100 MSa/s on CH8–11 (10 ns grid). On pi133 every sampled SCLK high was
+50.0–52.5 ns and every within-byte low 47.5–50.0 ns, duty 50.9%. That is
+7.5 ns above one 40 ns sample at 25 MSa/s on the sample grid; allowing one grid
+interval of edge uncertainty, the phases exceed about 45 ns. pi134's means
+agree (duty 50.9–51.9%, lows averaging 48–49 ns), but at 10 ns resolution it
+recorded thousands of lows at 40 ns. That is consistent with ~49 ns phases
+quantized to 40 or 50 ns, but it does not bound pi134 as tightly as pi133. The
+empirical evidence for both buses at 25 MSa/s is the byte-exact decode below.
+Frames include the 4104-clock (513-byte) FIFO transfers.
+
+**Byte-exact decode (RUN B).** A 90 s `sigrok_hla.py --dslogic --raw-out`
+capture of 12 channels (mask `0x3f3f`, uint16) held exactly 2,250,000,000
+samples (4.5 GB to local NVMe), dslcap exit 0, ring high-water 1.98 MB. It was
+replayed with `--dslogic -i` in 13 s, and in 20 s with
+`-T deglitch:channels=0,8:clock_period=2.5:frame_pulses=8`; the deglitch made
+zero corrections and its output is byte-identical. `check_pcycle.py --expect
+2000` passes the full-run contract:
+- All 2000 request frames pi133 wrote (seq 0..1999, each once) match prbs9 from
+  byte 4, and are identical to pi134's MISO reads.
+- All 2000 replies pi133 read (resp_seq 0..1999, each once) match prbs9 from
+  byte 8, and each is identical to a frame pi134 wrote.
+- The responder pre-stages two replies, so the first two echoes are
+  `0xFFFFFFFF` and the echo is resp_seq − 2 after that.
+- pi134 wrote 2004 replies, resp_seq 0,1,0,1,2..2001. Counted by occurrence,
+  four are unread: 0 and 1 from the negative control's staging, and 2000 and
+  2001 staged after the last exchange.
+- There were no CMD_FAIL, dict-error or decode-error lines, and no short
+  transfers among 62,185 transfers.
+- Three zero-filled 1022-byte TX FIFO prefills during setup decoded as `CMD_OK`.
+
+The kernel's own counts agree: req_rx 2000, reply_rx 2000, 0 missed/CRC/mismatch.
+
+**RUN C**, a second 2000-exchange run with `INIT_RX=auto WITNESS=2`, was
+captured the same way after the user moved CH4 to pi134's DIO11 witness (see
+the current-wiring note under Open gates). It also passes the full-run contract byte for byte,
+with the same staging pattern, and CH4 shows 4004 witness edges.
+
+Scope: two runs, and 0.252 s of high-rate duty sampling, on this bench, wiring
+and 1.6 V threshold. Decode was by replay through the same decoder; live decode
+of this traffic was not run. Raw captures and their dslcap logs remain on
+local disk (`/mnt/foo/dslcap-captures`), not committed; the JSON records their
+hashes and the kernel stat file hashes.
+Tools: `dslcap/tools/` (duty analysis, prbs9 checker, synthetic generator).
+Evidence: [PCYCLE_10MHZ_VALIDATION.json](PCYCLE_10MHZ_VALIDATION.json).
