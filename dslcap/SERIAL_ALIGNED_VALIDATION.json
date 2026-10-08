@@ -1,0 +1,6262 @@
+{
+  "bench_date_utc": "2026-10-08",
+  "baseline_commit": "cb9008d",
+  "scope": "Native aligned C.2 at 100 MS/s, CH0-7; C.3 and higher-rate live bit-order remain pending",
+  "outcome": "PASS for scoped nine-case matrix; separate expired control attempt excluded",
+  "settings": {
+    "samplerate_hz": 100000000,
+    "channels": "0-7",
+    "samples": 1000448,
+    "position_percent": 10,
+    "threshold_volts": 1.6,
+    "timeout_seconds": 45,
+    "timeout_action": "fail",
+    "spi_mode": 0,
+    "spi_requested_hz": 8000000,
+    "serial": "start=3:f,stop=3:r,clock=0:r,data=2,value=0x1c35,bits=16",
+    "carrier": "0002VVVV0000"
+  },
+  "binary": {
+    "path": "/tmp/dslcap-phase-c-build/dslcap",
+    "sha256": "5e9be8b773d8f33a74c49323cbf91638f3d68496e322f0939e0b652fae46ce8d"
+  },
+  "frozen_source_sha256": {
+    "dslcap/CMakeLists.txt": "8686c2c1d33bdd54798da0ceb42553ba22a0aad50bf776357878672826b19e05",
+    "dslcap/options.h": "b3e478168c5b8338ac9f48d78540f722cf98e69ca74e73b96cb563e83dfa89b4",
+    "dslcap/options.c": "1363c1114b7f37bf0f3b634b0bff2f1008d98d23819401f159bc6383af386a3e",
+    "dslcap/driver_config.c": "150832ef36c5f4279fe689a3aad668d9b2f26e1203c36568e22d1c148981a9b1",
+    "dslcap/tests/fake_driver.c": "5ddc51378f603b4aea74c3577fdaeb5a66fbb068adc5e53be776b2314aa59830",
+    "dslcap/tests/test_serial.py": "d28b386bf415c4b1e1008a5f28a5808d9642e1c7cfe9b3225007e32a158f720a",
+    "sigrok_hla.py": "1082a95492568ee2f15224953dd534a6d6db385d4ccee9108a8f6a37da3f8fc2",
+    "tests/test_dslcap_serial.py": "10d68f98ddd3010fee2e925b6b03be8424334585f81704049dabd1b999961bff"
+  },
+  "actual_register_images": {
+    "ctl_pos": {
+      "raw_hex": "a5f5a5f501000100020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c"
+    },
+    "s_pos": {
+      "raw_hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff0000fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001000000351c000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc"
+    }
+  },
+  "cases": [
+    {
+      "case": "ctl_pos",
+      "manifest": {
+        "arm_observed_epoch": 1791424109.6897206,
+        "command": [
+          "/tmp/dslcap-phase-c-build/dslcap",
+          "--mode",
+          "buffer",
+          "--samplerate",
+          "100M",
+          "--channels",
+          "0-7",
+          "--samples",
+          "1000448",
+          "--trigger-pos",
+          "10",
+          "--trigger-timeout",
+          "45s",
+          "--on-timeout",
+          "fail",
+          "--vth",
+          "1.6",
+          "-v",
+          "--trigger",
+          "3:f"
+        ],
+        "end_epoch": 1791424135.557264,
+        "exit": 0,
+        "kind": "simple",
+        "label": "ctl_pos",
+        "pid": 2351756,
+        "rate_hz": 100000000,
+        "register_matches_golden": true,
+        "register_sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+        "samples": 1000448,
+        "start_epoch": 1791424108.7873175
+      },
+      "raw_sha256": "1ffa2540f3772ed0e3cba80c9d8ca71b2b2595123b7c53d294e4a32c1b100830",
+      "registers": {
+        "callbacks": [
+          {
+            "ep": 134,
+            "epoch": 1791424135.369565,
+            "label": "TRIG_HEADER",
+            "prefix": "55555555f88601002097a00000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "req": 512,
+            "status": 0,
+            "xfer": 512
+          },
+          {
+            "ep": 134,
+            "epoch": 1791424135.391332,
+            "label": "BULK_IN_CB",
+            "prefix": null,
+            "req": 1048576,
+            "status": 0,
+            "xfer": 1048576
+          }
+        ],
+        "caveats": "Requires req= identity from shim; missing/invalid prefixes, callback map coverage and live-file mutation qualify negative evidence.",
+        "classification": "FPGA-triggered header",
+        "expected_raw_dump_bytes": 1048576,
+        "first_valid_header": {
+          "after_force_seconds": null,
+          "after_stop_seconds": null,
+          "aligned_samples": 1000448,
+          "check_id": 1431655765,
+          "epoch": 1791424135.369565,
+          "meaningful_trigger_sample": 100088,
+          "ram_saddr": 10524448,
+          "real_pos_raw": 100088,
+          "remaining": 0,
+          "status_word": 1,
+          "triggered": true
+        },
+        "force_stop_times": [],
+        "header_requests": [
+          {
+            "ep": 134,
+            "epoch": 1791424135.369565,
+            "label": "TRIG_HEADER",
+            "prefix": "55555555f88601002097a00000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "req": 512,
+            "status": 0,
+            "xfer": 512
+          }
+        ],
+        "path": "/tmp/dslcap-g-live/ctl_pos.usb.log",
+        "reference": {
+          "differences": {},
+          "identical": true,
+          "path": "/tmp/dslcap-c-dsview-live/golden_simple_100M.setting.bin"
+        },
+        "setting": {
+          "armed_samples": 1000448,
+          "arrays": {
+            "edge0": [
+              8,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "edge1": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "logic0": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "logic1": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "mask0": [
+              65527,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535
+            ],
+            "mask1": [
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535
+            ],
+            "value0": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "value1": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "channel_mask": 255,
+          "counts": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "enabled_count": 8,
+          "fields": {
+            "ch_en_h": 0,
+            "ch_en_header": 2562,
+            "ch_en_l": 255,
+            "cnt_h": 0,
+            "cnt_l": 62528,
+            "count_header": 770,
+            "div_h": 0,
+            "div_l": 1,
+            "divider_header": 258,
+            "dso_cnt_h": 15,
+            "dso_cnt_l": 17408,
+            "dso_count_header": 2050,
+            "fgain": 0,
+            "fgain_header": 3073,
+            "mode": 1,
+            "mode_header": 1,
+            "tpos_h": 1,
+            "tpos_l": 34496,
+            "trig_glb": 2048,
+            "trig_glb_header": 1793,
+            "trig_header": 16544,
+            "trig_pos_header": 1282
+          },
+          "global_stage": 0,
+          "mode": {
+            "half": false,
+            "quarter": false,
+            "raw": 1,
+            "serial": false,
+            "trigger": true
+          },
+          "sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+          "stages": [
+            {
+              "count": 0,
+              "edge0": 8,
+              "edge1": 0,
+              "index": 0,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65527,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            },
+            {
+              "count": 0,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 1,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65535,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            },
+            {
+              "count": 0,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 2,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65535,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            },
+            {
+              "count": 0,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 3,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65535,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            }
+          ],
+          "trigger_position": 100032
+        },
+        "sha256": "679fdc860a387288b94fa66f2b3103389c120b856fa655115ba2b4eededeabcf",
+        "stop_marks": []
+      },
+      "stderr_sha256": "0ef4119f04698cc3e2b5e1fd28743ecb5a8dbf1f573cf30bf229800999a8856e",
+      "waveform": {
+        "channels": {
+          "miso": 1,
+          "mosi": 2,
+          "nss": 3,
+          "sclk": 0
+        },
+        "diagnostics": [],
+        "format_valid": true,
+        "interpretation": "Decode assumes mode 0 and MSB-first wire bytes. Rolling windows include unaligned/payload matches within each NSS frame. Partial frame offsets are relative to the observed suffix. Simultaneous NSS/clock rises are flagged and not shifted. File inspection cannot prove producer exit status or hardware trigger bit order by itself.",
+        "match_counts": {
+          "0x1c35": 1,
+          "0x351c": 0,
+          "0x38ac": 0,
+          "0xac38": 0
+        },
+        "metadata_lines": 2,
+        "mode": "SPI mode 0, rising SCLK, MSB-first decode, NSS active low",
+        "path": "/tmp/dslcap-g-live/ctl_pos.raw",
+        "requested_value": "0x1c35",
+        "rolling_matches": [
+          {
+            "bit_offset_origin": "nss frame",
+            "delta_from_trigger_samples": 929,
+            "end_bit_offset": 31,
+            "end_sample": 101017,
+            "start_bit_in_byte": 0,
+            "start_bit_offset": 16,
+            "start_byte_offset": 2,
+            "start_sample": 100812,
+            "transaction": 0,
+            "value": "0x1c35"
+          }
+        ],
+        "samplerate_hz": 100000000,
+        "samples": 1000448,
+        "sha256": "1ffa2540f3772ed0e3cba80c9d8ca71b2b2595123b7c53d294e4a32c1b100830",
+        "transactions": [
+          {
+            "bit_count": 48,
+            "bit_offset_origin": "first selected rising edge after nss assertion",
+            "first_rising_sample": 100582,
+            "index": 0,
+            "last_rising_sample": 101247,
+            "matches": [
+              0
+            ],
+            "miso_hex": "04 52 00 00 00 00",
+            "mosi_hex": "00 02 1c 35 00 00",
+            "nss_assert_sample": 100088,
+            "nss_release_sample": 101482,
+            "partial_left": false,
+            "partial_right": false,
+            "trailing_miso_bits": "",
+            "trailing_mosi_bits": ""
+          }
+        ],
+        "trigger_association": {
+          "interpretation": "Sampled association only: deltas are observed, no fixed trigger latency or causal match is assumed.",
+          "nearest_events": {
+            "clock_falling": {
+              "after": {
+                "delta_samples": 500,
+                "sample": 100588,
+                "selected": true,
+                "time_s": 0.00100588,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            },
+            "clock_rising": {
+              "after": {
+                "delta_samples": 494,
+                "sample": 100582,
+                "selected": true,
+                "time_s": 0.00100582,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            },
+            "nss_assert": {
+              "after": null,
+              "at": {
+                "delta_samples": 0,
+                "sample": 100088,
+                "selected": true,
+                "time_s": 0.00100088,
+                "transaction": 0
+              },
+              "before": null
+            },
+            "nss_release": {
+              "after": {
+                "delta_samples": 1394,
+                "sample": 101482,
+                "selected": false,
+                "time_s": 0.00101482,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            }
+          },
+          "nearest_matching_windows": [
+            {
+              "bit_offset_origin": "nss frame",
+              "delta_from_trigger_samples": 929,
+              "end_bit_offset": 31,
+              "end_sample": 101017,
+              "start_bit_in_byte": 0,
+              "start_bit_offset": 16,
+              "start_byte_offset": 2,
+              "start_sample": 100812,
+              "transaction": 0,
+              "value": "0x1c35"
+            }
+          ],
+          "transaction_indices": [
+            0
+          ]
+        },
+        "trigger_sample": 100088,
+        "trigger_time_s": 0.00100088,
+        "variants": [
+          "0x1c35",
+          "0xac38",
+          "0x351c",
+          "0x38ac"
+        ]
+      },
+      "artifacts": {
+        "raw": {
+          "path": "/tmp/dslcap-g-live/ctl_pos.raw",
+          "sha256": "1ffa2540f3772ed0e3cba80c9d8ca71b2b2595123b7c53d294e4a32c1b100830"
+        },
+        "stderr": {
+          "path": "/tmp/dslcap-g-live/ctl_pos.stderr",
+          "sha256": "0ef4119f04698cc3e2b5e1fd28743ecb5a8dbf1f573cf30bf229800999a8856e"
+        },
+        "usb.log": {
+          "path": "/tmp/dslcap-g-live/ctl_pos.usb.log",
+          "sha256": "679fdc860a387288b94fa66f2b3103389c120b856fa655115ba2b4eededeabcf"
+        },
+        "json": {
+          "path": "/tmp/dslcap-g-live/ctl_pos.json",
+          "sha256": "4d9d1c3295d34013ca0f355e38b414662f2198b1bc85727f112941c2dfff83ce"
+        }
+      },
+      "included_in_matrix": true
+    },
+    {
+      "case": "s_pos",
+      "manifest": {
+        "arm_observed_epoch": 1791424197.5578477,
+        "command": [
+          "/tmp/dslcap-phase-c-build/dslcap",
+          "--mode",
+          "buffer",
+          "--samplerate",
+          "100M",
+          "--channels",
+          "0-7",
+          "--samples",
+          "1000448",
+          "--trigger-pos",
+          "10",
+          "--trigger-timeout",
+          "45s",
+          "--on-timeout",
+          "fail",
+          "--vth",
+          "1.6",
+          "-v",
+          "--serial-trigger",
+          "start=3:f,stop=3:r,clock=0:r,data=2,value=0x1c35,bits=16"
+        ],
+        "end_epoch": 1791424221.6189365,
+        "exit": 0,
+        "kind": "serial",
+        "label": "s_pos",
+        "pid": 2353963,
+        "rate_hz": 100000000,
+        "register_matches_golden": true,
+        "register_sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+        "samples": 1000448,
+        "start_epoch": 1791424196.6552784
+      },
+      "raw_sha256": "2b4a807a190b64d7b279abbc68d9bb87b10611d4c13149821ddcd731963fb97d",
+      "registers": {
+        "callbacks": [
+          {
+            "ep": 134,
+            "epoch": 1791424221.390174,
+            "label": "TRIG_HEADER",
+            "prefix": "55555555f18601008076270000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "req": 512,
+            "status": 0,
+            "xfer": 512
+          },
+          {
+            "ep": 134,
+            "epoch": 1791424221.411854,
+            "label": "BULK_IN_CB",
+            "prefix": null,
+            "req": 1048576,
+            "status": 0,
+            "xfer": 1048576
+          }
+        ],
+        "caveats": "Requires req= identity from shim; missing/invalid prefixes, callback map coverage and live-file mutation qualify negative evidence.",
+        "classification": "FPGA-triggered header",
+        "expected_raw_dump_bytes": 1048576,
+        "first_valid_header": {
+          "after_force_seconds": null,
+          "after_stop_seconds": null,
+          "aligned_samples": 1000448,
+          "check_id": 1431655765,
+          "epoch": 1791424221.390174,
+          "meaningful_trigger_sample": 100081,
+          "ram_saddr": 2586240,
+          "real_pos_raw": 100081,
+          "remaining": 0,
+          "status_word": 1,
+          "triggered": true
+        },
+        "force_stop_times": [],
+        "header_requests": [
+          {
+            "ep": 134,
+            "epoch": 1791424221.390174,
+            "label": "TRIG_HEADER",
+            "prefix": "55555555f18601008076270000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "req": 512,
+            "status": 0,
+            "xfer": 512
+          }
+        ],
+        "path": "/tmp/dslcap-g-live/s_pos.usb.log",
+        "reference": {
+          "differences": {},
+          "identical": true,
+          "path": "/tmp/dslcap-f-dsview/golden_serial16_100M.setting.bin"
+        },
+        "setting": {
+          "armed_samples": 1000448,
+          "arrays": {
+            "edge0": [
+              8,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "edge1": [
+              8,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "logic0": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "logic1": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "mask0": [
+              65527,
+              65534,
+              65531,
+              0,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535
+            ],
+            "mask1": [
+              65527,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535
+            ],
+            "value0": [
+              0,
+              1,
+              0,
+              7221,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "value1": [
+              8,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "channel_mask": 255,
+          "counts": [
+            0,
+            1,
+            0,
+            15,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "enabled_count": 8,
+          "fields": {
+            "ch_en_h": 0,
+            "ch_en_header": 2562,
+            "ch_en_l": 255,
+            "cnt_h": 0,
+            "cnt_l": 62528,
+            "count_header": 770,
+            "div_h": 0,
+            "div_l": 1,
+            "divider_header": 258,
+            "dso_cnt_h": 15,
+            "dso_cnt_l": 17408,
+            "dso_count_header": 2050,
+            "fgain": 0,
+            "fgain_header": 3073,
+            "mode": 2049,
+            "mode_header": 1,
+            "tpos_h": 1,
+            "tpos_l": 34496,
+            "trig_glb": 2048,
+            "trig_glb_header": 1793,
+            "trig_header": 16544,
+            "trig_pos_header": 1282
+          },
+          "global_stage": 0,
+          "mode": {
+            "half": false,
+            "quarter": false,
+            "raw": 2049,
+            "serial": true,
+            "trigger": true
+          },
+          "sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+          "stages": [
+            {
+              "count": 0,
+              "edge0": 8,
+              "edge1": 8,
+              "index": 0,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65527,
+              "mask1": 65527,
+              "value0": 0,
+              "value1": 8
+            },
+            {
+              "count": 1,
+              "edge0": 1,
+              "edge1": 0,
+              "index": 1,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65534,
+              "mask1": 65535,
+              "value0": 1,
+              "value1": 0
+            },
+            {
+              "count": 0,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 2,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65531,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            },
+            {
+              "count": 15,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 3,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 0,
+              "mask1": 65535,
+              "value0": 7221,
+              "value1": 0
+            }
+          ],
+          "trigger_position": 100032
+        },
+        "sha256": "448b7f0cc4f161309fff45239b57bf811b0e2ce1ff0a6306b4c33ad43a1c38c6",
+        "stop_marks": []
+      },
+      "stderr_sha256": "03a0a5571357503378f8bf41651c8e16fe3136612708b5108270e01f2c520221",
+      "waveform": {
+        "channels": {
+          "miso": 1,
+          "mosi": 2,
+          "nss": 3,
+          "sclk": 0
+        },
+        "diagnostics": [],
+        "format_valid": true,
+        "interpretation": "Decode assumes mode 0 and MSB-first wire bytes. Rolling windows include unaligned/payload matches within each NSS frame. Partial frame offsets are relative to the observed suffix. Simultaneous NSS/clock rises are flagged and not shifted. File inspection cannot prove producer exit status or hardware trigger bit order by itself.",
+        "match_counts": {
+          "0x1c35": 1,
+          "0x351c": 0,
+          "0x38ac": 0,
+          "0xac38": 0
+        },
+        "metadata_lines": 2,
+        "mode": "SPI mode 0, rising SCLK, MSB-first decode, NSS active low",
+        "path": "/tmp/dslcap-g-live/s_pos.raw",
+        "requested_value": "0x1c35",
+        "rolling_matches": [
+          {
+            "bit_offset_origin": "nss frame",
+            "delta_from_trigger_samples": 0,
+            "end_bit_offset": 31,
+            "end_sample": 100081,
+            "start_bit_in_byte": 0,
+            "start_bit_offset": 16,
+            "start_byte_offset": 2,
+            "start_sample": 99877,
+            "transaction": 0,
+            "value": "0x1c35"
+          }
+        ],
+        "samplerate_hz": 100000000,
+        "samples": 1000448,
+        "sha256": "2b4a807a190b64d7b279abbc68d9bb87b10611d4c13149821ddcd731963fb97d",
+        "transactions": [
+          {
+            "bit_count": 48,
+            "bit_offset_origin": "first selected rising edge after nss assertion",
+            "first_rising_sample": 99646,
+            "index": 0,
+            "last_rising_sample": 100312,
+            "matches": [
+              0
+            ],
+            "miso_hex": "04 52 00 00 00 00",
+            "mosi_hex": "00 02 1c 35 00 00",
+            "nss_assert_sample": 99121,
+            "nss_release_sample": 100542,
+            "partial_left": false,
+            "partial_right": false,
+            "trailing_miso_bits": "",
+            "trailing_mosi_bits": ""
+          }
+        ],
+        "trigger_association": {
+          "interpretation": "Sampled association only: deltas are observed, no fixed trigger latency or causal match is assumed.",
+          "nearest_events": {
+            "clock_falling": {
+              "after": {
+                "delta_samples": 7,
+                "sample": 100088,
+                "selected": true,
+                "time_s": 0.00100088,
+                "transaction": 0
+              },
+              "at": null,
+              "before": {
+                "delta_samples": -6,
+                "sample": 100075,
+                "selected": true,
+                "time_s": 0.00100075,
+                "transaction": 0
+              }
+            },
+            "clock_rising": {
+              "after": {
+                "delta_samples": 26,
+                "sample": 100107,
+                "selected": true,
+                "time_s": 0.00100107,
+                "transaction": 0
+              },
+              "at": {
+                "delta_samples": 0,
+                "sample": 100081,
+                "selected": true,
+                "time_s": 0.00100081,
+                "transaction": 0
+              },
+              "before": {
+                "delta_samples": -12,
+                "sample": 100069,
+                "selected": true,
+                "time_s": 0.00100069,
+                "transaction": 0
+              }
+            },
+            "nss_assert": {
+              "after": null,
+              "at": null,
+              "before": {
+                "delta_samples": -960,
+                "sample": 99121,
+                "selected": true,
+                "time_s": 0.00099121,
+                "transaction": 0
+              }
+            },
+            "nss_release": {
+              "after": {
+                "delta_samples": 461,
+                "sample": 100542,
+                "selected": false,
+                "time_s": 0.00100542,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            }
+          },
+          "nearest_matching_windows": [
+            {
+              "bit_offset_origin": "nss frame",
+              "delta_from_trigger_samples": 0,
+              "end_bit_offset": 31,
+              "end_sample": 100081,
+              "start_bit_in_byte": 0,
+              "start_bit_offset": 16,
+              "start_byte_offset": 2,
+              "start_sample": 99877,
+              "transaction": 0,
+              "value": "0x1c35"
+            }
+          ],
+          "transaction_indices": [
+            0
+          ]
+        },
+        "trigger_sample": 100081,
+        "trigger_time_s": 0.00100081,
+        "variants": [
+          "0x1c35",
+          "0xac38",
+          "0x351c",
+          "0x38ac"
+        ]
+      },
+      "artifacts": {
+        "raw": {
+          "path": "/tmp/dslcap-g-live/s_pos.raw",
+          "sha256": "2b4a807a190b64d7b279abbc68d9bb87b10611d4c13149821ddcd731963fb97d"
+        },
+        "stderr": {
+          "path": "/tmp/dslcap-g-live/s_pos.stderr",
+          "sha256": "03a0a5571357503378f8bf41651c8e16fe3136612708b5108270e01f2c520221"
+        },
+        "usb.log": {
+          "path": "/tmp/dslcap-g-live/s_pos.usb.log",
+          "sha256": "448b7f0cc4f161309fff45239b57bf811b0e2ce1ff0a6306b4c33ad43a1c38c6"
+        },
+        "json": {
+          "path": "/tmp/dslcap-g-live/s_pos.json",
+          "sha256": "4f1d1b7c3b09dfefca49efcf93300042a64c13e863b57d5fc1c795197b92b91b"
+        }
+      },
+      "included_in_matrix": true
+    },
+    {
+      "case": "ctl_bit",
+      "manifest": {
+        "arm_observed_epoch": 1791424280.838094,
+        "command": [
+          "/tmp/dslcap-phase-c-build/dslcap",
+          "--mode",
+          "buffer",
+          "--samplerate",
+          "100M",
+          "--channels",
+          "0-7",
+          "--samples",
+          "1000448",
+          "--trigger-pos",
+          "10",
+          "--trigger-timeout",
+          "45s",
+          "--on-timeout",
+          "fail",
+          "--vth",
+          "1.6",
+          "-v",
+          "--trigger",
+          "3:f"
+        ],
+        "end_epoch": 1791424306.4053817,
+        "exit": 0,
+        "kind": "simple",
+        "label": "ctl_bit",
+        "pid": 2355648,
+        "rate_hz": 100000000,
+        "register_matches_golden": true,
+        "register_sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+        "samples": 1000448,
+        "start_epoch": 1791424279.9353797
+      },
+      "raw_sha256": "67ab512b652cd2ab46cf3e7c5bb4e76ece56392a7e99962bfa1d916987befb47",
+      "registers": {
+        "callbacks": [
+          {
+            "ep": 134,
+            "epoch": 1791424306.17242,
+            "label": "TRIG_HEADER",
+            "prefix": "55555555f2860100c08aa00000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "req": 512,
+            "status": 0,
+            "xfer": 512
+          },
+          {
+            "ep": 134,
+            "epoch": 1791424306.194298,
+            "label": "BULK_IN_CB",
+            "prefix": null,
+            "req": 1048576,
+            "status": 0,
+            "xfer": 1048576
+          }
+        ],
+        "caveats": "Requires req= identity from shim; missing/invalid prefixes, callback map coverage and live-file mutation qualify negative evidence.",
+        "classification": "FPGA-triggered header",
+        "expected_raw_dump_bytes": 1048576,
+        "first_valid_header": {
+          "after_force_seconds": null,
+          "after_stop_seconds": null,
+          "aligned_samples": 1000448,
+          "check_id": 1431655765,
+          "epoch": 1791424306.17242,
+          "meaningful_trigger_sample": 100082,
+          "ram_saddr": 10521280,
+          "real_pos_raw": 100082,
+          "remaining": 0,
+          "status_word": 1,
+          "triggered": true
+        },
+        "force_stop_times": [],
+        "header_requests": [
+          {
+            "ep": 134,
+            "epoch": 1791424306.17242,
+            "label": "TRIG_HEADER",
+            "prefix": "55555555f2860100c08aa00000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "req": 512,
+            "status": 0,
+            "xfer": 512
+          }
+        ],
+        "path": "/tmp/dslcap-g-live/ctl_bit.usb.log",
+        "reference": {
+          "differences": {},
+          "identical": true,
+          "path": "/tmp/dslcap-c-dsview-live/golden_simple_100M.setting.bin"
+        },
+        "setting": {
+          "armed_samples": 1000448,
+          "arrays": {
+            "edge0": [
+              8,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "edge1": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "logic0": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "logic1": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "mask0": [
+              65527,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535
+            ],
+            "mask1": [
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535
+            ],
+            "value0": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "value1": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "channel_mask": 255,
+          "counts": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "enabled_count": 8,
+          "fields": {
+            "ch_en_h": 0,
+            "ch_en_header": 2562,
+            "ch_en_l": 255,
+            "cnt_h": 0,
+            "cnt_l": 62528,
+            "count_header": 770,
+            "div_h": 0,
+            "div_l": 1,
+            "divider_header": 258,
+            "dso_cnt_h": 15,
+            "dso_cnt_l": 17408,
+            "dso_count_header": 2050,
+            "fgain": 0,
+            "fgain_header": 3073,
+            "mode": 1,
+            "mode_header": 1,
+            "tpos_h": 1,
+            "tpos_l": 34496,
+            "trig_glb": 2048,
+            "trig_glb_header": 1793,
+            "trig_header": 16544,
+            "trig_pos_header": 1282
+          },
+          "global_stage": 0,
+          "mode": {
+            "half": false,
+            "quarter": false,
+            "raw": 1,
+            "serial": false,
+            "trigger": true
+          },
+          "sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+          "stages": [
+            {
+              "count": 0,
+              "edge0": 8,
+              "edge1": 0,
+              "index": 0,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65527,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            },
+            {
+              "count": 0,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 1,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65535,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            },
+            {
+              "count": 0,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 2,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65535,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            },
+            {
+              "count": 0,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 3,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65535,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            }
+          ],
+          "trigger_position": 100032
+        },
+        "sha256": "7de3670bcc0a0c32c34241d2a3f50aac2e534f50609217875454e6740cfbe96a",
+        "stop_marks": []
+      },
+      "stderr_sha256": "b33e1f4c51d15419d123e3f334de64404562c86a4695c71d4db902c73a7492af",
+      "verdict": "PASS",
+      "waveform": {
+        "channels": {
+          "miso": 1,
+          "mosi": 2,
+          "nss": 3,
+          "sclk": 0
+        },
+        "diagnostics": [],
+        "format_valid": true,
+        "interpretation": "Decode assumes mode 0 and MSB-first wire bytes. Rolling windows include unaligned/payload matches within each NSS frame. Partial frame offsets are relative to the observed suffix. Simultaneous NSS/clock rises are flagged and not shifted. File inspection cannot prove producer exit status or hardware trigger bit order by itself.",
+        "match_counts": {
+          "0x1c35": 0,
+          "0x351c": 0,
+          "0x38ac": 0,
+          "0xac38": 1
+        },
+        "metadata_lines": 2,
+        "mode": "SPI mode 0, rising SCLK, MSB-first decode, NSS active low",
+        "path": "/tmp/dslcap-g-live/ctl_bit.raw",
+        "requested_value": "0x1c35",
+        "rolling_matches": [
+          {
+            "bit_offset_origin": "nss frame",
+            "delta_from_trigger_samples": 916,
+            "end_bit_offset": 31,
+            "end_sample": 100998,
+            "start_bit_in_byte": 0,
+            "start_bit_offset": 16,
+            "start_byte_offset": 2,
+            "start_sample": 100793,
+            "transaction": 0,
+            "value": "0xac38"
+          }
+        ],
+        "samplerate_hz": 100000000,
+        "samples": 1000448,
+        "sha256": "67ab512b652cd2ab46cf3e7c5bb4e76ece56392a7e99962bfa1d916987befb47",
+        "transactions": [
+          {
+            "bit_count": 48,
+            "bit_offset_origin": "first selected rising edge after nss assertion",
+            "first_rising_sample": 100563,
+            "index": 0,
+            "last_rising_sample": 101228,
+            "matches": [
+              0
+            ],
+            "miso_hex": "04 52 00 00 00 00",
+            "mosi_hex": "00 02 ac 38 00 00",
+            "nss_assert_sample": 100082,
+            "nss_release_sample": 101467,
+            "partial_left": false,
+            "partial_right": false,
+            "trailing_miso_bits": "",
+            "trailing_mosi_bits": ""
+          }
+        ],
+        "trigger_association": {
+          "interpretation": "Sampled association only: deltas are observed, no fixed trigger latency or causal match is assumed.",
+          "nearest_events": {
+            "clock_falling": {
+              "after": {
+                "delta_samples": 487,
+                "sample": 100569,
+                "selected": true,
+                "time_s": 0.00100569,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            },
+            "clock_rising": {
+              "after": {
+                "delta_samples": 481,
+                "sample": 100563,
+                "selected": true,
+                "time_s": 0.00100563,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            },
+            "nss_assert": {
+              "after": null,
+              "at": {
+                "delta_samples": 0,
+                "sample": 100082,
+                "selected": true,
+                "time_s": 0.00100082,
+                "transaction": 0
+              },
+              "before": null
+            },
+            "nss_release": {
+              "after": {
+                "delta_samples": 1385,
+                "sample": 101467,
+                "selected": false,
+                "time_s": 0.00101467,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            }
+          },
+          "nearest_matching_windows": [
+            {
+              "bit_offset_origin": "nss frame",
+              "delta_from_trigger_samples": 916,
+              "end_bit_offset": 31,
+              "end_sample": 100998,
+              "start_bit_in_byte": 0,
+              "start_bit_offset": 16,
+              "start_byte_offset": 2,
+              "start_sample": 100793,
+              "transaction": 0,
+              "value": "0xac38"
+            }
+          ],
+          "transaction_indices": [
+            0
+          ]
+        },
+        "trigger_sample": 100082,
+        "trigger_time_s": 0.00100082,
+        "variants": [
+          "0x1c35",
+          "0xac38",
+          "0x351c",
+          "0x38ac"
+        ]
+      },
+      "artifacts": {
+        "raw": {
+          "path": "/tmp/dslcap-g-live/ctl_bit.raw",
+          "sha256": "67ab512b652cd2ab46cf3e7c5bb4e76ece56392a7e99962bfa1d916987befb47"
+        },
+        "stderr": {
+          "path": "/tmp/dslcap-g-live/ctl_bit.stderr",
+          "sha256": "b33e1f4c51d15419d123e3f334de64404562c86a4695c71d4db902c73a7492af"
+        },
+        "usb.log": {
+          "path": "/tmp/dslcap-g-live/ctl_bit.usb.log",
+          "sha256": "7de3670bcc0a0c32c34241d2a3f50aac2e534f50609217875454e6740cfbe96a"
+        },
+        "json": {
+          "path": "/tmp/dslcap-g-live/ctl_bit.json",
+          "sha256": "e2690d440421e9f36cd6b4ed5615b804114460f2c352792a14b17df34be23906"
+        }
+      },
+      "included_in_matrix": true
+    },
+    {
+      "case": "s_bit",
+      "manifest": {
+        "arm_observed_epoch": 1791424367.663066,
+        "command": [
+          "/tmp/dslcap-phase-c-build/dslcap",
+          "--mode",
+          "buffer",
+          "--samplerate",
+          "100M",
+          "--channels",
+          "0-7",
+          "--samples",
+          "1000448",
+          "--trigger-pos",
+          "10",
+          "--trigger-timeout",
+          "45s",
+          "--on-timeout",
+          "fail",
+          "--vth",
+          "1.6",
+          "-v",
+          "--serial-trigger",
+          "start=3:f,stop=3:r,clock=0:r,data=2,value=0x1c35,bits=16"
+        ],
+        "end_epoch": 1791424413.126911,
+        "exit": 16,
+        "kind": "serial",
+        "label": "s_bit",
+        "pid": 2358179,
+        "rate_hz": 100000000,
+        "register_matches_golden": true,
+        "register_sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+        "samples": 1000448,
+        "start_epoch": 1791424366.760679
+      },
+      "raw_sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab",
+      "registers": {
+        "path": "/tmp/dslcap-g-live/s_bit.usb.log",
+        "reference": {
+          "identical": true,
+          "path": "/tmp/dslcap-f-dsview/golden_serial16_100M.setting.bin"
+        },
+        "setting": {
+          "armed_samples": 1000448,
+          "arrays": {
+            "edge0": [
+              8,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "edge1": [
+              8,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "logic0": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "logic1": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "mask0": [
+              65527,
+              65534,
+              65531,
+              0,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535
+            ],
+            "mask1": [
+              65527,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535
+            ],
+            "value0": [
+              0,
+              1,
+              0,
+              7221,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "value1": [
+              8,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "channel_mask": 255,
+          "counts": [
+            0,
+            1,
+            0,
+            15,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "enabled_count": 8,
+          "fields": {
+            "ch_en_h": 0,
+            "ch_en_header": 2562,
+            "ch_en_l": 255,
+            "cnt_h": 0,
+            "cnt_l": 62528,
+            "count_header": 770,
+            "div_h": 0,
+            "div_l": 1,
+            "divider_header": 258,
+            "dso_cnt_h": 15,
+            "dso_cnt_l": 17408,
+            "dso_count_header": 2050,
+            "fgain": 0,
+            "fgain_header": 3073,
+            "mode": 2049,
+            "mode_header": 1,
+            "tpos_h": 1,
+            "tpos_l": 34496,
+            "trig_glb": 2048,
+            "trig_glb_header": 1793,
+            "trig_header": 16544,
+            "trig_pos_header": 1282
+          },
+          "global_stage": 0,
+          "mode": {
+            "half": false,
+            "quarter": false,
+            "raw": 2049,
+            "serial": true,
+            "trigger": true
+          },
+          "sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+          "stages": [
+            {
+              "count": 0,
+              "edge0": 8,
+              "edge1": 8,
+              "index": 0,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65527,
+              "mask1": 65527,
+              "value0": 0,
+              "value1": 8
+            },
+            {
+              "count": 1,
+              "edge0": 1,
+              "edge1": 0,
+              "index": 1,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65534,
+              "mask1": 65535,
+              "value0": 1,
+              "value1": 0
+            },
+            {
+              "count": 0,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 2,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65531,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            },
+            {
+              "count": 15,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 3,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 0,
+              "mask1": 65535,
+              "value0": 7221,
+              "value1": 0
+            }
+          ],
+          "trigger_position": 100032
+        },
+        "sha256": "4a4dc1d20196ec1d144ac6e613c5b90689c263645423feebb4a76a2bc247e963"
+      },
+      "stderr_sha256": "cb130b300bec99c304389883f76ba2f6f5c3dbe9a11b90a7990497eddfc286d7",
+      "timeout": {
+        "abort_epoch": 1791424412.962169,
+        "callbacks": [
+          {
+            "ep": 134,
+            "epoch": 1791424412.962537,
+            "line": "1791424412.962537 TRIG_HEADER ep=0x86 status=0 req=512 xfer=512 seq_total_in=512 len=64 data=55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555",
+            "req": 512,
+            "status": 0,
+            "xfer": 512
+          },
+          {
+            "ep": 134,
+            "epoch": 1791424412.985025,
+            "line": "1791424412.985025 BULK_IN_CB ep=0x86 status=0 req=1048576 xfer=1048576 seq_total_in=1049088 len=0",
+            "req": 1048576,
+            "status": 0,
+            "xfer": 1048576
+          }
+        ],
+        "caveat": "No valid FPGA status available. Separate control does not prove concurrent failed-case waveform; owner emission receipt required.",
+        "classification": "timeout exit16; no valid preabort header; postabort cleanup only",
+        "cleanup_data_callbacks": [
+          {
+            "ep": 134,
+            "epoch": 1791424412.985025,
+            "line": "1791424412.985025 BULK_IN_CB ep=0x86 status=0 req=1048576 xfer=1048576 seq_total_in=1049088 len=0",
+            "req": 1048576,
+            "status": 0,
+            "xfer": 1048576
+          }
+        ],
+        "frozen_parser_expected_rejection": "header remaining exceeds armed samples",
+        "invalid_cleanup_headers": [
+          {
+            "after_abort_seconds": 0.0003681182861328125,
+            "epoch": 1791424412.962537,
+            "fields": [
+              1431655765,
+              1431655765,
+              1431655765,
+              1431655765,
+              1431655765,
+              1431655765
+            ],
+            "reason": "all-0x55 dummy; remaining exceeds arm count",
+            "remaining": 6148914691236517205
+          }
+        ],
+        "preabort_completed_in": [],
+        "samples": 0,
+        "stdout_bytes": 27
+      },
+      "verdict": "PASS",
+      "artifacts": {
+        "raw": {
+          "path": "/tmp/dslcap-g-live/s_bit.raw",
+          "sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab"
+        },
+        "stderr": {
+          "path": "/tmp/dslcap-g-live/s_bit.stderr",
+          "sha256": "cb130b300bec99c304389883f76ba2f6f5c3dbe9a11b90a7990497eddfc286d7"
+        },
+        "usb.log": {
+          "path": "/tmp/dslcap-g-live/s_bit.usb.log",
+          "sha256": "4a4dc1d20196ec1d144ac6e613c5b90689c263645423feebb4a76a2bc247e963"
+        },
+        "json": {
+          "path": "/tmp/dslcap-g-live/s_bit.json",
+          "sha256": "e357d550543ebbeb93b72f45d9507d726f2c0bd76162002398992e063c1cab65"
+        }
+      },
+      "included_in_matrix": true
+    },
+    {
+      "case": "ctl_byte",
+      "manifest": {
+        "arm_observed_epoch": 1791424476.6959856,
+        "command": [
+          "/tmp/dslcap-phase-c-build/dslcap",
+          "--mode",
+          "buffer",
+          "--samplerate",
+          "100M",
+          "--channels",
+          "0-7",
+          "--samples",
+          "1000448",
+          "--trigger-pos",
+          "10",
+          "--trigger-timeout",
+          "45s",
+          "--on-timeout",
+          "fail",
+          "--vth",
+          "1.6",
+          "-v",
+          "--trigger",
+          "3:f"
+        ],
+        "end_epoch": 1791424502.6579864,
+        "exit": 0,
+        "kind": "simple",
+        "label": "ctl_byte",
+        "pid": 2360595,
+        "rate_hz": 100000000,
+        "register_matches_golden": true,
+        "register_sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+        "samples": 1000448,
+        "start_epoch": 1791424475.7937381
+      },
+      "raw_sha256": "07b770f1ac587e1e55b2580fd315a60ea77f6c214f7d14a3af72c4ed6a802428",
+      "registers": {
+        "callbacks": [
+          {
+            "ep": 134,
+            "epoch": 1791424502.477084,
+            "label": "TRIG_HEADER",
+            "prefix": "55555555ef860100c004f60000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "req": 512,
+            "status": 0,
+            "xfer": 512
+          },
+          {
+            "ep": 134,
+            "epoch": 1791424502.498832,
+            "label": "BULK_IN_CB",
+            "prefix": null,
+            "req": 1048576,
+            "status": 0,
+            "xfer": 1048576
+          }
+        ],
+        "caveats": "Requires req= identity from shim; missing/invalid prefixes, callback map coverage and live-file mutation qualify negative evidence.",
+        "classification": "FPGA-triggered header",
+        "expected_raw_dump_bytes": 1048576,
+        "first_valid_header": {
+          "after_force_seconds": null,
+          "after_stop_seconds": null,
+          "aligned_samples": 1000448,
+          "check_id": 1431655765,
+          "epoch": 1791424502.477084,
+          "meaningful_trigger_sample": 100079,
+          "ram_saddr": 16123072,
+          "real_pos_raw": 100079,
+          "remaining": 0,
+          "status_word": 1,
+          "triggered": true
+        },
+        "force_stop_times": [],
+        "header_requests": [
+          {
+            "ep": 134,
+            "epoch": 1791424502.477084,
+            "label": "TRIG_HEADER",
+            "prefix": "55555555ef860100c004f60000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "req": 512,
+            "status": 0,
+            "xfer": 512
+          }
+        ],
+        "path": "/tmp/dslcap-g-live/ctl_byte.usb.log",
+        "reference": {
+          "differences": {},
+          "identical": true,
+          "path": "/tmp/dslcap-c-dsview-live/golden_simple_100M.setting.bin"
+        },
+        "setting": {
+          "armed_samples": 1000448,
+          "arrays": {
+            "edge0": [
+              8,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "edge1": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "logic0": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "logic1": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "mask0": [
+              65527,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535
+            ],
+            "mask1": [
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535
+            ],
+            "value0": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "value1": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "channel_mask": 255,
+          "counts": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "enabled_count": 8,
+          "fields": {
+            "ch_en_h": 0,
+            "ch_en_header": 2562,
+            "ch_en_l": 255,
+            "cnt_h": 0,
+            "cnt_l": 62528,
+            "count_header": 770,
+            "div_h": 0,
+            "div_l": 1,
+            "divider_header": 258,
+            "dso_cnt_h": 15,
+            "dso_cnt_l": 17408,
+            "dso_count_header": 2050,
+            "fgain": 0,
+            "fgain_header": 3073,
+            "mode": 1,
+            "mode_header": 1,
+            "tpos_h": 1,
+            "tpos_l": 34496,
+            "trig_glb": 2048,
+            "trig_glb_header": 1793,
+            "trig_header": 16544,
+            "trig_pos_header": 1282
+          },
+          "global_stage": 0,
+          "mode": {
+            "half": false,
+            "quarter": false,
+            "raw": 1,
+            "serial": false,
+            "trigger": true
+          },
+          "sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+          "stages": [
+            {
+              "count": 0,
+              "edge0": 8,
+              "edge1": 0,
+              "index": 0,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65527,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            },
+            {
+              "count": 0,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 1,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65535,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            },
+            {
+              "count": 0,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 2,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65535,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            },
+            {
+              "count": 0,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 3,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65535,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            }
+          ],
+          "trigger_position": 100032
+        },
+        "sha256": "21885c496be89b543365f0e7b0b31b531c03b730690d16de67f260fe77b537e7",
+        "stop_marks": []
+      },
+      "stderr_sha256": "6f424da789d36219e5a1d2a110bd1d8debcb63a6e5631db975e71e28011a346f",
+      "verdict": "PASS",
+      "waveform": {
+        "channels": {
+          "miso": 1,
+          "mosi": 2,
+          "nss": 3,
+          "sclk": 0
+        },
+        "diagnostics": [],
+        "format_valid": true,
+        "interpretation": "Decode assumes mode 0 and MSB-first wire bytes. Rolling windows include unaligned/payload matches within each NSS frame. Partial frame offsets are relative to the observed suffix. Simultaneous NSS/clock rises are flagged and not shifted. File inspection cannot prove producer exit status or hardware trigger bit order by itself.",
+        "match_counts": {
+          "0x1c35": 0,
+          "0x351c": 1,
+          "0x38ac": 0,
+          "0xac38": 0
+        },
+        "metadata_lines": 2,
+        "mode": "SPI mode 0, rising SCLK, MSB-first decode, NSS active low",
+        "path": "/tmp/dslcap-g-live/ctl_byte.raw",
+        "requested_value": "0x1c35",
+        "rolling_matches": [
+          {
+            "bit_offset_origin": "nss frame",
+            "delta_from_trigger_samples": 888,
+            "end_bit_offset": 31,
+            "end_sample": 100967,
+            "start_bit_in_byte": 0,
+            "start_bit_offset": 16,
+            "start_byte_offset": 2,
+            "start_sample": 100762,
+            "transaction": 0,
+            "value": "0x351c"
+          }
+        ],
+        "samplerate_hz": 100000000,
+        "samples": 1000448,
+        "sha256": "07b770f1ac587e1e55b2580fd315a60ea77f6c214f7d14a3af72c4ed6a802428",
+        "transactions": [
+          {
+            "bit_count": 48,
+            "bit_offset_origin": "first selected rising edge after nss assertion",
+            "first_rising_sample": 100532,
+            "index": 0,
+            "last_rising_sample": 101198,
+            "matches": [
+              0
+            ],
+            "miso_hex": "04 52 00 00 00 00",
+            "mosi_hex": "00 02 35 1c 00 00",
+            "nss_assert_sample": 100079,
+            "nss_release_sample": 101428,
+            "partial_left": false,
+            "partial_right": false,
+            "trailing_miso_bits": "",
+            "trailing_mosi_bits": ""
+          }
+        ],
+        "trigger_association": {
+          "interpretation": "Sampled association only: deltas are observed, no fixed trigger latency or causal match is assumed.",
+          "nearest_events": {
+            "clock_falling": {
+              "after": {
+                "delta_samples": 460,
+                "sample": 100539,
+                "selected": true,
+                "time_s": 0.00100539,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            },
+            "clock_rising": {
+              "after": {
+                "delta_samples": 453,
+                "sample": 100532,
+                "selected": true,
+                "time_s": 0.00100532,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            },
+            "nss_assert": {
+              "after": null,
+              "at": {
+                "delta_samples": 0,
+                "sample": 100079,
+                "selected": true,
+                "time_s": 0.00100079,
+                "transaction": 0
+              },
+              "before": null
+            },
+            "nss_release": {
+              "after": {
+                "delta_samples": 1349,
+                "sample": 101428,
+                "selected": false,
+                "time_s": 0.00101428,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            }
+          },
+          "nearest_matching_windows": [
+            {
+              "bit_offset_origin": "nss frame",
+              "delta_from_trigger_samples": 888,
+              "end_bit_offset": 31,
+              "end_sample": 100967,
+              "start_bit_in_byte": 0,
+              "start_bit_offset": 16,
+              "start_byte_offset": 2,
+              "start_sample": 100762,
+              "transaction": 0,
+              "value": "0x351c"
+            }
+          ],
+          "transaction_indices": [
+            0
+          ]
+        },
+        "trigger_sample": 100079,
+        "trigger_time_s": 0.00100079,
+        "variants": [
+          "0x1c35",
+          "0xac38",
+          "0x351c",
+          "0x38ac"
+        ]
+      },
+      "artifacts": {
+        "raw": {
+          "path": "/tmp/dslcap-g-live/ctl_byte.raw",
+          "sha256": "07b770f1ac587e1e55b2580fd315a60ea77f6c214f7d14a3af72c4ed6a802428"
+        },
+        "stderr": {
+          "path": "/tmp/dslcap-g-live/ctl_byte.stderr",
+          "sha256": "6f424da789d36219e5a1d2a110bd1d8debcb63a6e5631db975e71e28011a346f"
+        },
+        "usb.log": {
+          "path": "/tmp/dslcap-g-live/ctl_byte.usb.log",
+          "sha256": "21885c496be89b543365f0e7b0b31b531c03b730690d16de67f260fe77b537e7"
+        },
+        "json": {
+          "path": "/tmp/dslcap-g-live/ctl_byte.json",
+          "sha256": "858be2d676d849c6c4f753404f645f3c3875443caf13b6169004691eaefbaa2f"
+        }
+      },
+      "included_in_matrix": true
+    },
+    {
+      "case": "s_byte",
+      "manifest": {
+        "arm_observed_epoch": 1791424565.8552954,
+        "command": [
+          "/tmp/dslcap-phase-c-build/dslcap",
+          "--mode",
+          "buffer",
+          "--samplerate",
+          "100M",
+          "--channels",
+          "0-7",
+          "--samples",
+          "1000448",
+          "--trigger-pos",
+          "10",
+          "--trigger-timeout",
+          "45s",
+          "--on-timeout",
+          "fail",
+          "--vth",
+          "1.6",
+          "-v",
+          "--serial-trigger",
+          "start=3:f,stop=3:r,clock=0:r,data=2,value=0x1c35,bits=16"
+        ],
+        "end_epoch": 1791424611.3120346,
+        "exit": 16,
+        "kind": "serial",
+        "label": "s_byte",
+        "pid": 2362471,
+        "rate_hz": 100000000,
+        "register_matches_golden": true,
+        "register_sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+        "samples": 1000448,
+        "start_epoch": 1791424564.9533033
+      },
+      "raw_sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab",
+      "registers": {
+        "path": "/tmp/dslcap-g-live/s_byte.usb.log",
+        "reference": {
+          "identical": true,
+          "path": "/tmp/dslcap-f-dsview/golden_serial16_100M.setting.bin"
+        },
+        "setting": {
+          "armed_samples": 1000448,
+          "arrays": {
+            "edge0": [
+              8,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "edge1": [
+              8,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "logic0": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "logic1": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "mask0": [
+              65527,
+              65534,
+              65531,
+              0,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535
+            ],
+            "mask1": [
+              65527,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535
+            ],
+            "value0": [
+              0,
+              1,
+              0,
+              7221,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "value1": [
+              8,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "channel_mask": 255,
+          "counts": [
+            0,
+            1,
+            0,
+            15,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "enabled_count": 8,
+          "fields": {
+            "ch_en_h": 0,
+            "ch_en_header": 2562,
+            "ch_en_l": 255,
+            "cnt_h": 0,
+            "cnt_l": 62528,
+            "count_header": 770,
+            "div_h": 0,
+            "div_l": 1,
+            "divider_header": 258,
+            "dso_cnt_h": 15,
+            "dso_cnt_l": 17408,
+            "dso_count_header": 2050,
+            "fgain": 0,
+            "fgain_header": 3073,
+            "mode": 2049,
+            "mode_header": 1,
+            "tpos_h": 1,
+            "tpos_l": 34496,
+            "trig_glb": 2048,
+            "trig_glb_header": 1793,
+            "trig_header": 16544,
+            "trig_pos_header": 1282
+          },
+          "global_stage": 0,
+          "mode": {
+            "half": false,
+            "quarter": false,
+            "raw": 2049,
+            "serial": true,
+            "trigger": true
+          },
+          "sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+          "stages": [
+            {
+              "count": 0,
+              "edge0": 8,
+              "edge1": 8,
+              "index": 0,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65527,
+              "mask1": 65527,
+              "value0": 0,
+              "value1": 8
+            },
+            {
+              "count": 1,
+              "edge0": 1,
+              "edge1": 0,
+              "index": 1,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65534,
+              "mask1": 65535,
+              "value0": 1,
+              "value1": 0
+            },
+            {
+              "count": 0,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 2,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65531,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            },
+            {
+              "count": 15,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 3,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 0,
+              "mask1": 65535,
+              "value0": 7221,
+              "value1": 0
+            }
+          ],
+          "trigger_position": 100032
+        },
+        "sha256": "10c6d32305ca5bb77e3293b7d59676aded81958f2a2ca0577f859f0684350183"
+      },
+      "stderr_sha256": "fb603ce565caab0a973de277b1592eb14bed27b7e732111259ab10e5455ae96d",
+      "timeout": {
+        "abort_epoch": 1791424611.160161,
+        "callbacks": [
+          {
+            "ep": 134,
+            "epoch": 1791424611.16052,
+            "line": "1791424611.160520 TRIG_HEADER ep=0x86 status=0 req=512 xfer=512 seq_total_in=512 len=64 data=55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555",
+            "req": 512,
+            "status": 0,
+            "xfer": 512
+          },
+          {
+            "ep": 134,
+            "epoch": 1791424611.182338,
+            "line": "1791424611.182338 BULK_IN_CB ep=0x86 status=0 req=1048576 xfer=1048576 seq_total_in=1049088 len=0",
+            "req": 1048576,
+            "status": 0,
+            "xfer": 1048576
+          }
+        ],
+        "caveat": "No valid FPGA status available. Separate control does not prove concurrent failed-case waveform; owner emission receipt required.",
+        "classification": "timeout exit16; no valid preabort header; postabort cleanup only",
+        "cleanup_data_callbacks": [
+          {
+            "ep": 134,
+            "epoch": 1791424611.182338,
+            "line": "1791424611.182338 BULK_IN_CB ep=0x86 status=0 req=1048576 xfer=1048576 seq_total_in=1049088 len=0",
+            "req": 1048576,
+            "status": 0,
+            "xfer": 1048576
+          }
+        ],
+        "frozen_parser_expected_rejection": "header remaining exceeds armed samples",
+        "invalid_cleanup_headers": [
+          {
+            "after_abort_seconds": 0.0003590583801269531,
+            "epoch": 1791424611.16052,
+            "fields": [
+              1431655765,
+              1431655765,
+              1431655765,
+              1431655765,
+              1431655765,
+              1431655765
+            ],
+            "reason": "all-0x55 dummy; remaining exceeds arm count",
+            "remaining": 6148914691236517205
+          }
+        ],
+        "preabort_completed_in": [],
+        "samples": 0,
+        "stdout_bytes": 27
+      },
+      "verdict": "PASS",
+      "artifacts": {
+        "raw": {
+          "path": "/tmp/dslcap-g-live/s_byte.raw",
+          "sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab"
+        },
+        "stderr": {
+          "path": "/tmp/dslcap-g-live/s_byte.stderr",
+          "sha256": "fb603ce565caab0a973de277b1592eb14bed27b7e732111259ab10e5455ae96d"
+        },
+        "usb.log": {
+          "path": "/tmp/dslcap-g-live/s_byte.usb.log",
+          "sha256": "10c6d32305ca5bb77e3293b7d59676aded81958f2a2ca0577f859f0684350183"
+        },
+        "json": {
+          "path": "/tmp/dslcap-g-live/s_byte.json",
+          "sha256": "ab8b3c928844cbba00e34dc4a72c8411b9b9d4cceba4d34784cf8b8fc569f00a"
+        }
+      },
+      "included_in_matrix": true
+    },
+    {
+      "case": "ctl_both",
+      "manifest": {
+        "arm_observed_epoch": 1791424705.2464423,
+        "command": [
+          "/tmp/dslcap-phase-c-build/dslcap",
+          "--mode",
+          "buffer",
+          "--samplerate",
+          "100M",
+          "--channels",
+          "0-7",
+          "--samples",
+          "1000448",
+          "--trigger-pos",
+          "10",
+          "--trigger-timeout",
+          "45s",
+          "--on-timeout",
+          "fail",
+          "--vth",
+          "1.6",
+          "-v",
+          "--trigger",
+          "3:f"
+        ],
+        "end_epoch": 1791424750.7101989,
+        "exit": 16,
+        "kind": "simple",
+        "label": "ctl_both",
+        "pid": 2365134,
+        "rate_hz": 100000000,
+        "register_matches_golden": true,
+        "register_sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+        "samples": 1000448,
+        "start_epoch": 1791424704.3439724
+      },
+      "raw_sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab",
+      "registers": {
+        "path": "/tmp/dslcap-g-live/ctl_both.usb.log",
+        "reference": {
+          "identical": true,
+          "path": "/tmp/dslcap-c-dsview-live/golden_simple_100M.setting.bin"
+        },
+        "setting": {
+          "armed_samples": 1000448,
+          "arrays": {
+            "edge0": [
+              8,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "edge1": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "logic0": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "logic1": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "mask0": [
+              65527,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535
+            ],
+            "mask1": [
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535
+            ],
+            "value0": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "value1": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "channel_mask": 255,
+          "counts": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "enabled_count": 8,
+          "fields": {
+            "ch_en_h": 0,
+            "ch_en_header": 2562,
+            "ch_en_l": 255,
+            "cnt_h": 0,
+            "cnt_l": 62528,
+            "count_header": 770,
+            "div_h": 0,
+            "div_l": 1,
+            "divider_header": 258,
+            "dso_cnt_h": 15,
+            "dso_cnt_l": 17408,
+            "dso_count_header": 2050,
+            "fgain": 0,
+            "fgain_header": 3073,
+            "mode": 1,
+            "mode_header": 1,
+            "tpos_h": 1,
+            "tpos_l": 34496,
+            "trig_glb": 2048,
+            "trig_glb_header": 1793,
+            "trig_header": 16544,
+            "trig_pos_header": 1282
+          },
+          "global_stage": 0,
+          "mode": {
+            "half": false,
+            "quarter": false,
+            "raw": 1,
+            "serial": false,
+            "trigger": true
+          },
+          "sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+          "stages": [
+            {
+              "count": 0,
+              "edge0": 8,
+              "edge1": 0,
+              "index": 0,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65527,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            },
+            {
+              "count": 0,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 1,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65535,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            },
+            {
+              "count": 0,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 2,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65535,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            },
+            {
+              "count": 0,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 3,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65535,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            }
+          ],
+          "trigger_position": 100032
+        },
+        "sha256": "8e9bcccbbafbbee6354f8d41a5cae41b11d7d802961fac7187fffdc019a4e415"
+      },
+      "stderr_sha256": "7fb8848fe2e64391e836658c269cd209db881b1c9b5c3ac74f16253843ff3677",
+      "timeout": {
+        "abort_epoch": 1791424750.551253,
+        "callbacks": [
+          {
+            "ep": 134,
+            "epoch": 1791424750.551633,
+            "line": "1791424750.551633 TRIG_HEADER ep=0x86 status=0 req=512 xfer=512 seq_total_in=512 len=64 data=55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555",
+            "req": 512,
+            "status": 0,
+            "xfer": 512
+          },
+          {
+            "ep": 134,
+            "epoch": 1791424750.574211,
+            "line": "1791424750.574211 BULK_IN_CB ep=0x86 status=0 req=1048576 xfer=1048576 seq_total_in=1049088 len=0",
+            "req": 1048576,
+            "status": 0,
+            "xfer": 1048576
+          }
+        ],
+        "caveat": "No valid FPGA status available. Separate control does not prove concurrent failed-case waveform; owner emission receipt required.",
+        "classification": "timeout exit16; no valid preabort header; postabort cleanup only",
+        "cleanup_data_callbacks": [
+          {
+            "ep": 134,
+            "epoch": 1791424750.574211,
+            "line": "1791424750.574211 BULK_IN_CB ep=0x86 status=0 req=1048576 xfer=1048576 seq_total_in=1049088 len=0",
+            "req": 1048576,
+            "status": 0,
+            "xfer": 1048576
+          }
+        ],
+        "frozen_parser_expected_rejection": "header remaining exceeds armed samples",
+        "invalid_cleanup_headers": [
+          {
+            "after_abort_seconds": 0.00037980079650878906,
+            "epoch": 1791424750.551633,
+            "fields": [
+              1431655765,
+              1431655765,
+              1431655765,
+              1431655765,
+              1431655765,
+              1431655765
+            ],
+            "reason": "all-0x55 dummy; remaining exceeds arm count",
+            "remaining": 6148914691236517205
+          }
+        ],
+        "preabort_completed_in": [],
+        "samples": 0,
+        "stdout_bytes": 27
+      },
+      "verdict": "INCONCLUSIVE_NO_CAPTURE",
+      "artifacts": {
+        "raw": {
+          "path": "/tmp/dslcap-g-live/ctl_both.raw",
+          "sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab"
+        },
+        "stderr": {
+          "path": "/tmp/dslcap-g-live/ctl_both.stderr",
+          "sha256": "7fb8848fe2e64391e836658c269cd209db881b1c9b5c3ac74f16253843ff3677"
+        },
+        "usb.log": {
+          "path": "/tmp/dslcap-g-live/ctl_both.usb.log",
+          "sha256": "8e9bcccbbafbbee6354f8d41a5cae41b11d7d802961fac7187fffdc019a4e415"
+        },
+        "json": {
+          "path": "/tmp/dslcap-g-live/ctl_both.json",
+          "sha256": "941774dd5b9e9cefd581b5277f6a040a1d6450189763b19bcc1d43a2d6abd73b"
+        }
+      },
+      "included_in_matrix": false
+    },
+    {
+      "case": "ctl_both_retry",
+      "manifest": {
+        "arm_observed_epoch": 1791425057.6597033,
+        "command": [
+          "/tmp/dslcap-phase-c-build/dslcap",
+          "--mode",
+          "buffer",
+          "--samplerate",
+          "100M",
+          "--channels",
+          "0-7",
+          "--samples",
+          "1000448",
+          "--trigger-pos",
+          "10",
+          "--trigger-timeout",
+          "45s",
+          "--on-timeout",
+          "fail",
+          "--vth",
+          "1.6",
+          "-v",
+          "--trigger",
+          "3:f"
+        ],
+        "end_epoch": 1791425078.422047,
+        "exit": 0,
+        "kind": "simple",
+        "label": "ctl_both_retry",
+        "pid": 2371588,
+        "rate_hz": 100000000,
+        "register_matches_golden": true,
+        "register_sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+        "samples": 1000448,
+        "start_epoch": 1791425056.7568552
+      },
+      "raw_sha256": "64ecb5911b19afa64537ad7b0bd9f43553cbeae2676b1861cbb966b30e62e6e4",
+      "registers": {
+        "callbacks": [
+          {
+            "ep": 134,
+            "epoch": 1791425078.181293,
+            "label": "TRIG_HEADER",
+            "prefix": "55555555c0860100c062480000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "req": 512,
+            "status": 0,
+            "xfer": 512
+          },
+          {
+            "ep": 134,
+            "epoch": 1791425078.203377,
+            "label": "BULK_IN_CB",
+            "prefix": null,
+            "req": 1048576,
+            "status": 0,
+            "xfer": 1048576
+          }
+        ],
+        "caveats": "Requires req= identity from shim; missing/invalid prefixes, callback map coverage and live-file mutation qualify negative evidence.",
+        "classification": "FPGA-triggered header",
+        "expected_raw_dump_bytes": 1048576,
+        "first_valid_header": {
+          "after_force_seconds": null,
+          "after_stop_seconds": null,
+          "aligned_samples": 1000448,
+          "check_id": 1431655765,
+          "epoch": 1791425078.181293,
+          "meaningful_trigger_sample": 100032,
+          "ram_saddr": 4743872,
+          "real_pos_raw": 100032,
+          "remaining": 0,
+          "status_word": 1,
+          "triggered": true
+        },
+        "force_stop_times": [],
+        "header_requests": [
+          {
+            "ep": 134,
+            "epoch": 1791425078.181293,
+            "label": "TRIG_HEADER",
+            "prefix": "55555555c0860100c062480000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "req": 512,
+            "status": 0,
+            "xfer": 512
+          }
+        ],
+        "path": "/tmp/dslcap-g-live/ctl_both_retry.usb.log",
+        "reference": {
+          "differences": {},
+          "identical": true,
+          "path": "/tmp/dslcap-c-dsview-live/golden_simple_100M.setting.bin"
+        },
+        "setting": {
+          "armed_samples": 1000448,
+          "arrays": {
+            "edge0": [
+              8,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "edge1": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "logic0": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "logic1": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "mask0": [
+              65527,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535
+            ],
+            "mask1": [
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535
+            ],
+            "value0": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "value1": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "channel_mask": 255,
+          "counts": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "enabled_count": 8,
+          "fields": {
+            "ch_en_h": 0,
+            "ch_en_header": 2562,
+            "ch_en_l": 255,
+            "cnt_h": 0,
+            "cnt_l": 62528,
+            "count_header": 770,
+            "div_h": 0,
+            "div_l": 1,
+            "divider_header": 258,
+            "dso_cnt_h": 15,
+            "dso_cnt_l": 17408,
+            "dso_count_header": 2050,
+            "fgain": 0,
+            "fgain_header": 3073,
+            "mode": 1,
+            "mode_header": 1,
+            "tpos_h": 1,
+            "tpos_l": 34496,
+            "trig_glb": 2048,
+            "trig_glb_header": 1793,
+            "trig_header": 16544,
+            "trig_pos_header": 1282
+          },
+          "global_stage": 0,
+          "mode": {
+            "half": false,
+            "quarter": false,
+            "raw": 1,
+            "serial": false,
+            "trigger": true
+          },
+          "sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+          "stages": [
+            {
+              "count": 0,
+              "edge0": 8,
+              "edge1": 0,
+              "index": 0,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65527,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            },
+            {
+              "count": 0,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 1,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65535,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            },
+            {
+              "count": 0,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 2,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65535,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            },
+            {
+              "count": 0,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 3,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65535,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            }
+          ],
+          "trigger_position": 100032
+        },
+        "sha256": "520522527a9f8329d9e072c7015c3154b33e33ba80114ad30cfa37ed4fc92975",
+        "stop_marks": []
+      },
+      "stderr_sha256": "ac4c8842625372108759d230c345b7a01067720cddb6799fde3558933ac1c708",
+      "verdict": "PASS",
+      "waveform": {
+        "channels": {
+          "miso": 1,
+          "mosi": 2,
+          "nss": 3,
+          "sclk": 0
+        },
+        "diagnostics": [],
+        "format_valid": true,
+        "interpretation": "Decode assumes mode 0 and MSB-first wire bytes. Rolling windows include unaligned/payload matches within each NSS frame. Partial frame offsets are relative to the observed suffix. Simultaneous NSS/clock rises are flagged and not shifted. File inspection cannot prove producer exit status or hardware trigger bit order by itself.",
+        "match_counts": {
+          "0x1c35": 0,
+          "0x351c": 0,
+          "0x38ac": 1,
+          "0xac38": 0
+        },
+        "metadata_lines": 2,
+        "mode": "SPI mode 0, rising SCLK, MSB-first decode, NSS active low",
+        "path": "/tmp/dslcap-g-live/ctl_both_retry.raw",
+        "requested_value": "0x1c35",
+        "rolling_matches": [
+          {
+            "bit_offset_origin": "nss frame",
+            "delta_from_trigger_samples": 937,
+            "end_bit_offset": 31,
+            "end_sample": 100969,
+            "start_bit_in_byte": 0,
+            "start_bit_offset": 16,
+            "start_byte_offset": 2,
+            "start_sample": 100764,
+            "transaction": 0,
+            "value": "0x38ac"
+          }
+        ],
+        "samplerate_hz": 100000000,
+        "samples": 1000448,
+        "sha256": "64ecb5911b19afa64537ad7b0bd9f43553cbeae2676b1861cbb966b30e62e6e4",
+        "transactions": [
+          {
+            "bit_count": 48,
+            "bit_offset_origin": "first selected rising edge after nss assertion",
+            "first_rising_sample": 100534,
+            "index": 0,
+            "last_rising_sample": 101199,
+            "matches": [
+              0
+            ],
+            "miso_hex": "04 52 00 00 00 00",
+            "mosi_hex": "00 02 38 ac 00 00",
+            "nss_assert_sample": 100032,
+            "nss_release_sample": 101429,
+            "partial_left": false,
+            "partial_right": false,
+            "trailing_miso_bits": "",
+            "trailing_mosi_bits": ""
+          }
+        ],
+        "trigger_association": {
+          "interpretation": "Sampled association only: deltas are observed, no fixed trigger latency or causal match is assumed.",
+          "nearest_events": {
+            "clock_falling": {
+              "after": {
+                "delta_samples": 508,
+                "sample": 100540,
+                "selected": true,
+                "time_s": 0.0010054,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            },
+            "clock_rising": {
+              "after": {
+                "delta_samples": 502,
+                "sample": 100534,
+                "selected": true,
+                "time_s": 0.00100534,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            },
+            "nss_assert": {
+              "after": null,
+              "at": {
+                "delta_samples": 0,
+                "sample": 100032,
+                "selected": true,
+                "time_s": 0.00100032,
+                "transaction": 0
+              },
+              "before": null
+            },
+            "nss_release": {
+              "after": {
+                "delta_samples": 1397,
+                "sample": 101429,
+                "selected": false,
+                "time_s": 0.00101429,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            }
+          },
+          "nearest_matching_windows": [
+            {
+              "bit_offset_origin": "nss frame",
+              "delta_from_trigger_samples": 937,
+              "end_bit_offset": 31,
+              "end_sample": 100969,
+              "start_bit_in_byte": 0,
+              "start_bit_offset": 16,
+              "start_byte_offset": 2,
+              "start_sample": 100764,
+              "transaction": 0,
+              "value": "0x38ac"
+            }
+          ],
+          "transaction_indices": [
+            0
+          ]
+        },
+        "trigger_sample": 100032,
+        "trigger_time_s": 0.00100032,
+        "variants": [
+          "0x1c35",
+          "0xac38",
+          "0x351c",
+          "0x38ac"
+        ]
+      },
+      "artifacts": {
+        "raw": {
+          "path": "/tmp/dslcap-g-live/ctl_both_retry.raw",
+          "sha256": "64ecb5911b19afa64537ad7b0bd9f43553cbeae2676b1861cbb966b30e62e6e4"
+        },
+        "stderr": {
+          "path": "/tmp/dslcap-g-live/ctl_both_retry.stderr",
+          "sha256": "ac4c8842625372108759d230c345b7a01067720cddb6799fde3558933ac1c708"
+        },
+        "usb.log": {
+          "path": "/tmp/dslcap-g-live/ctl_both_retry.usb.log",
+          "sha256": "520522527a9f8329d9e072c7015c3154b33e33ba80114ad30cfa37ed4fc92975"
+        },
+        "json": {
+          "path": "/tmp/dslcap-g-live/ctl_both_retry.json",
+          "sha256": "34d01faffc7a977c385b1aba4aaa95d396f69ffae9fc79fe53044fa48d8a8d05"
+        }
+      },
+      "included_in_matrix": true
+    },
+    {
+      "case": "s_both",
+      "manifest": {
+        "arm_observed_epoch": 1791425126.3299055,
+        "command": [
+          "/tmp/dslcap-phase-c-build/dslcap",
+          "--mode",
+          "buffer",
+          "--samplerate",
+          "100M",
+          "--channels",
+          "0-7",
+          "--samples",
+          "1000448",
+          "--trigger-pos",
+          "10",
+          "--trigger-timeout",
+          "45s",
+          "--on-timeout",
+          "fail",
+          "--vth",
+          "1.6",
+          "-v",
+          "--serial-trigger",
+          "start=3:f,stop=3:r,clock=0:r,data=2,value=0x1c35,bits=16"
+        ],
+        "end_epoch": 1791425171.7989392,
+        "exit": 16,
+        "kind": "serial",
+        "label": "s_both",
+        "pid": 2373123,
+        "rate_hz": 100000000,
+        "register_matches_golden": true,
+        "register_sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+        "samples": 1000448,
+        "start_epoch": 1791425125.4271839
+      },
+      "raw_sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab",
+      "registers": {
+        "path": "/tmp/dslcap-g-live/s_both.usb.log",
+        "reference": {
+          "identical": true,
+          "path": "/tmp/dslcap-f-dsview/golden_serial16_100M.setting.bin"
+        },
+        "setting": {
+          "armed_samples": 1000448,
+          "arrays": {
+            "edge0": [
+              8,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "edge1": [
+              8,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "logic0": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "logic1": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "mask0": [
+              65527,
+              65534,
+              65531,
+              0,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535
+            ],
+            "mask1": [
+              65527,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535
+            ],
+            "value0": [
+              0,
+              1,
+              0,
+              7221,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "value1": [
+              8,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "channel_mask": 255,
+          "counts": [
+            0,
+            1,
+            0,
+            15,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "enabled_count": 8,
+          "fields": {
+            "ch_en_h": 0,
+            "ch_en_header": 2562,
+            "ch_en_l": 255,
+            "cnt_h": 0,
+            "cnt_l": 62528,
+            "count_header": 770,
+            "div_h": 0,
+            "div_l": 1,
+            "divider_header": 258,
+            "dso_cnt_h": 15,
+            "dso_cnt_l": 17408,
+            "dso_count_header": 2050,
+            "fgain": 0,
+            "fgain_header": 3073,
+            "mode": 2049,
+            "mode_header": 1,
+            "tpos_h": 1,
+            "tpos_l": 34496,
+            "trig_glb": 2048,
+            "trig_glb_header": 1793,
+            "trig_header": 16544,
+            "trig_pos_header": 1282
+          },
+          "global_stage": 0,
+          "mode": {
+            "half": false,
+            "quarter": false,
+            "raw": 2049,
+            "serial": true,
+            "trigger": true
+          },
+          "sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+          "stages": [
+            {
+              "count": 0,
+              "edge0": 8,
+              "edge1": 8,
+              "index": 0,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65527,
+              "mask1": 65527,
+              "value0": 0,
+              "value1": 8
+            },
+            {
+              "count": 1,
+              "edge0": 1,
+              "edge1": 0,
+              "index": 1,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65534,
+              "mask1": 65535,
+              "value0": 1,
+              "value1": 0
+            },
+            {
+              "count": 0,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 2,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65531,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            },
+            {
+              "count": 15,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 3,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 0,
+              "mask1": 65535,
+              "value0": 7221,
+              "value1": 0
+            }
+          ],
+          "trigger_position": 100032
+        },
+        "sha256": "bd9cdde00ef1dd1876dcc50308769d2835d146efcf437ba6e70da85178b5a934"
+      },
+      "stderr_sha256": "e88080e6566e26660f50dd33598016fabb54bda92e4bd89a0d82671392e6b7ba",
+      "timeout": {
+        "abort_epoch": 1791425171.620649,
+        "callbacks": [
+          {
+            "ep": 134,
+            "epoch": 1791425171.621087,
+            "line": "1791425171.621087 TRIG_HEADER ep=0x86 status=0 req=512 xfer=512 seq_total_in=512 len=64 data=55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555",
+            "req": 512,
+            "status": 0,
+            "xfer": 512
+          },
+          {
+            "ep": 134,
+            "epoch": 1791425171.643019,
+            "line": "1791425171.643019 BULK_IN_CB ep=0x86 status=0 req=1048576 xfer=1048576 seq_total_in=1049088 len=0",
+            "req": 1048576,
+            "status": 0,
+            "xfer": 1048576
+          }
+        ],
+        "caveat": "No valid FPGA status available. Separate control does not prove concurrent failed-case waveform; owner emission receipt required.",
+        "classification": "timeout exit16; no valid preabort header; postabort cleanup only",
+        "cleanup_data_callbacks": [
+          {
+            "ep": 134,
+            "epoch": 1791425171.643019,
+            "line": "1791425171.643019 BULK_IN_CB ep=0x86 status=0 req=1048576 xfer=1048576 seq_total_in=1049088 len=0",
+            "req": 1048576,
+            "status": 0,
+            "xfer": 1048576
+          }
+        ],
+        "frozen_parser_expected_rejection": "header remaining exceeds armed samples",
+        "invalid_cleanup_headers": [
+          {
+            "after_abort_seconds": 0.0004379749298095703,
+            "epoch": 1791425171.621087,
+            "fields": [
+              1431655765,
+              1431655765,
+              1431655765,
+              1431655765,
+              1431655765,
+              1431655765
+            ],
+            "reason": "all-0x55 dummy; remaining exceeds arm count",
+            "remaining": 6148914691236517205
+          }
+        ],
+        "preabort_completed_in": [],
+        "samples": 0,
+        "stdout_bytes": 27
+      },
+      "verdict": "PASS",
+      "artifacts": {
+        "raw": {
+          "path": "/tmp/dslcap-g-live/s_both.raw",
+          "sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab"
+        },
+        "stderr": {
+          "path": "/tmp/dslcap-g-live/s_both.stderr",
+          "sha256": "e88080e6566e26660f50dd33598016fabb54bda92e4bd89a0d82671392e6b7ba"
+        },
+        "usb.log": {
+          "path": "/tmp/dslcap-g-live/s_both.usb.log",
+          "sha256": "bd9cdde00ef1dd1876dcc50308769d2835d146efcf437ba6e70da85178b5a934"
+        },
+        "json": {
+          "path": "/tmp/dslcap-g-live/s_both.json",
+          "sha256": "33442ced61075a41a11b7dfb9d5bc33bf178dea7eed8d06c55a0dd557e36a487"
+        }
+      },
+      "included_in_matrix": true
+    },
+    {
+      "case": "s_pos_repeat",
+      "manifest": {
+        "arm_observed_epoch": 1791425217.3339286,
+        "command": [
+          "/tmp/dslcap-phase-c-build/dslcap",
+          "--mode",
+          "buffer",
+          "--samplerate",
+          "100M",
+          "--channels",
+          "0-7",
+          "--samples",
+          "1000448",
+          "--trigger-pos",
+          "10",
+          "--trigger-timeout",
+          "45s",
+          "--on-timeout",
+          "fail",
+          "--vth",
+          "1.6",
+          "-v",
+          "--serial-trigger",
+          "start=3:f,stop=3:r,clock=0:r,data=2,value=0x1c35,bits=16"
+        ],
+        "end_epoch": 1791425237.4911087,
+        "exit": 0,
+        "kind": "serial",
+        "label": "s_pos_repeat",
+        "pid": 2375084,
+        "rate_hz": 100000000,
+        "register_matches_golden": true,
+        "register_sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+        "samples": 1000448,
+        "start_epoch": 1791425216.43112
+      },
+      "raw_sha256": "3705ed89875dde49737a85c0bae631e10c03dcf99df558d32edb699fb00347fc",
+      "registers": {
+        "callbacks": [
+          {
+            "ep": 134,
+            "epoch": 1791425237.314881,
+            "label": "TRIG_HEADER",
+            "prefix": "55555555e88601004014aa0000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "req": 512,
+            "status": 0,
+            "xfer": 512
+          },
+          {
+            "ep": 134,
+            "epoch": 1791425237.336949,
+            "label": "BULK_IN_CB",
+            "prefix": null,
+            "req": 1048576,
+            "status": 0,
+            "xfer": 1048576
+          }
+        ],
+        "caveats": "Requires req= identity from shim; missing/invalid prefixes, callback map coverage and live-file mutation qualify negative evidence.",
+        "classification": "FPGA-triggered header",
+        "expected_raw_dump_bytes": 1048576,
+        "first_valid_header": {
+          "after_force_seconds": null,
+          "after_stop_seconds": null,
+          "aligned_samples": 1000448,
+          "check_id": 1431655765,
+          "epoch": 1791425237.314881,
+          "meaningful_trigger_sample": 100072,
+          "ram_saddr": 11146304,
+          "real_pos_raw": 100072,
+          "remaining": 0,
+          "status_word": 1,
+          "triggered": true
+        },
+        "force_stop_times": [],
+        "header_requests": [
+          {
+            "ep": 134,
+            "epoch": 1791425237.314881,
+            "label": "TRIG_HEADER",
+            "prefix": "55555555e88601004014aa0000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "req": 512,
+            "status": 0,
+            "xfer": 512
+          }
+        ],
+        "path": "/tmp/dslcap-g-live/s_pos_repeat.usb.log",
+        "reference": {
+          "differences": {},
+          "identical": true,
+          "path": "/tmp/dslcap-f-dsview/golden_serial16_100M.setting.bin"
+        },
+        "setting": {
+          "armed_samples": 1000448,
+          "arrays": {
+            "edge0": [
+              8,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "edge1": [
+              8,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "logic0": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "logic1": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "mask0": [
+              65527,
+              65534,
+              65531,
+              0,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535
+            ],
+            "mask1": [
+              65527,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535,
+              65535
+            ],
+            "value0": [
+              0,
+              1,
+              0,
+              7221,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "value1": [
+              8,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "channel_mask": 255,
+          "counts": [
+            0,
+            1,
+            0,
+            15,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "enabled_count": 8,
+          "fields": {
+            "ch_en_h": 0,
+            "ch_en_header": 2562,
+            "ch_en_l": 255,
+            "cnt_h": 0,
+            "cnt_l": 62528,
+            "count_header": 770,
+            "div_h": 0,
+            "div_l": 1,
+            "divider_header": 258,
+            "dso_cnt_h": 15,
+            "dso_cnt_l": 17408,
+            "dso_count_header": 2050,
+            "fgain": 0,
+            "fgain_header": 3073,
+            "mode": 2049,
+            "mode_header": 1,
+            "tpos_h": 1,
+            "tpos_l": 34496,
+            "trig_glb": 2048,
+            "trig_glb_header": 1793,
+            "trig_header": 16544,
+            "trig_pos_header": 1282
+          },
+          "global_stage": 0,
+          "mode": {
+            "half": false,
+            "quarter": false,
+            "raw": 2049,
+            "serial": true,
+            "trigger": true
+          },
+          "sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+          "stages": [
+            {
+              "count": 0,
+              "edge0": 8,
+              "edge1": 8,
+              "index": 0,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65527,
+              "mask1": 65527,
+              "value0": 0,
+              "value1": 8
+            },
+            {
+              "count": 1,
+              "edge0": 1,
+              "edge1": 0,
+              "index": 1,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65534,
+              "mask1": 65535,
+              "value0": 1,
+              "value1": 0
+            },
+            {
+              "count": 0,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 2,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 65531,
+              "mask1": 65535,
+              "value0": 0,
+              "value1": 0
+            },
+            {
+              "count": 15,
+              "edge0": 0,
+              "edge1": 0,
+              "index": 3,
+              "logic0": 2,
+              "logic1": 2,
+              "mask0": 0,
+              "mask1": 65535,
+              "value0": 7221,
+              "value1": 0
+            }
+          ],
+          "trigger_position": 100032
+        },
+        "sha256": "0a1d16a873d14238ee66a94686ee68c94ffa174e666db987ed0b0dc367913ed5",
+        "stop_marks": []
+      },
+      "stderr_sha256": "610d078e11107097618d9c23034d9486992552706badf6dc49e0cf7873f7f465",
+      "verdict": "PASS",
+      "waveform": {
+        "channels": {
+          "miso": 1,
+          "mosi": 2,
+          "nss": 3,
+          "sclk": 0
+        },
+        "diagnostics": [],
+        "format_valid": true,
+        "interpretation": "Decode assumes mode 0 and MSB-first wire bytes. Rolling windows include unaligned/payload matches within each NSS frame. Partial frame offsets are relative to the observed suffix. Simultaneous NSS/clock rises are flagged and not shifted. File inspection cannot prove producer exit status or hardware trigger bit order by itself.",
+        "match_counts": {
+          "0x1c35": 1,
+          "0x351c": 0,
+          "0x38ac": 0,
+          "0xac38": 0
+        },
+        "metadata_lines": 2,
+        "mode": "SPI mode 0, rising SCLK, MSB-first decode, NSS active low",
+        "path": "/tmp/dslcap-g-live/s_pos_repeat.raw",
+        "requested_value": "0x1c35",
+        "rolling_matches": [
+          {
+            "bit_offset_origin": "nss frame",
+            "delta_from_trigger_samples": 0,
+            "end_bit_offset": 31,
+            "end_sample": 100072,
+            "start_bit_in_byte": 0,
+            "start_bit_offset": 16,
+            "start_byte_offset": 2,
+            "start_sample": 99867,
+            "transaction": 0,
+            "value": "0x1c35"
+          }
+        ],
+        "samplerate_hz": 100000000,
+        "samples": 1000448,
+        "sha256": "3705ed89875dde49737a85c0bae631e10c03dcf99df558d32edb699fb00347fc",
+        "transactions": [
+          {
+            "bit_count": 48,
+            "bit_offset_origin": "first selected rising edge after nss assertion",
+            "first_rising_sample": 99637,
+            "index": 0,
+            "last_rising_sample": 100302,
+            "matches": [
+              0
+            ],
+            "miso_hex": "04 52 00 00 00 00",
+            "mosi_hex": "00 02 1c 35 00 00",
+            "nss_assert_sample": 99168,
+            "nss_release_sample": 100538,
+            "partial_left": false,
+            "partial_right": false,
+            "trailing_miso_bits": "",
+            "trailing_mosi_bits": ""
+          }
+        ],
+        "trigger_association": {
+          "interpretation": "Sampled association only: deltas are observed, no fixed trigger latency or causal match is assumed.",
+          "nearest_events": {
+            "clock_falling": {
+              "after": {
+                "delta_samples": 6,
+                "sample": 100078,
+                "selected": true,
+                "time_s": 0.00100078,
+                "transaction": 0
+              },
+              "at": null,
+              "before": {
+                "delta_samples": -6,
+                "sample": 100066,
+                "selected": true,
+                "time_s": 0.00100066,
+                "transaction": 0
+              }
+            },
+            "clock_rising": {
+              "after": {
+                "delta_samples": 25,
+                "sample": 100097,
+                "selected": true,
+                "time_s": 0.00100097,
+                "transaction": 0
+              },
+              "at": {
+                "delta_samples": 0,
+                "sample": 100072,
+                "selected": true,
+                "time_s": 0.00100072,
+                "transaction": 0
+              },
+              "before": {
+                "delta_samples": -13,
+                "sample": 100059,
+                "selected": true,
+                "time_s": 0.00100059,
+                "transaction": 0
+              }
+            },
+            "nss_assert": {
+              "after": null,
+              "at": null,
+              "before": {
+                "delta_samples": -904,
+                "sample": 99168,
+                "selected": true,
+                "time_s": 0.00099168,
+                "transaction": 0
+              }
+            },
+            "nss_release": {
+              "after": {
+                "delta_samples": 466,
+                "sample": 100538,
+                "selected": false,
+                "time_s": 0.00100538,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            }
+          },
+          "nearest_matching_windows": [
+            {
+              "bit_offset_origin": "nss frame",
+              "delta_from_trigger_samples": 0,
+              "end_bit_offset": 31,
+              "end_sample": 100072,
+              "start_bit_in_byte": 0,
+              "start_bit_offset": 16,
+              "start_byte_offset": 2,
+              "start_sample": 99867,
+              "transaction": 0,
+              "value": "0x1c35"
+            }
+          ],
+          "transaction_indices": [
+            0
+          ]
+        },
+        "trigger_sample": 100072,
+        "trigger_time_s": 0.00100072,
+        "variants": [
+          "0x1c35",
+          "0xac38",
+          "0x351c",
+          "0x38ac"
+        ]
+      },
+      "artifacts": {
+        "raw": {
+          "path": "/tmp/dslcap-g-live/s_pos_repeat.raw",
+          "sha256": "3705ed89875dde49737a85c0bae631e10c03dcf99df558d32edb699fb00347fc"
+        },
+        "stderr": {
+          "path": "/tmp/dslcap-g-live/s_pos_repeat.stderr",
+          "sha256": "610d078e11107097618d9c23034d9486992552706badf6dc49e0cf7873f7f465"
+        },
+        "usb.log": {
+          "path": "/tmp/dslcap-g-live/s_pos_repeat.usb.log",
+          "sha256": "0a1d16a873d14238ee66a94686ee68c94ffa174e666db987ed0b0dc367913ed5"
+        },
+        "json": {
+          "path": "/tmp/dslcap-g-live/s_pos_repeat.json",
+          "sha256": "b504ade996e347a2b15a4683b1675c0ef13cb4ebcebde6b1361528d738da7743"
+        }
+      },
+      "included_in_matrix": true
+    }
+  ],
+  "receipt_checks": {
+    "caveat": "Host UTC receipt windows support emission within arm wait, not submillisecond waveform synchronization. Separate controls cannot prove negative-case contemporaneous waveform.",
+    "checks": [
+      {
+        "case": "ctl_bit",
+        "emission_within_arm_wait": true,
+        "end_epoch": 1791424306.176,
+        "frame": "0002ac380000",
+        "go_id": "go-ctl_bit",
+        "go_sha256": "147114ed9de57f6f7b81da8b637a4fbba80dc59f1cd3c1da1a4cbf316544f1fe",
+        "go_within_arm_wait": true,
+        "one_emission_receipt": true,
+        "owner_emission_ordinal": 3,
+        "receipt_host_end": "2026-10-08T01:51:46.176+00:00",
+        "receipt_host_start": "2026-10-08T01:51:46.023+00:00",
+        "receipt_id": "hd26-g-sent-ctl_bit",
+        "receipt_sha256": "2048f39e4e133d581fb94d3f34009deab70dfae2d1b82f0bc13f0fe0c2081a7e",
+        "restoration": {
+          "fields": {
+            "after_clear_tx": {
+              "errors": 0,
+              "irq": "0x00000002",
+              "level": 0,
+              "mode": "STBY_XOSC",
+              "rx": 3,
+              "tx": 39
+            },
+            "baseline_ok": true,
+            "cleared_sys_irq": "0x00000002",
+            "final": {
+              "active": false,
+              "errors": 0,
+              "irq": "0x00000000",
+              "level": 0,
+              "mode": "STBY_XOSC",
+              "rx": 3,
+              "tx": 39
+            },
+            "utc": "2026-10-08T01:52:25.871+00:00"
+          },
+          "message_id": "hd26-g-restored-ctl_bit",
+          "sha256": "c70abca63e55a2a7bd899a19b0abcbb7efcba7599301754bc29b8ecdeb73c6d8"
+        },
+        "seconds_after_arm": 25.184906005859375,
+        "seconds_before_process_end": 0.22938156127929688,
+        "start_epoch": 1791424306.023
+      },
+      {
+        "case": "ctl_both",
+        "emission_within_arm_wait": false,
+        "end_epoch": 1791424882.503,
+        "frame": "000238ac0000",
+        "go_id": "go-ctl_both",
+        "go_sha256": "3308c8dfa168d2cc6b2df8d7ca722cf9aae58953349cb94ca821b8640a781689",
+        "go_within_arm_wait": false,
+        "one_emission_receipt": true,
+        "owner_emission_ordinal": 7,
+        "receipt_host_end": "2026-10-08T02:01:22.503+00:00",
+        "receipt_host_start": "2026-10-08T02:01:22.222+00:00",
+        "receipt_id": "hd26-g-sent-ctl_both",
+        "receipt_sha256": "03494d08c2dd9bdc65384b86432f0e9a816a1b6bd7b9d80e38dbdb663250e7db",
+        "restoration": {
+          "fields": {
+            "after_clear_tx": {
+              "errors": 0,
+              "irq": "0x00000002",
+              "level": 0,
+              "mode": "STBY_XOSC",
+              "rx": 3,
+              "tx": 39
+            },
+            "baseline_ok": true,
+            "cleared_sys_irq": "0x00000002",
+            "final": {
+              "active": false,
+              "errors": 0,
+              "irq": "0x00000000",
+              "level": 0,
+              "mode": "STBY_XOSC",
+              "rx": 3,
+              "tx": 39
+            },
+            "utc": "2026-10-08T02:01:59.548+00:00"
+          },
+          "message_id": "hd26-g-ctl_both-expired",
+          "sha256": "0e4cb97748556be45bdb2cecc0438e930f8cae238a88378a5e65024faf0bb620"
+        },
+        "seconds_after_arm": 176.9755575656891,
+        "seconds_before_abort": -131.9517469406128,
+        "seconds_before_process_end": -131.7928011417389,
+        "start_epoch": 1791424882.222
+      },
+      {
+        "case": "ctl_both_retry",
+        "emission_within_arm_wait": true,
+        "end_epoch": 1791425078.185,
+        "frame": "000238ac0000",
+        "go_id": "go-ctl_both_retry",
+        "go_sha256": "e7528280d08e01473b597438a725a7f453ce4e4ae535c6fd6ea85e32dc3ab433",
+        "go_within_arm_wait": true,
+        "one_emission_receipt": true,
+        "owner_emission_ordinal": 8,
+        "receipt_host_end": "2026-10-08T02:04:38.185+00:00",
+        "receipt_host_start": "2026-10-08T02:04:37.924+00:00",
+        "receipt_id": "hd26-g-sent-ctl_both_retry",
+        "receipt_sha256": "b0bc959e8f4c88c7a94454cc2447dea50cb582f0862488bc376d30262fc487ee",
+        "restoration": {
+          "fields": {
+            "after_clear_tx": {
+              "errors": 0,
+              "irq": "0x00000002",
+              "level": 0,
+              "mode": "STBY_XOSC",
+              "rx": 3,
+              "tx": 39
+            },
+            "baseline_ok": true,
+            "cleared_sys_irq": "0x00000002",
+            "final": {
+              "active": false,
+              "errors": 0,
+              "irq": "0x00000000",
+              "level": 0,
+              "mode": "STBY_XOSC",
+              "rx": 3,
+              "tx": 39
+            },
+            "utc": "2026-10-08T02:05:12.358+00:00"
+          },
+          "message_id": "hd26-g-restored-ctl_both_retry",
+          "sha256": "10d0f4b1ab8a898a9a45dd021f863cc004c2b5684a58543edd63478bc93027d4"
+        },
+        "seconds_after_arm": 20.264296770095825,
+        "seconds_before_process_end": 0.2370469570159912,
+        "start_epoch": 1791425077.924
+      },
+      {
+        "case": "ctl_byte",
+        "emission_within_arm_wait": true,
+        "end_epoch": 1791424502.481,
+        "frame": "0002351c0000",
+        "go_id": "go-ctl_byte",
+        "go_sha256": "e54f33697d40f9e3615333638745033f5f43afe19cd4a546d6498f0144cdad1b",
+        "go_within_arm_wait": true,
+        "one_emission_receipt": true,
+        "owner_emission_ordinal": 5,
+        "receipt_host_end": "2026-10-08T01:55:02.481+00:00",
+        "receipt_host_start": "2026-10-08T01:55:02.204+00:00",
+        "receipt_id": "hd26-g-sent-ctl_byte",
+        "receipt_sha256": "1987b55abc238f0b30d788a58d8d265f11e93c070fa79abe46bbe3a66a101239",
+        "restoration": {
+          "fields": {
+            "after_clear_tx": {
+              "errors": 0,
+              "irq": "0x00000002",
+              "level": 0,
+              "mode": "STBY_XOSC",
+              "rx": 3,
+              "tx": 39
+            },
+            "baseline_ok": true,
+            "cleared_sys_irq": "0x00000002",
+            "final": {
+              "active": false,
+              "errors": 0,
+              "irq": "0x00000000",
+              "level": 0,
+              "mode": "STBY_XOSC",
+              "rx": 3,
+              "tx": 39
+            },
+            "utc": "2026-10-08T01:55:52.619+00:00"
+          },
+          "message_id": "hd26-g-restored-ctl_byte",
+          "sha256": "48beb333a55395d5fa3f097ee80f9ccb6f793f37493963ea3fa98524474a5b32"
+        },
+        "seconds_after_arm": 25.5080144405365,
+        "seconds_before_process_end": 0.1769864559173584,
+        "start_epoch": 1791424502.204
+      },
+      {
+        "case": "ctl_pos",
+        "emission_within_arm_wait": true,
+        "end_epoch": 1791424135.374,
+        "frame": "00021c350000",
+        "go_id": "go-ctl_pos",
+        "go_sha256": "64f742c262245832d3735e92ed68177cbbc9d5fb41e26d9fb8243f4c1d41db39",
+        "go_within_arm_wait": true,
+        "one_emission_receipt": true,
+        "owner_emission_ordinal": 1,
+        "receipt_host_end": "2026-10-08T01:48:55.374Z",
+        "receipt_host_start": "2026-10-08T01:48:55.081Z",
+        "receipt_id": "hd26-g-sent-ctl_pos-v2",
+        "receipt_sha256": "f5424b9d54cb83619c9b021b7a2ef31bc711627d82728c3aaf6377f1e6fa1976",
+        "restoration": {
+          "fields": {
+            "after_clear_tx": {
+              "errors": 0,
+              "irq": "0x00000002",
+              "level": 0,
+              "mode": "STBY_XOSC",
+              "rx": 3,
+              "tx": 39
+            },
+            "baseline_ok": true,
+            "cleared_sys_irq": "0x00000002",
+            "final": {
+              "active": false,
+              "errors": 0,
+              "irq": "0x00000000",
+              "level": 0,
+              "mode": "STBY_XOSC",
+              "rx": 3,
+              "tx": 39
+            },
+            "utc": "2026-10-08T01:49:41.209+00:00"
+          },
+          "message_id": "hd26-g-restored-ctl_pos",
+          "sha256": "045dd6a3c64c4a350f934ab51f13c053bc8947c80a51c6f5301a0662b735b191"
+        },
+        "seconds_after_arm": 25.391279458999634,
+        "seconds_before_process_end": 0.18326401710510254,
+        "start_epoch": 1791424135.081
+      },
+      {
+        "case": "s_bit",
+        "emission_within_arm_wait": true,
+        "end_epoch": 1791424390.352,
+        "frame": "0002ac380000",
+        "go_id": "go-s_bit",
+        "go_sha256": "50fb1745663e8b694282ba4e0b4f287bf37a6b515e73cd158c49fb42ba7e7490",
+        "go_within_arm_wait": true,
+        "one_emission_receipt": true,
+        "owner_emission_ordinal": 4,
+        "receipt_host_end": "2026-10-08T01:53:10.352+00:00",
+        "receipt_host_start": "2026-10-08T01:53:10.302+00:00",
+        "receipt_id": "hd26-g-sent-s_bit",
+        "receipt_sha256": "0c8cc25003136a46fba029da74f0ac6463f9c40c23cebba379c67bce054a1df6",
+        "restoration": {
+          "fields": {
+            "after_clear_tx": {
+              "errors": 0,
+              "irq": "0x00000002",
+              "level": 0,
+              "mode": "STBY_XOSC",
+              "rx": 3,
+              "tx": 39
+            },
+            "baseline_ok": true,
+            "cleared_sys_irq": "0x00000002",
+            "final": {
+              "active": false,
+              "errors": 0,
+              "irq": "0x00000000",
+              "level": 0,
+              "mode": "STBY_XOSC",
+              "rx": 3,
+              "tx": 39
+            },
+            "utc": "2026-10-08T01:54:00.797+00:00"
+          },
+          "message_id": "hd26-g-restored-s_bit",
+          "sha256": "3d53c6ab8b347ef2d8704dd2a3492abb97e42f2bc8f01d23b4dfbea1b173200d"
+        },
+        "seconds_after_arm": 22.63893413543701,
+        "seconds_before_abort": 22.610168933868408,
+        "seconds_before_process_end": 22.774910926818848,
+        "start_epoch": 1791424390.302
+      },
+      {
+        "case": "s_both",
+        "emission_within_arm_wait": true,
+        "end_epoch": 1791425145.462,
+        "frame": "000238ac0000",
+        "go_id": "go-s_both",
+        "go_sha256": "3bc9d3cb9778f8d255f6e07974838f99f0f7d0db8e066c6bb5b9e624278ca2d4",
+        "go_within_arm_wait": true,
+        "one_emission_receipt": true,
+        "owner_emission_ordinal": 9,
+        "receipt_host_end": "2026-10-08T02:05:45.462+00:00",
+        "receipt_host_start": "2026-10-08T02:05:45.133+00:00",
+        "receipt_id": "hd26-g-sent-s_both",
+        "receipt_sha256": "a268530c0ce4685e25cbdedd4ee4b7bc55dbeb3f76d27f5e86ecc7b6f06b8421",
+        "restoration": {
+          "fields": {
+            "after_clear_tx": {
+              "errors": 0,
+              "irq": "0x00000002",
+              "level": 0,
+              "mode": "STBY_XOSC",
+              "rx": 3,
+              "tx": 39
+            },
+            "baseline_ok": true,
+            "cleared_sys_irq": "0x00000002",
+            "final": {
+              "active": false,
+              "errors": 0,
+              "irq": "0x00000000",
+              "level": 0,
+              "mode": "STBY_XOSC",
+              "rx": 3,
+              "tx": 39
+            },
+            "utc": "2026-10-08T02:06:39.601+00:00"
+          },
+          "message_id": "hd26-g-restored-s_both",
+          "sha256": "e928717abee50e9febff531b80cdfdbb36c3f84eb7bfb751fcbc6f2556a9236a"
+        },
+        "seconds_after_arm": 18.803094387054443,
+        "seconds_before_abort": 26.1586492061615,
+        "seconds_before_process_end": 26.336939334869385,
+        "start_epoch": 1791425145.133
+      },
+      {
+        "case": "s_byte",
+        "emission_within_arm_wait": true,
+        "end_epoch": 1791424588.507,
+        "frame": "0002351c0000",
+        "go_id": "go-s_byte",
+        "go_sha256": "5caf9c4a02f88e24af4af70fdd504074b73fcc743133fbc4b308da01cbc88f8b",
+        "go_within_arm_wait": true,
+        "one_emission_receipt": true,
+        "owner_emission_ordinal": 6,
+        "receipt_host_end": "2026-10-08T01:56:28.507+00:00",
+        "receipt_host_start": "2026-10-08T01:56:28.365+00:00",
+        "receipt_id": "hd26-g-sent-s_byte",
+        "receipt_sha256": "daf32aaa6f40501583f1a13c69ab76ccc1f779c3d81ac2317993ac47f5b50a3b",
+        "restoration": {
+          "fields": {
+            "after_clear_tx": {
+              "errors": 0,
+              "irq": "0x00000002",
+              "level": 0,
+              "mode": "STBY_XOSC",
+              "rx": 3,
+              "tx": 39
+            },
+            "baseline_ok": true,
+            "cleared_sys_irq": "0x00000002",
+            "final": {
+              "active": false,
+              "errors": 0,
+              "irq": "0x00000000",
+              "level": 0,
+              "mode": "STBY_XOSC",
+              "rx": 3,
+              "tx": 39
+            },
+            "utc": "2026-10-08T01:58:10.033+00:00"
+          },
+          "message_id": "hd26-g-restored-s_byte",
+          "sha256": "655b716e3f0e9824e94389d695edfdab63402e962969ce7586637b6b32771ed0"
+        },
+        "seconds_after_arm": 22.50970458984375,
+        "seconds_before_abort": 22.65316104888916,
+        "seconds_before_process_end": 22.805034637451172,
+        "start_epoch": 1791424588.365
+      },
+      {
+        "case": "s_pos",
+        "emission_within_arm_wait": true,
+        "end_epoch": 1791424221.394,
+        "frame": "00021c350000",
+        "go_id": "go-s_pos",
+        "go_sha256": "68464da9ad5ac94d16093b523d78fa64b6af4bae175af6b98d6a0c7d47d60c41",
+        "go_within_arm_wait": true,
+        "one_emission_receipt": true,
+        "owner_emission_ordinal": 2,
+        "receipt_host_end": "2026-10-08T01:50:21.394+00:00",
+        "receipt_host_start": "2026-10-08T01:50:21.204+00:00",
+        "receipt_id": "hd26-g-sent-s_pos",
+        "receipt_sha256": "3a41185048f14f89e1ee1731c63b844f7fc00c9253f3b8ca082025f73d40edb5",
+        "restoration": {
+          "fields": {
+            "after_clear_tx": {
+              "errors": 0,
+              "irq": "0x00000002",
+              "level": 0,
+              "mode": "STBY_XOSC",
+              "rx": 3,
+              "tx": 39
+            },
+            "baseline_ok": true,
+            "cleared_sys_irq": "0x00000002",
+            "final": {
+              "active": false,
+              "errors": 0,
+              "irq": "0x00000000",
+              "level": 0,
+              "mode": "STBY_XOSC",
+              "rx": 3,
+              "tx": 39
+            },
+            "utc": "2026-10-08T01:51:01.745+00:00"
+          },
+          "message_id": "hd26-g-restored-s_pos",
+          "sha256": "6d30dfa84c56e971a9911bb167692fd4b959b4a8066613eda2e2cbca7ff0bde3"
+        },
+        "seconds_after_arm": 23.64615225791931,
+        "seconds_before_process_end": 0.22493648529052734,
+        "start_epoch": 1791424221.204
+      },
+      {
+        "case": "s_pos_repeat",
+        "emission_within_arm_wait": true,
+        "end_epoch": 1791425237.32,
+        "frame": "00021c350000",
+        "go_id": "go-s_pos_repeat",
+        "go_sha256": "c2f333e62de8876e77b00123ba1566b4c582ca79efd0b84364e823da73ab37f6",
+        "go_within_arm_wait": true,
+        "one_emission_receipt": true,
+        "owner_emission_ordinal": 10,
+        "receipt_host_end": "2026-10-08T02:07:17.320+00:00",
+        "receipt_host_start": "2026-10-08T02:07:17.021+00:00",
+        "receipt_id": "hd26-g-sent-s_pos_repeat",
+        "receipt_sha256": "2ac09a45d96a01aab87378a517dcbb0374415083347572cd9be44154caf9ba1a",
+        "restoration": {
+          "baseline_ok_reported": true,
+          "finish_message_sha256": "9bcb3b9b0850412c42d58e5413f821d354979dbd54365a3fd704e74979e692f3",
+          "reported_utc": "2026-10-08T02:07:47Z",
+          "result_revision": 5,
+          "result_sha256": "2662deb60b58f5ea3bc26f155ef733600f1ad6b7ed1f70e8f3c76c052cf56645",
+          "source": "owner terminal result; reported whole-second final state"
+        },
+        "seconds_after_arm": 19.687071323394775,
+        "seconds_before_process_end": 0.17110872268676758,
+        "start_epoch": 1791425237.021
+      }
+    ]
+  },
+  "limitations": [
+    "Separate NSS controls and owner receipts support negative stimuli; timeout outputs contain no contemporaneous waveform.",
+    "No valid FPGA header before abort in negative cases. All-0x55 post-abort cleanup records are invalid, not trigger-status evidence.",
+    "Host receipt times establish emission within wait, not sample-level synchronization.",
+    "One delayed GO arrived after ctl_both expired; retained as scheduling-only inconclusive and replaced by a separately named valid control.",
+    "Results do not establish all FPGA internals or untested configurations."
+  ],
+  "radio_owner_result": {
+    "id": "dslcap-g-radio-20261008",
+    "revision": 5,
+    "state": "complete",
+    "result": "# dslcap-g-radio-20261008: terminal result (hydra-develop-26)\n\nCarrier for every emission: ONE mcp_radio app-path frame (WriteTxFifo cmd 0002), pi133, mode 0, 8 MHz request. No helper, no speed change, no RF.\nBaseline (start): STBY_XOSC, sys irq 0, errors 0, TX FIFO 0, FIFO flags rx 0x03 / tx 0x27.\n\n| # | case | GO id | MOSI | host emission window (UTC 2026-10-08) | result | lead CAPTURE_COMPLETE |\n|---|---|---|---|---|---|---|\n| 1 | ctl_pos | go-ctl_pos | 00021c350000 | 01:48:55.081 to 01:48:55.374 | status 0, completed 1, no abort/cmd_err | simple NSS: exact frame, unique 1c35 |\n| 2 | s_pos | go-s_pos | 00021c350000 | 01:50:21.204 to 01:50:21.394 | status 0, completed 1, no abort/cmd_err | serial 1c35/16: **HIT** K at bit 31 |\n| 3 | ctl_bit | go-ctl_bit | 0002ac380000 | 01:51:46.023 to 01:51:46.176 | status 0, completed 1, no abort/cmd_err | simple NSS: exact frame, unique ac38, no 1c35 |\n| 4 | s_bit | go-s_bit | 0002ac380000 | 01:53:10.302 to 01:53:10.352 | status 0, completed 1, no abort/cmd_err | serial 1c35/16: no trigger, native exit 16 (post-abort dummy only during FORCE_RDY cleanup) |\n| 5 | ctl_byte | go-ctl_byte | 0002351c0000 | 01:55:02.204 to 01:55:02.481 | status 0, completed 1, no abort/cmd_err | simple NSS: exact frame, unique 351c, no 1c35 |\n| 6 | s_byte | go-s_byte | 0002351c0000 | 01:56:28.365 to 01:56:28.507 | status 0, completed 1, no abort/cmd_err | serial 1c35/16: no trigger, exit 16 |\n| 7 | ctl_both | go-ctl_both | 000238ac0000 | 02:01:22.222 to 02:01:22.503 | status 0, completed 1, no abort/cmd_err | **EXCLUDED**: GO delivered after capture expired (01:59:10.710Z); emitted to un-armed analyzer; inconclusive scheduling |\n| 8 | ctl_both_retry | go-ctl_both_retry | 000238ac0000 | 02:04:37.924 to 02:04:38.185 | status 0, completed 1, no abort/cmd_err | simple NSS: exact frame, unique 38ac, other variants absent |\n| 9 | s_both | go-s_both | 000238ac0000 | 02:05:45.133 to 02:05:45.462 | status 0, completed 1, no abort/cmd_err | serial 1c35/16: no trigger, exit 16 |\n| 10 | s_pos_repeat | go-s_pos_repeat | 00021c350000 | 02:07:17.021 to 02:07:17.320 | status 0, completed 1, no abort/cmd_err | serial 1c35/16: **HIT** K at bit 31 (final positive) |\n\nAll 10 emitted exactly once; no retries; repeated GO ids would have been rejected (none occurred).\nCounting note: the lead labelled s_pos_repeat 'emission 9', i.e. excluding the expired ctl_both. Counting every SPI emission it is #10, within the authorized ceiling of 10.\nReceipt notes: the ctl_pos SENT was initially blank (wrapper bug). A corrected receipt (hd26-g-sent-ctl_pos-v2) was sent from saved evidence with no retransmission. s_bit evidence wording corrected per the lead.\n\nRestoration after each of the 10 (all baseline_ok=true): clear_tx \u2192 TX level 0; FIFO flags 03/27 unchanged; sys irq 0x00000002 (FIFO_TX newly raised) \u2192 clear_irq_status{0x2} only \u2192 0x00000000; errors 0; STBY_XOSC.\n\n## Final state (02:07:47Z)\n- pi133 radio: irq 0x00000000, STBY_XOSC, errors 0, TX FIFO 0, FIFO flags 03/27. Equals the baseline.\n- spidev readback: mode 0 (mode32 0x0), bits 8, lsb 0, default max 8000000 Hz (original). App path kept its per-transfer 8 MHz request throughout.\n- App: `./mcp_radio --mcp-http` pid 7973, started Wed Oct 7 13:02:58 2026, not restarted.\n- Pins unchanged: GPIO4 op hi (NRST), GPIO5 ip lo (DIO8), GPIO6 ip pu hi, GPIO18 ip pd lo (BUSY), GPIO20 ip pd lo.\n- No GPIO/RF/SetTx/reset/config/DIO/IRQ-mask writes, helpers, dependencies, rebuilds or repo edits. **pi134 untouched.**\n- Host evidence: scratchpad/g/ (per-case JSON, sent/restore receipts, log.txt, seen_go.txt).\n",
+    "result_sha256": "2662deb60b58f5ea3bc26f155ef733600f1ad6b7ed1f70e8f3c76c052cf56645",
+    "consumed_and_acknowledged": true
+  },
+  "usb_released": {
+    "device": "/dev/bus/usb/001/012",
+    "fuser_exit": 1,
+    "fuser_output": "",
+    "meaning": "No process reported holding device after final native capture"
+  },
+  "independent_verification": {
+    "cases": [
+      {
+        "exit": 0,
+        "files": {
+          "/tmp/dslcap-g-live/ctl_pos.json": {
+            "bytes": 702,
+            "sha256": "4d9d1c3295d34013ca0f355e38b414662f2198b1bc85727f112941c2dfff83ce"
+          },
+          "/tmp/dslcap-g-live/ctl_pos.raw": {
+            "bytes": 1000496,
+            "sha256": "1ffa2540f3772ed0e3cba80c9d8ca71b2b2595123b7c53d294e4a32c1b100830"
+          },
+          "/tmp/dslcap-g-live/ctl_pos.stderr": {
+            "bytes": 3179,
+            "sha256": "0ef4119f04698cc3e2b5e1fd28743ecb5a8dbf1f573cf30bf229800999a8856e"
+          },
+          "/tmp/dslcap-g-live/ctl_pos.usb.log": {
+            "bytes": 61518,
+            "sha256": "679fdc860a387288b94fa66f2b3103389c120b856fa655115ba2b4eededeabcf"
+          },
+          "/tmp/dslcap-g-verify/ctl_pos.json": {
+            "bytes": 10892,
+            "sha256": "19c62f9dd6a1497495a2d3db9874d119186f1f2b36f0f18bff7fc02036ba4101"
+          }
+        },
+        "fpga_header": {
+          "after_force_seconds": null,
+          "after_stop_seconds": null,
+          "aligned_samples": 1000448,
+          "check_id": 1431655765,
+          "epoch": 1791424135.369565,
+          "meaningful_trigger_sample": 100088,
+          "ram_saddr": 10524448,
+          "real_pos_raw": 100088,
+          "remaining": 0,
+          "status_word": 1,
+          "triggered": true
+        },
+        "kind": "simple",
+        "label": "ctl_pos",
+        "match_counts": {
+          "0x1c35": 1,
+          "0x351c": 0,
+          "0x38ac": 0,
+          "0xac38": 0
+        },
+        "miso_hex": "04 52 00 00 00 00",
+        "mosi_hex": "00 02 1c 35 00 00",
+        "owner_receipt": {
+          "case": "ctl_pos",
+          "emission_within_arm_wait": true,
+          "end_epoch": 1791424135.374,
+          "frame": "00021c350000",
+          "go_id": "go-ctl_pos",
+          "go_sha256": "64f742c262245832d3735e92ed68177cbbc9d5fb41e26d9fb8243f4c1d41db39",
+          "go_within_arm_wait": true,
+          "one_emission_receipt": true,
+          "owner_emission_ordinal": 1,
+          "receipt_host_end": "2026-10-08T01:48:55.374Z",
+          "receipt_host_start": "2026-10-08T01:48:55.081Z",
+          "receipt_id": "hd26-g-sent-ctl_pos-v2",
+          "receipt_sha256": "f5424b9d54cb83619c9b021b7a2ef31bc711627d82728c3aaf6377f1e6fa1976",
+          "restoration": {
+            "fields": {
+              "after_clear_tx": {
+                "errors": 0,
+                "irq": "0x00000002",
+                "level": 0,
+                "mode": "STBY_XOSC",
+                "rx": 3,
+                "tx": 39
+              },
+              "baseline_ok": true,
+              "cleared_sys_irq": "0x00000002",
+              "final": {
+                "active": false,
+                "errors": 0,
+                "irq": "0x00000000",
+                "level": 0,
+                "mode": "STBY_XOSC",
+                "rx": 3,
+                "tx": 39
+              },
+              "utc": "2026-10-08T01:49:41.209+00:00"
+            },
+            "message_id": "hd26-g-restored-ctl_pos",
+            "sha256": "045dd6a3c64c4a350f934ab51f13c053bc8947c80a51c6f5301a0662b735b191"
+          },
+          "seconds_after_arm": 25.391279458999634,
+          "seconds_before_process_end": 0.18326401710510254,
+          "start_epoch": 1791424135.081
+        },
+        "register_sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+        "rolling_matches": [
+          {
+            "bit_offset_origin": "nss frame",
+            "delta_from_trigger_samples": 929,
+            "end_bit_offset": 31,
+            "end_sample": 101017,
+            "start_bit_in_byte": 0,
+            "start_bit_offset": 16,
+            "start_byte_offset": 2,
+            "start_sample": 100812,
+            "transaction": 0,
+            "value": "0x1c35"
+          }
+        ],
+        "samples": 1000448,
+        "trigger_sample": 100088,
+        "valid_matrix_case": true,
+        "verdict": "PASS"
+      },
+      {
+        "exit": 0,
+        "files": {
+          "/tmp/dslcap-g-live/s_pos.json": {
+            "bytes": 761,
+            "sha256": "4f1d1b7c3b09dfefca49efcf93300042a64c13e863b57d5fc1c795197b92b91b"
+          },
+          "/tmp/dslcap-g-live/s_pos.raw": {
+            "bytes": 1000496,
+            "sha256": "2b4a807a190b64d7b279abbc68d9bb87b10611d4c13149821ddcd731963fb97d"
+          },
+          "/tmp/dslcap-g-live/s_pos.stderr": {
+            "bytes": 3195,
+            "sha256": "03a0a5571357503378f8bf41651c8e16fe3136612708b5108270e01f2c520221"
+          },
+          "/tmp/dslcap-g-live/s_pos.usb.log": {
+            "bytes": 58773,
+            "sha256": "448b7f0cc4f161309fff45239b57bf811b0e2ce1ff0a6306b4c33ad43a1c38c6"
+          },
+          "/tmp/dslcap-g-verify/s_pos.json": {
+            "bytes": 11431,
+            "sha256": "60f6f29430cb5d62ce32a13ad58aadac27904568041edebde1a84d2aa090c545"
+          }
+        },
+        "fpga_header": {
+          "after_force_seconds": null,
+          "after_stop_seconds": null,
+          "aligned_samples": 1000448,
+          "check_id": 1431655765,
+          "epoch": 1791424221.390174,
+          "meaningful_trigger_sample": 100081,
+          "ram_saddr": 2586240,
+          "real_pos_raw": 100081,
+          "remaining": 0,
+          "status_word": 1,
+          "triggered": true
+        },
+        "kind": "serial",
+        "label": "s_pos",
+        "match_counts": {
+          "0x1c35": 1,
+          "0x351c": 0,
+          "0x38ac": 0,
+          "0xac38": 0
+        },
+        "miso_hex": "04 52 00 00 00 00",
+        "mosi_hex": "00 02 1c 35 00 00",
+        "owner_receipt": {
+          "case": "s_pos",
+          "emission_within_arm_wait": true,
+          "end_epoch": 1791424221.394,
+          "frame": "00021c350000",
+          "go_id": "go-s_pos",
+          "go_sha256": "68464da9ad5ac94d16093b523d78fa64b6af4bae175af6b98d6a0c7d47d60c41",
+          "go_within_arm_wait": true,
+          "one_emission_receipt": true,
+          "owner_emission_ordinal": 2,
+          "receipt_host_end": "2026-10-08T01:50:21.394+00:00",
+          "receipt_host_start": "2026-10-08T01:50:21.204+00:00",
+          "receipt_id": "hd26-g-sent-s_pos",
+          "receipt_sha256": "3a41185048f14f89e1ee1731c63b844f7fc00c9253f3b8ca082025f73d40edb5",
+          "restoration": {
+            "fields": {
+              "after_clear_tx": {
+                "errors": 0,
+                "irq": "0x00000002",
+                "level": 0,
+                "mode": "STBY_XOSC",
+                "rx": 3,
+                "tx": 39
+              },
+              "baseline_ok": true,
+              "cleared_sys_irq": "0x00000002",
+              "final": {
+                "active": false,
+                "errors": 0,
+                "irq": "0x00000000",
+                "level": 0,
+                "mode": "STBY_XOSC",
+                "rx": 3,
+                "tx": 39
+              },
+              "utc": "2026-10-08T01:51:01.745+00:00"
+            },
+            "message_id": "hd26-g-restored-s_pos",
+            "sha256": "6d30dfa84c56e971a9911bb167692fd4b959b4a8066613eda2e2cbca7ff0bde3"
+          },
+          "seconds_after_arm": 23.64615225791931,
+          "seconds_before_process_end": 0.22493648529052734,
+          "start_epoch": 1791424221.204
+        },
+        "register_sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+        "rolling_matches": [
+          {
+            "bit_offset_origin": "nss frame",
+            "delta_from_trigger_samples": 0,
+            "end_bit_offset": 31,
+            "end_sample": 100081,
+            "start_bit_in_byte": 0,
+            "start_bit_offset": 16,
+            "start_byte_offset": 2,
+            "start_sample": 99877,
+            "transaction": 0,
+            "value": "0x1c35"
+          }
+        ],
+        "samples": 1000448,
+        "trigger_sample": 100081,
+        "valid_matrix_case": true,
+        "verdict": "PASS"
+      },
+      {
+        "exit": 0,
+        "files": {
+          "/tmp/dslcap-g-live/ctl_bit.json": {
+            "bytes": 702,
+            "sha256": "e2690d440421e9f36cd6b4ed5615b804114460f2c352792a14b17df34be23906"
+          },
+          "/tmp/dslcap-g-live/ctl_bit.raw": {
+            "bytes": 1000496,
+            "sha256": "67ab512b652cd2ab46cf3e7c5bb4e76ece56392a7e99962bfa1d916987befb47"
+          },
+          "/tmp/dslcap-g-live/ctl_bit.stderr": {
+            "bytes": 3179,
+            "sha256": "b33e1f4c51d15419d123e3f334de64404562c86a4695c71d4db902c73a7492af"
+          },
+          "/tmp/dslcap-g-live/ctl_bit.usb.log": {
+            "bytes": 60969,
+            "sha256": "7de3670bcc0a0c32c34241d2a3f50aac2e534f50609217875454e6740cfbe96a"
+          },
+          "/tmp/dslcap-g-verify/ctl_bit.json": {
+            "bytes": 10910,
+            "sha256": "992f087a547dd30478ed810df7efc16bc0bbb1061ff6b430e592345e7327578f"
+          }
+        },
+        "fpga_header": {
+          "after_force_seconds": null,
+          "after_stop_seconds": null,
+          "aligned_samples": 1000448,
+          "check_id": 1431655765,
+          "epoch": 1791424306.17242,
+          "meaningful_trigger_sample": 100082,
+          "ram_saddr": 10521280,
+          "real_pos_raw": 100082,
+          "remaining": 0,
+          "status_word": 1,
+          "triggered": true
+        },
+        "kind": "simple",
+        "label": "ctl_bit",
+        "match_counts": {
+          "0x1c35": 0,
+          "0x351c": 0,
+          "0x38ac": 0,
+          "0xac38": 1
+        },
+        "miso_hex": "04 52 00 00 00 00",
+        "mosi_hex": "00 02 ac 38 00 00",
+        "owner_receipt": {
+          "case": "ctl_bit",
+          "emission_within_arm_wait": true,
+          "end_epoch": 1791424306.176,
+          "frame": "0002ac380000",
+          "go_id": "go-ctl_bit",
+          "go_sha256": "147114ed9de57f6f7b81da8b637a4fbba80dc59f1cd3c1da1a4cbf316544f1fe",
+          "go_within_arm_wait": true,
+          "one_emission_receipt": true,
+          "owner_emission_ordinal": 3,
+          "receipt_host_end": "2026-10-08T01:51:46.176+00:00",
+          "receipt_host_start": "2026-10-08T01:51:46.023+00:00",
+          "receipt_id": "hd26-g-sent-ctl_bit",
+          "receipt_sha256": "2048f39e4e133d581fb94d3f34009deab70dfae2d1b82f0bc13f0fe0c2081a7e",
+          "restoration": {
+            "fields": {
+              "after_clear_tx": {
+                "errors": 0,
+                "irq": "0x00000002",
+                "level": 0,
+                "mode": "STBY_XOSC",
+                "rx": 3,
+                "tx": 39
+              },
+              "baseline_ok": true,
+              "cleared_sys_irq": "0x00000002",
+              "final": {
+                "active": false,
+                "errors": 0,
+                "irq": "0x00000000",
+                "level": 0,
+                "mode": "STBY_XOSC",
+                "rx": 3,
+                "tx": 39
+              },
+              "utc": "2026-10-08T01:52:25.871+00:00"
+            },
+            "message_id": "hd26-g-restored-ctl_bit",
+            "sha256": "c70abca63e55a2a7bd899a19b0abcbb7efcba7599301754bc29b8ecdeb73c6d8"
+          },
+          "seconds_after_arm": 25.184906005859375,
+          "seconds_before_process_end": 0.22938156127929688,
+          "start_epoch": 1791424306.023
+        },
+        "register_sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+        "rolling_matches": [
+          {
+            "bit_offset_origin": "nss frame",
+            "delta_from_trigger_samples": 916,
+            "end_bit_offset": 31,
+            "end_sample": 100998,
+            "start_bit_in_byte": 0,
+            "start_bit_offset": 16,
+            "start_byte_offset": 2,
+            "start_sample": 100793,
+            "transaction": 0,
+            "value": "0xac38"
+          }
+        ],
+        "samples": 1000448,
+        "trigger_sample": 100082,
+        "valid_matrix_case": true,
+        "verdict": "PASS"
+      },
+      {
+        "exit": 16,
+        "files": {
+          "/tmp/dslcap-g-live/s_bit.json": {
+            "bytes": 759,
+            "sha256": "e357d550543ebbeb93b72f45d9507d726f2c0bd76162002398992e063c1cab65"
+          },
+          "/tmp/dslcap-g-live/s_bit.raw": {
+            "bytes": 27,
+            "sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab"
+          },
+          "/tmp/dslcap-g-live/s_bit.stderr": {
+            "bytes": 3277,
+            "sha256": "cb130b300bec99c304389883f76ba2f6f5c3dbe9a11b90a7990497eddfc286d7"
+          },
+          "/tmp/dslcap-g-live/s_bit.usb.log": {
+            "bytes": 90701,
+            "sha256": "4a4dc1d20196ec1d144ac6e613c5b90689c263645423feebb4a76a2bc247e963"
+          },
+          "/tmp/dslcap-g-verify/s_bit.json": {
+            "bytes": 7429,
+            "sha256": "3d18ca6f60a03988cadad7638a697bbc74954dd3faf565efd696a4aa45a897f7"
+          }
+        },
+        "kind": "serial",
+        "label": "s_bit",
+        "owner_receipt": {
+          "case": "s_bit",
+          "emission_within_arm_wait": true,
+          "end_epoch": 1791424390.352,
+          "frame": "0002ac380000",
+          "go_id": "go-s_bit",
+          "go_sha256": "50fb1745663e8b694282ba4e0b4f287bf37a6b515e73cd158c49fb42ba7e7490",
+          "go_within_arm_wait": true,
+          "one_emission_receipt": true,
+          "owner_emission_ordinal": 4,
+          "receipt_host_end": "2026-10-08T01:53:10.352+00:00",
+          "receipt_host_start": "2026-10-08T01:53:10.302+00:00",
+          "receipt_id": "hd26-g-sent-s_bit",
+          "receipt_sha256": "0c8cc25003136a46fba029da74f0ac6463f9c40c23cebba379c67bce054a1df6",
+          "restoration": {
+            "fields": {
+              "after_clear_tx": {
+                "errors": 0,
+                "irq": "0x00000002",
+                "level": 0,
+                "mode": "STBY_XOSC",
+                "rx": 3,
+                "tx": 39
+              },
+              "baseline_ok": true,
+              "cleared_sys_irq": "0x00000002",
+              "final": {
+                "active": false,
+                "errors": 0,
+                "irq": "0x00000000",
+                "level": 0,
+                "mode": "STBY_XOSC",
+                "rx": 3,
+                "tx": 39
+              },
+              "utc": "2026-10-08T01:54:00.797+00:00"
+            },
+            "message_id": "hd26-g-restored-s_bit",
+            "sha256": "3d53c6ab8b347ef2d8704dd2a3492abb97e42f2bc8f01d23b4dfbea1b173200d"
+          },
+          "seconds_after_arm": 22.63893413543701,
+          "seconds_before_abort": 22.610168933868408,
+          "seconds_before_process_end": 22.774910926818848,
+          "start_epoch": 1791424390.302
+        },
+        "register_sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+        "samples": 0,
+        "timeout": {
+          "abort_epoch": 1791424412.962169,
+          "callbacks": [
+            {
+              "ep": 134,
+              "epoch": 1791424412.962537,
+              "line": "1791424412.962537 TRIG_HEADER ep=0x86 status=0 req=512 xfer=512 seq_total_in=512 len=64 data=55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555",
+              "req": 512,
+              "status": 0,
+              "xfer": 512
+            },
+            {
+              "ep": 134,
+              "epoch": 1791424412.985025,
+              "line": "1791424412.985025 BULK_IN_CB ep=0x86 status=0 req=1048576 xfer=1048576 seq_total_in=1049088 len=0",
+              "req": 1048576,
+              "status": 0,
+              "xfer": 1048576
+            }
+          ],
+          "caveat": "No valid FPGA status available. Separate control does not prove concurrent failed-case waveform; owner emission receipt required.",
+          "classification": "timeout exit16; no valid preabort header; postabort cleanup only",
+          "cleanup_data_callbacks": [
+            {
+              "ep": 134,
+              "epoch": 1791424412.985025,
+              "line": "1791424412.985025 BULK_IN_CB ep=0x86 status=0 req=1048576 xfer=1048576 seq_total_in=1049088 len=0",
+              "req": 1048576,
+              "status": 0,
+              "xfer": 1048576
+            }
+          ],
+          "frozen_parser_expected_rejection": "header remaining exceeds armed samples",
+          "invalid_cleanup_headers": [
+            {
+              "after_abort_seconds": 0.0003681182861328125,
+              "epoch": 1791424412.962537,
+              "fields": [
+                1431655765,
+                1431655765,
+                1431655765,
+                1431655765,
+                1431655765,
+                1431655765
+              ],
+              "reason": "all-0x55 dummy; remaining exceeds arm count",
+              "remaining": 6148914691236517205
+            }
+          ],
+          "preabort_completed_in": [],
+          "samples": 0,
+          "stdout_bytes": 27
+        },
+        "valid_matrix_case": true,
+        "verdict": "PASS"
+      },
+      {
+        "exit": 0,
+        "files": {
+          "/tmp/dslcap-g-live/ctl_byte.json": {
+            "bytes": 704,
+            "sha256": "858be2d676d849c6c4f753404f645f3c3875443caf13b6169004691eaefbaa2f"
+          },
+          "/tmp/dslcap-g-live/ctl_byte.raw": {
+            "bytes": 1000496,
+            "sha256": "07b770f1ac587e1e55b2580fd315a60ea77f6c214f7d14a3af72c4ed6a802428"
+          },
+          "/tmp/dslcap-g-live/ctl_byte.stderr": {
+            "bytes": 3179,
+            "sha256": "6f424da789d36219e5a1d2a110bd1d8debcb63a6e5631db975e71e28011a346f"
+          },
+          "/tmp/dslcap-g-live/ctl_byte.usb.log": {
+            "bytes": 61701,
+            "sha256": "21885c496be89b543365f0e7b0b31b531c03b730690d16de67f260fe77b537e7"
+          },
+          "/tmp/dslcap-g-verify/ctl_byte.json": {
+            "bytes": 10918,
+            "sha256": "44a50ac346c51d7a0603c2e8bb536e0a9dd7991c92544c94abb1d827abbb4838"
+          }
+        },
+        "fpga_header": {
+          "after_force_seconds": null,
+          "after_stop_seconds": null,
+          "aligned_samples": 1000448,
+          "check_id": 1431655765,
+          "epoch": 1791424502.477084,
+          "meaningful_trigger_sample": 100079,
+          "ram_saddr": 16123072,
+          "real_pos_raw": 100079,
+          "remaining": 0,
+          "status_word": 1,
+          "triggered": true
+        },
+        "kind": "simple",
+        "label": "ctl_byte",
+        "match_counts": {
+          "0x1c35": 0,
+          "0x351c": 1,
+          "0x38ac": 0,
+          "0xac38": 0
+        },
+        "miso_hex": "04 52 00 00 00 00",
+        "mosi_hex": "00 02 35 1c 00 00",
+        "owner_receipt": {
+          "case": "ctl_byte",
+          "emission_within_arm_wait": true,
+          "end_epoch": 1791424502.481,
+          "frame": "0002351c0000",
+          "go_id": "go-ctl_byte",
+          "go_sha256": "e54f33697d40f9e3615333638745033f5f43afe19cd4a546d6498f0144cdad1b",
+          "go_within_arm_wait": true,
+          "one_emission_receipt": true,
+          "owner_emission_ordinal": 5,
+          "receipt_host_end": "2026-10-08T01:55:02.481+00:00",
+          "receipt_host_start": "2026-10-08T01:55:02.204+00:00",
+          "receipt_id": "hd26-g-sent-ctl_byte",
+          "receipt_sha256": "1987b55abc238f0b30d788a58d8d265f11e93c070fa79abe46bbe3a66a101239",
+          "restoration": {
+            "fields": {
+              "after_clear_tx": {
+                "errors": 0,
+                "irq": "0x00000002",
+                "level": 0,
+                "mode": "STBY_XOSC",
+                "rx": 3,
+                "tx": 39
+              },
+              "baseline_ok": true,
+              "cleared_sys_irq": "0x00000002",
+              "final": {
+                "active": false,
+                "errors": 0,
+                "irq": "0x00000000",
+                "level": 0,
+                "mode": "STBY_XOSC",
+                "rx": 3,
+                "tx": 39
+              },
+              "utc": "2026-10-08T01:55:52.619+00:00"
+            },
+            "message_id": "hd26-g-restored-ctl_byte",
+            "sha256": "48beb333a55395d5fa3f097ee80f9ccb6f793f37493963ea3fa98524474a5b32"
+          },
+          "seconds_after_arm": 25.5080144405365,
+          "seconds_before_process_end": 0.1769864559173584,
+          "start_epoch": 1791424502.204
+        },
+        "register_sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+        "rolling_matches": [
+          {
+            "bit_offset_origin": "nss frame",
+            "delta_from_trigger_samples": 888,
+            "end_bit_offset": 31,
+            "end_sample": 100967,
+            "start_bit_in_byte": 0,
+            "start_bit_offset": 16,
+            "start_byte_offset": 2,
+            "start_sample": 100762,
+            "transaction": 0,
+            "value": "0x351c"
+          }
+        ],
+        "samples": 1000448,
+        "trigger_sample": 100079,
+        "valid_matrix_case": true,
+        "verdict": "PASS"
+      },
+      {
+        "exit": 16,
+        "files": {
+          "/tmp/dslcap-g-live/s_byte.json": {
+            "bytes": 763,
+            "sha256": "ab8b3c928844cbba00e34dc4a72c8411b9b9d4cceba4d34784cf8b8fc569f00a"
+          },
+          "/tmp/dslcap-g-live/s_byte.raw": {
+            "bytes": 27,
+            "sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab"
+          },
+          "/tmp/dslcap-g-live/s_byte.stderr": {
+            "bytes": 3277,
+            "sha256": "fb603ce565caab0a973de277b1592eb14bed27b7e732111259ab10e5455ae96d"
+          },
+          "/tmp/dslcap-g-live/s_byte.usb.log": {
+            "bytes": 90701,
+            "sha256": "10c6d32305ca5bb77e3293b7d59676aded81958f2a2ca0577f859f0684350183"
+          },
+          "/tmp/dslcap-g-verify/s_byte.json": {
+            "bytes": 7433,
+            "sha256": "67ada4083dc5c9135b5df7aa05fbd25425d61a9b2a097d96c984f2f6d241e10f"
+          }
+        },
+        "kind": "serial",
+        "label": "s_byte",
+        "owner_receipt": {
+          "case": "s_byte",
+          "emission_within_arm_wait": true,
+          "end_epoch": 1791424588.507,
+          "frame": "0002351c0000",
+          "go_id": "go-s_byte",
+          "go_sha256": "5caf9c4a02f88e24af4af70fdd504074b73fcc743133fbc4b308da01cbc88f8b",
+          "go_within_arm_wait": true,
+          "one_emission_receipt": true,
+          "owner_emission_ordinal": 6,
+          "receipt_host_end": "2026-10-08T01:56:28.507+00:00",
+          "receipt_host_start": "2026-10-08T01:56:28.365+00:00",
+          "receipt_id": "hd26-g-sent-s_byte",
+          "receipt_sha256": "daf32aaa6f40501583f1a13c69ab76ccc1f779c3d81ac2317993ac47f5b50a3b",
+          "restoration": {
+            "fields": {
+              "after_clear_tx": {
+                "errors": 0,
+                "irq": "0x00000002",
+                "level": 0,
+                "mode": "STBY_XOSC",
+                "rx": 3,
+                "tx": 39
+              },
+              "baseline_ok": true,
+              "cleared_sys_irq": "0x00000002",
+              "final": {
+                "active": false,
+                "errors": 0,
+                "irq": "0x00000000",
+                "level": 0,
+                "mode": "STBY_XOSC",
+                "rx": 3,
+                "tx": 39
+              },
+              "utc": "2026-10-08T01:58:10.033+00:00"
+            },
+            "message_id": "hd26-g-restored-s_byte",
+            "sha256": "655b716e3f0e9824e94389d695edfdab63402e962969ce7586637b6b32771ed0"
+          },
+          "seconds_after_arm": 22.50970458984375,
+          "seconds_before_abort": 22.65316104888916,
+          "seconds_before_process_end": 22.805034637451172,
+          "start_epoch": 1791424588.365
+        },
+        "register_sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+        "samples": 0,
+        "timeout": {
+          "abort_epoch": 1791424611.160161,
+          "callbacks": [
+            {
+              "ep": 134,
+              "epoch": 1791424611.16052,
+              "line": "1791424611.160520 TRIG_HEADER ep=0x86 status=0 req=512 xfer=512 seq_total_in=512 len=64 data=55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555",
+              "req": 512,
+              "status": 0,
+              "xfer": 512
+            },
+            {
+              "ep": 134,
+              "epoch": 1791424611.182338,
+              "line": "1791424611.182338 BULK_IN_CB ep=0x86 status=0 req=1048576 xfer=1048576 seq_total_in=1049088 len=0",
+              "req": 1048576,
+              "status": 0,
+              "xfer": 1048576
+            }
+          ],
+          "caveat": "No valid FPGA status available. Separate control does not prove concurrent failed-case waveform; owner emission receipt required.",
+          "classification": "timeout exit16; no valid preabort header; postabort cleanup only",
+          "cleanup_data_callbacks": [
+            {
+              "ep": 134,
+              "epoch": 1791424611.182338,
+              "line": "1791424611.182338 BULK_IN_CB ep=0x86 status=0 req=1048576 xfer=1048576 seq_total_in=1049088 len=0",
+              "req": 1048576,
+              "status": 0,
+              "xfer": 1048576
+            }
+          ],
+          "frozen_parser_expected_rejection": "header remaining exceeds armed samples",
+          "invalid_cleanup_headers": [
+            {
+              "after_abort_seconds": 0.0003590583801269531,
+              "epoch": 1791424611.16052,
+              "fields": [
+                1431655765,
+                1431655765,
+                1431655765,
+                1431655765,
+                1431655765,
+                1431655765
+              ],
+              "reason": "all-0x55 dummy; remaining exceeds arm count",
+              "remaining": 6148914691236517205
+            }
+          ],
+          "preabort_completed_in": [],
+          "samples": 0,
+          "stdout_bytes": 27
+        },
+        "valid_matrix_case": true,
+        "verdict": "PASS"
+      },
+      {
+        "exit": 16,
+        "files": {
+          "/tmp/dslcap-g-live/ctl_both.json": {
+            "bytes": 705,
+            "sha256": "941774dd5b9e9cefd581b5277f6a040a1d6450189763b19bcc1d43a2d6abd73b"
+          },
+          "/tmp/dslcap-g-live/ctl_both.raw": {
+            "bytes": 27,
+            "sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab"
+          },
+          "/tmp/dslcap-g-live/ctl_both.stderr": {
+            "bytes": 3261,
+            "sha256": "7fb8848fe2e64391e836658c269cd209db881b1c9b5c3ac74f16253843ff3677"
+          },
+          "/tmp/dslcap-g-live/ctl_both.usb.log": {
+            "bytes": 90701,
+            "sha256": "8e9bcccbbafbbee6354f8d41a5cae41b11d7d802961fac7187fffdc019a4e415"
+          },
+          "/tmp/dslcap-g-verify/ctl_both.json": {
+            "bytes": 7399,
+            "sha256": "72019ce6408ebdca44810899ca3f260e075530adcaa5df40e81bd7db1f9d1c8c"
+          }
+        },
+        "kind": "simple",
+        "label": "ctl_both",
+        "owner_receipt": {
+          "case": "ctl_both",
+          "emission_within_arm_wait": false,
+          "end_epoch": 1791424882.503,
+          "frame": "000238ac0000",
+          "go_id": "go-ctl_both",
+          "go_sha256": "3308c8dfa168d2cc6b2df8d7ca722cf9aae58953349cb94ca821b8640a781689",
+          "go_within_arm_wait": false,
+          "one_emission_receipt": true,
+          "owner_emission_ordinal": 7,
+          "receipt_host_end": "2026-10-08T02:01:22.503+00:00",
+          "receipt_host_start": "2026-10-08T02:01:22.222+00:00",
+          "receipt_id": "hd26-g-sent-ctl_both",
+          "receipt_sha256": "03494d08c2dd9bdc65384b86432f0e9a816a1b6bd7b9d80e38dbdb663250e7db",
+          "restoration": {
+            "fields": {
+              "after_clear_tx": {
+                "errors": 0,
+                "irq": "0x00000002",
+                "level": 0,
+                "mode": "STBY_XOSC",
+                "rx": 3,
+                "tx": 39
+              },
+              "baseline_ok": true,
+              "cleared_sys_irq": "0x00000002",
+              "final": {
+                "active": false,
+                "errors": 0,
+                "irq": "0x00000000",
+                "level": 0,
+                "mode": "STBY_XOSC",
+                "rx": 3,
+                "tx": 39
+              },
+              "utc": "2026-10-08T02:01:59.548+00:00"
+            },
+            "message_id": "hd26-g-ctl_both-expired",
+            "sha256": "0e4cb97748556be45bdb2cecc0438e930f8cae238a88378a5e65024faf0bb620"
+          },
+          "seconds_after_arm": 176.9755575656891,
+          "seconds_before_abort": -131.9517469406128,
+          "seconds_before_process_end": -131.7928011417389,
+          "start_epoch": 1791424882.222
+        },
+        "register_sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+        "samples": 0,
+        "timeout": {
+          "abort_epoch": 1791424750.551253,
+          "callbacks": [
+            {
+              "ep": 134,
+              "epoch": 1791424750.551633,
+              "line": "1791424750.551633 TRIG_HEADER ep=0x86 status=0 req=512 xfer=512 seq_total_in=512 len=64 data=55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555",
+              "req": 512,
+              "status": 0,
+              "xfer": 512
+            },
+            {
+              "ep": 134,
+              "epoch": 1791424750.574211,
+              "line": "1791424750.574211 BULK_IN_CB ep=0x86 status=0 req=1048576 xfer=1048576 seq_total_in=1049088 len=0",
+              "req": 1048576,
+              "status": 0,
+              "xfer": 1048576
+            }
+          ],
+          "caveat": "No valid FPGA status available. Separate control does not prove concurrent failed-case waveform; owner emission receipt required.",
+          "classification": "timeout exit16; no valid preabort header; postabort cleanup only",
+          "cleanup_data_callbacks": [
+            {
+              "ep": 134,
+              "epoch": 1791424750.574211,
+              "line": "1791424750.574211 BULK_IN_CB ep=0x86 status=0 req=1048576 xfer=1048576 seq_total_in=1049088 len=0",
+              "req": 1048576,
+              "status": 0,
+              "xfer": 1048576
+            }
+          ],
+          "frozen_parser_expected_rejection": "header remaining exceeds armed samples",
+          "invalid_cleanup_headers": [
+            {
+              "after_abort_seconds": 0.00037980079650878906,
+              "epoch": 1791424750.551633,
+              "fields": [
+                1431655765,
+                1431655765,
+                1431655765,
+                1431655765,
+                1431655765,
+                1431655765
+              ],
+              "reason": "all-0x55 dummy; remaining exceeds arm count",
+              "remaining": 6148914691236517205
+            }
+          ],
+          "preabort_completed_in": [],
+          "samples": 0,
+          "stdout_bytes": 27
+        },
+        "valid_matrix_case": false,
+        "verdict": "INCONCLUSIVE_SCHEDULING"
+      },
+      {
+        "exit": 0,
+        "files": {
+          "/tmp/dslcap-g-live/ctl_both_retry.json": {
+            "bytes": 709,
+            "sha256": "34d01faffc7a977c385b1aba4aaa95d396f69ffae9fc79fe53044fa48d8a8d05"
+          },
+          "/tmp/dslcap-g-live/ctl_both_retry.raw": {
+            "bytes": 1000496,
+            "sha256": "64ecb5911b19afa64537ad7b0bd9f43553cbeae2676b1861cbb966b30e62e6e4"
+          },
+          "/tmp/dslcap-g-live/ctl_both_retry.stderr": {
+            "bytes": 3179,
+            "sha256": "ac4c8842625372108759d230c345b7a01067720cddb6799fde3558933ac1c708"
+          },
+          "/tmp/dslcap-g-live/ctl_both_retry.usb.log": {
+            "bytes": 53832,
+            "sha256": "520522527a9f8329d9e072c7015c3154b33e33ba80114ad30cfa37ed4fc92975"
+          },
+          "/tmp/dslcap-g-verify/ctl_both_retry.json": {
+            "bytes": 10939,
+            "sha256": "0a818e33cd745ac35216395549070c6c059850634591f74dfa45c983371601d2"
+          }
+        },
+        "fpga_header": {
+          "after_force_seconds": null,
+          "after_stop_seconds": null,
+          "aligned_samples": 1000448,
+          "check_id": 1431655765,
+          "epoch": 1791425078.181293,
+          "meaningful_trigger_sample": 100032,
+          "ram_saddr": 4743872,
+          "real_pos_raw": 100032,
+          "remaining": 0,
+          "status_word": 1,
+          "triggered": true
+        },
+        "kind": "simple",
+        "label": "ctl_both_retry",
+        "match_counts": {
+          "0x1c35": 0,
+          "0x351c": 0,
+          "0x38ac": 1,
+          "0xac38": 0
+        },
+        "miso_hex": "04 52 00 00 00 00",
+        "mosi_hex": "00 02 38 ac 00 00",
+        "owner_receipt": {
+          "case": "ctl_both_retry",
+          "emission_within_arm_wait": true,
+          "end_epoch": 1791425078.185,
+          "frame": "000238ac0000",
+          "go_id": "go-ctl_both_retry",
+          "go_sha256": "e7528280d08e01473b597438a725a7f453ce4e4ae535c6fd6ea85e32dc3ab433",
+          "go_within_arm_wait": true,
+          "one_emission_receipt": true,
+          "owner_emission_ordinal": 8,
+          "receipt_host_end": "2026-10-08T02:04:38.185+00:00",
+          "receipt_host_start": "2026-10-08T02:04:37.924+00:00",
+          "receipt_id": "hd26-g-sent-ctl_both_retry",
+          "receipt_sha256": "b0bc959e8f4c88c7a94454cc2447dea50cb582f0862488bc376d30262fc487ee",
+          "restoration": {
+            "fields": {
+              "after_clear_tx": {
+                "errors": 0,
+                "irq": "0x00000002",
+                "level": 0,
+                "mode": "STBY_XOSC",
+                "rx": 3,
+                "tx": 39
+              },
+              "baseline_ok": true,
+              "cleared_sys_irq": "0x00000002",
+              "final": {
+                "active": false,
+                "errors": 0,
+                "irq": "0x00000000",
+                "level": 0,
+                "mode": "STBY_XOSC",
+                "rx": 3,
+                "tx": 39
+              },
+              "utc": "2026-10-08T02:05:12.358+00:00"
+            },
+            "message_id": "hd26-g-restored-ctl_both_retry",
+            "sha256": "10d0f4b1ab8a898a9a45dd021f863cc004c2b5684a58543edd63478bc93027d4"
+          },
+          "seconds_after_arm": 20.264296770095825,
+          "seconds_before_process_end": 0.2370469570159912,
+          "start_epoch": 1791425077.924
+        },
+        "register_sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+        "rolling_matches": [
+          {
+            "bit_offset_origin": "nss frame",
+            "delta_from_trigger_samples": 937,
+            "end_bit_offset": 31,
+            "end_sample": 100969,
+            "start_bit_in_byte": 0,
+            "start_bit_offset": 16,
+            "start_byte_offset": 2,
+            "start_sample": 100764,
+            "transaction": 0,
+            "value": "0x38ac"
+          }
+        ],
+        "samples": 1000448,
+        "trigger_sample": 100032,
+        "valid_matrix_case": true,
+        "verdict": "PASS"
+      },
+      {
+        "exit": 16,
+        "files": {
+          "/tmp/dslcap-g-live/s_both.json": {
+            "bytes": 763,
+            "sha256": "33442ced61075a41a11b7dfb9d5bc33bf178dea7eed8d06c55a0dd557e36a487"
+          },
+          "/tmp/dslcap-g-live/s_both.raw": {
+            "bytes": 27,
+            "sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab"
+          },
+          "/tmp/dslcap-g-live/s_both.stderr": {
+            "bytes": 3277,
+            "sha256": "e88080e6566e26660f50dd33598016fabb54bda92e4bd89a0d82671392e6b7ba"
+          },
+          "/tmp/dslcap-g-live/s_both.usb.log": {
+            "bytes": 90701,
+            "sha256": "bd9cdde00ef1dd1876dcc50308769d2835d146efcf437ba6e70da85178b5a934"
+          },
+          "/tmp/dslcap-g-verify/s_both.json": {
+            "bytes": 7435,
+            "sha256": "557ff03ec81ea0f95dce8babac5e2ebc0cc8fb5315e2d95985cc1a1a1a53ca2a"
+          }
+        },
+        "kind": "serial",
+        "label": "s_both",
+        "owner_receipt": {
+          "case": "s_both",
+          "emission_within_arm_wait": true,
+          "end_epoch": 1791425145.462,
+          "frame": "000238ac0000",
+          "go_id": "go-s_both",
+          "go_sha256": "3bc9d3cb9778f8d255f6e07974838f99f0f7d0db8e066c6bb5b9e624278ca2d4",
+          "go_within_arm_wait": true,
+          "one_emission_receipt": true,
+          "owner_emission_ordinal": 9,
+          "receipt_host_end": "2026-10-08T02:05:45.462+00:00",
+          "receipt_host_start": "2026-10-08T02:05:45.133+00:00",
+          "receipt_id": "hd26-g-sent-s_both",
+          "receipt_sha256": "a268530c0ce4685e25cbdedd4ee4b7bc55dbeb3f76d27f5e86ecc7b6f06b8421",
+          "restoration": {
+            "fields": {
+              "after_clear_tx": {
+                "errors": 0,
+                "irq": "0x00000002",
+                "level": 0,
+                "mode": "STBY_XOSC",
+                "rx": 3,
+                "tx": 39
+              },
+              "baseline_ok": true,
+              "cleared_sys_irq": "0x00000002",
+              "final": {
+                "active": false,
+                "errors": 0,
+                "irq": "0x00000000",
+                "level": 0,
+                "mode": "STBY_XOSC",
+                "rx": 3,
+                "tx": 39
+              },
+              "utc": "2026-10-08T02:06:39.601+00:00"
+            },
+            "message_id": "hd26-g-restored-s_both",
+            "sha256": "e928717abee50e9febff531b80cdfdbb36c3f84eb7bfb751fcbc6f2556a9236a"
+          },
+          "seconds_after_arm": 18.803094387054443,
+          "seconds_before_abort": 26.1586492061615,
+          "seconds_before_process_end": 26.336939334869385,
+          "start_epoch": 1791425145.133
+        },
+        "register_sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+        "samples": 0,
+        "timeout": {
+          "abort_epoch": 1791425171.620649,
+          "callbacks": [
+            {
+              "ep": 134,
+              "epoch": 1791425171.621087,
+              "line": "1791425171.621087 TRIG_HEADER ep=0x86 status=0 req=512 xfer=512 seq_total_in=512 len=64 data=55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555",
+              "req": 512,
+              "status": 0,
+              "xfer": 512
+            },
+            {
+              "ep": 134,
+              "epoch": 1791425171.643019,
+              "line": "1791425171.643019 BULK_IN_CB ep=0x86 status=0 req=1048576 xfer=1048576 seq_total_in=1049088 len=0",
+              "req": 1048576,
+              "status": 0,
+              "xfer": 1048576
+            }
+          ],
+          "caveat": "No valid FPGA status available. Separate control does not prove concurrent failed-case waveform; owner emission receipt required.",
+          "classification": "timeout exit16; no valid preabort header; postabort cleanup only",
+          "cleanup_data_callbacks": [
+            {
+              "ep": 134,
+              "epoch": 1791425171.643019,
+              "line": "1791425171.643019 BULK_IN_CB ep=0x86 status=0 req=1048576 xfer=1048576 seq_total_in=1049088 len=0",
+              "req": 1048576,
+              "status": 0,
+              "xfer": 1048576
+            }
+          ],
+          "frozen_parser_expected_rejection": "header remaining exceeds armed samples",
+          "invalid_cleanup_headers": [
+            {
+              "after_abort_seconds": 0.0004379749298095703,
+              "epoch": 1791425171.621087,
+              "fields": [
+                1431655765,
+                1431655765,
+                1431655765,
+                1431655765,
+                1431655765,
+                1431655765
+              ],
+              "reason": "all-0x55 dummy; remaining exceeds arm count",
+              "remaining": 6148914691236517205
+            }
+          ],
+          "preabort_completed_in": [],
+          "samples": 0,
+          "stdout_bytes": 27
+        },
+        "valid_matrix_case": true,
+        "verdict": "PASS"
+      },
+      {
+        "exit": 0,
+        "files": {
+          "/tmp/dslcap-g-live/s_pos_repeat.json": {
+            "bytes": 766,
+            "sha256": "b504ade996e347a2b15a4683b1675c0ef13cb4ebcebde6b1361528d738da7743"
+          },
+          "/tmp/dslcap-g-live/s_pos_repeat.raw": {
+            "bytes": 1000496,
+            "sha256": "3705ed89875dde49737a85c0bae631e10c03dcf99df558d32edb699fb00347fc"
+          },
+          "/tmp/dslcap-g-live/s_pos_repeat.stderr": {
+            "bytes": 3195,
+            "sha256": "610d078e11107097618d9c23034d9486992552706badf6dc49e0cf7873f7f465"
+          },
+          "/tmp/dslcap-g-live/s_pos_repeat.usb.log": {
+            "bytes": 53100,
+            "sha256": "0a1d16a873d14238ee66a94686ee68c94ffa174e666db987ed0b0dc367913ed5"
+          },
+          "/tmp/dslcap-g-verify/s_pos_repeat.json": {
+            "bytes": 11479,
+            "sha256": "af30500d825c5956871d0090130493e19e609b8a0040061321c0cf515ec56b5c"
+          }
+        },
+        "fpga_header": {
+          "after_force_seconds": null,
+          "after_stop_seconds": null,
+          "aligned_samples": 1000448,
+          "check_id": 1431655765,
+          "epoch": 1791425237.314881,
+          "meaningful_trigger_sample": 100072,
+          "ram_saddr": 11146304,
+          "real_pos_raw": 100072,
+          "remaining": 0,
+          "status_word": 1,
+          "triggered": true
+        },
+        "kind": "serial",
+        "label": "s_pos_repeat",
+        "match_counts": {
+          "0x1c35": 1,
+          "0x351c": 0,
+          "0x38ac": 0,
+          "0xac38": 0
+        },
+        "miso_hex": "04 52 00 00 00 00",
+        "mosi_hex": "00 02 1c 35 00 00",
+        "owner_receipt": {
+          "case": "s_pos_repeat",
+          "emission_within_arm_wait": true,
+          "end_epoch": 1791425237.32,
+          "frame": "00021c350000",
+          "go_id": "go-s_pos_repeat",
+          "go_sha256": "c2f333e62de8876e77b00123ba1566b4c582ca79efd0b84364e823da73ab37f6",
+          "go_within_arm_wait": true,
+          "one_emission_receipt": true,
+          "owner_emission_ordinal": 10,
+          "receipt_host_end": "2026-10-08T02:07:17.320+00:00",
+          "receipt_host_start": "2026-10-08T02:07:17.021+00:00",
+          "receipt_id": "hd26-g-sent-s_pos_repeat",
+          "receipt_sha256": "2ac09a45d96a01aab87378a517dcbb0374415083347572cd9be44154caf9ba1a",
+          "restoration": {
+            "baseline_ok_reported": true,
+            "finish_message_sha256": "9bcb3b9b0850412c42d58e5413f821d354979dbd54365a3fd704e74979e692f3",
+            "reported_utc": "2026-10-08T02:07:47Z",
+            "result_revision": 5,
+            "result_sha256": "2662deb60b58f5ea3bc26f155ef733600f1ad6b7ed1f70e8f3c76c052cf56645",
+            "source": "owner terminal result; reported whole-second final state"
+          },
+          "seconds_after_arm": 19.687071323394775,
+          "seconds_before_process_end": 0.17110872268676758,
+          "start_epoch": 1791425237.021
+        },
+        "register_sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+        "rolling_matches": [
+          {
+            "bit_offset_origin": "nss frame",
+            "delta_from_trigger_samples": 0,
+            "end_bit_offset": 31,
+            "end_sample": 100072,
+            "start_bit_in_byte": 0,
+            "start_bit_offset": 16,
+            "start_byte_offset": 2,
+            "start_sample": 99867,
+            "transaction": 0,
+            "value": "0x1c35"
+          }
+        ],
+        "samples": 1000448,
+        "trigger_sample": 100072,
+        "valid_matrix_case": true,
+        "verdict": "PASS"
+      }
+    ],
+    "conclusion": "Aligned native value1c35/16 matches MSB-first wire00021c350000 at clock32 twice; bit-reversed ac38, byte-swapped351c and combined38ac timed out. All three distinct control frames lack1c35 at every rolling alignment.",
+    "excluded_attempts": 1,
+    "frozen_parser_note": "Frozen F header parser deliberately rejects all0x55 remaining>arm; G-only wrapper catches that exact error and independently qualifies retained postabort callbacks. Both frozen parsers and production binary unchanged.",
+    "limits": [
+      "100MS/s CH0-7 fixed16-bit value1c35 at clocks17-32 only; no general width/rate/algorithm guarantee.",
+      "Separate controls and host owner receipts support failed-case emission; no contemporaneous waveform returned by negatives.",
+      "Negative native META-only exit16 is no accepted trigger; postabort dummy/header cleanup has no valid FPGA status.",
+      "Cross-word sliding-window opcode detection remains a separate gate."
+    ],
+    "matrix_cases": 9,
+    "owner_terminal_result": {
+      "final_restoration": {
+        "baseline_ok_reported": true,
+        "finish_message_sha256": "9bcb3b9b0850412c42d58e5413f821d354979dbd54365a3fd704e74979e692f3",
+        "reported_utc": "2026-10-08T02:07:47Z",
+        "result_revision": 5,
+        "result_sha256": "2662deb60b58f5ea3bc26f155ef733600f1ad6b7ed1f70e8f3c76c052cf56645",
+        "source": "owner terminal result; reported whole-second final state"
+      },
+      "result_sha256": "2662deb60b58f5ea3bc26f155ef733600f1ad6b7ed1f70e8f3c76c052cf56645",
+      "revision": 5,
+      "scope": "Owner-reported remote state, independently checked against mailbox receipts; no hardware access by this worker.",
+      "state": "complete"
+    },
+    "serial_negative_cases": 3,
+    "serial_positive_cases": 2,
+    "total_owner_emissions": 10,
+    "unchanged_input_fingerprints": "75b9a4e28ac254a286ef3e06125cbe4d6405addfba60736b18ee23ba9a957fb0  /tmp/dslcap-f-verify/evidence.py\nf5b85973ac75cebc5d7a6942346622ff0852fdb8bb503e8dd6296a872c8614d2  /tmp/dslcap-c-verify/serial_verify.py\n5e9be8b773d8f33a74c49323cbf91638f3d68496e322f0939e0b652fae46ce8d  /tmp/dslcap-phase-c-build/dslcap\n",
+    "valid_controls": 4,
+    "verdict": "PASS_FOR_TESTED_ALIGNED_100M_SETUP"
+  },
+  "durable_review": {
+    "artifact_hashes": 40,
+    "checked_attempts": 10,
+    "documents_sha256": {
+      "dslcap/README.md": "9c6828a1822440bc967118bed415d29d438301283a922bbbdc0ba08af518454a",
+      "dslcap/SERIAL_ALIGNED_VALIDATION.md": "af2c88c75d2a49313f81940d961eba0f06cc3af3bbbec47daa04e0f96c98640a",
+      "dslcap/SERIAL_INTERMEDIATE_WIDTHS.md": "a425a339e58d3303e53dce6ad46ec41604d5a6becc58016ea9ccec41bf3bf1c6",
+      "dslcap/TRIGGER_PLAN.md": "0fd3ba34710cf88f8bc1e1858627a9b7a2820027c80ec5589a1b031e04d60988",
+      "dslcap/TRIGGER_TASKS.md": "4d58f1fac33787cf83693d9e246118161b1ec86087fe7432cee9e7820947aa40",
+      "sigrok_hla_readme.md": "9b032792c73daabaf9137775971626c3ca530b2105d618cc1883de6c8467f20e"
+    },
+    "durable_json_sha256": "f6bed2eaafacf2aa9d64245cbc7e3364c565c5a0b7471f8cbb3413897709bbf2",
+    "frozen_source_hashes": 8,
+    "leaf_comparisons": 4923,
+    "limitations": "Owner restoration and lead USB fuser are reported hardware evidence, checked for consistency/provenance only; this worker performed no hardware/Git/repository mutations.",
+    "reviewed_docs_scope": "Aligned100MS/s CH0-7 C.2 passed; C.3 opcode/higher-rate order pending; expired scheduling attempt excluded; invalid postabort cleanup qualified.",
+    "valid_matrix_cases": 9,
+    "verdict": "PASS"
+  }
+}

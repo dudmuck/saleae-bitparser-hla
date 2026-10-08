@@ -8,9 +8,9 @@ review and restored wiring; see [A2_VALIDATION.md](A2_VALIDATION.md).
 Phase C serial-trigger implementation is now present in C and Python with
 offline coverage and independent review PASS; see
 [SERIAL_REVIEW.md](SERIAL_REVIEW.md). Real DSView serial register comparison
-passed at100M/200M/400M. Hardware bit-order validation remains **incomplete**:
-the original crossed-word patterns timed out despite passing NSS controls.
-No complete native serial order or opcode acceptance is claimed; see
+passed at100M/200M/400M. Native aligned bit-order validation subsequently
+**passed at 100 MS/s, CH0–7**; opcode and higher-rate live order gates remain
+open. The original crossed-word patterns timed out despite passing NSS controls; see
 [SERIAL_VALIDATION.md](SERIAL_VALIDATION.md) and
 [TRIGGER_TASKS.md](TRIGGER_TASKS.md). A subsequent real DSView live test also
 failed to trigger serially while its NSS control passed; see
@@ -25,8 +25,11 @@ general width limit. A subsequent intermediate-width sweep and constant-register
 This demonstrates working 16-bit comparison in DSView and supports word-boundary
 matching on this setup; the earlier arbitrary sliding-window assumption was
 incorrect. See [SERIAL_INTERMEDIATE_WIDTHS.md](SERIAL_INTERMEDIATE_WIDTHS.md).
-Next: repeat native dslcap C.2 with word-aligned carriers before C.3. The full
-FPGA mechanism and untested configurations remain unproven.
+Native C.2 then confirmed the intended `1c35` order twice on aligned carriers
+and rejected all three reversed variants. See
+[SERIAL_ALIGNED_VALIDATION.md](SERIAL_ALIGNED_VALIDATION.md).
+Next: C.3 opcode validation. The full FPGA mechanism and untested
+configurations, including higher-rate live bit order, remain unproven.
 Optional trigger-relative
 timestamps remain unimplemented.
 
@@ -822,9 +825,11 @@ serial template (stage roles and counts above; logic = AND, non-contiguous,
 Validation update: C.1 passed; C.2's original crossed-word tests missed at100M.
 Real DSView reproduced those misses, but a later constant-register alignment
 test hit twice with the target at clocks 17–32 and missed at clocks 25–40.
-Use aligned carriers for the next native C.2 run; retain source mapping.
-The old misses do not establish order. C.3 remains pending. Full evidence is
-in SERIAL_INTERMEDIATE_WIDTHS.md; no native C.2 PASS is inferred from DSView.
+The native aligned C.2 run now passes at100M CH0–7: intended order hits twice,
+three reversals time out, and all four separate NSS waveform controls pass.
+The old crossed-word misses do not establish order. C.3 and higher-rate live
+bit-order checks remain pending. See SERIAL_INTERMEDIATE_WIDTHS.md and
+SERIAL_ALIGNED_VALIDATION.md; source mapping is unchanged.
 
 1. **Golden image:** B.1-style comparison against DSView's serial tab with
    an identical setup, including value `0x1c35`/`bits=16`, so the

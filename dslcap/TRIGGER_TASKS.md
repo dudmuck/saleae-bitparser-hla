@@ -2,6 +2,32 @@
 
 ## C-serial-trigger — wave 1
 
+### Native aligned bit-order validation (complete at 100 MS/s)
+
+User authorized native C.2 after cb9008d. Lead owns exclusive analyzer USB;
+radio owner task `dslcap-g-radio-20261008` owns pi133 app-path emissions and
+baseline restoration. Existing dslcap_worker independently checks offline
+artifacts under /tmp/dslcap-g-verify. No DSView capture or source implementation
+change. Use frozen real dslcap binary, 100 MS/s CH0-7, N1000448, position10%,
+threshold1.6 V, serial 1c35/16, aligned carrier 0002VVVV0000.
+Four simple NSS controls validate intended, bit-reversed, byte-swapped and
+combined variants; each gets a separate serial trial at fixed target1c35,
+then a final positive repeat. Unique named GO after arm/register verification,
+one frame, completion before cleanup, no GPIO/RF/reset/config or pi134 action.
+Timeout fail at45s; expected negatives exit16. Nine valid matrix captures.
+One additional control expired before a delayed GO during a context handoff;
+its late emission and timeout are retained as inconclusive scheduling evidence.
+Lead explicitly authorized a separately named replacement control after restore.
+All four NSS controls pass; aligned positives hit twice at clock32/K exactly;
+all three reversals exit16 with no valid pre-abort header or output samples.
+Post-abort all-0x55 dummy headers and cleanup bytes are excluded from trigger
+evidence. Actual EP2 images match the frozen DSView references in every attempt.
+Existing worker independently verifies raw records, receipts and durable docs.
+See SERIAL_ALIGNED_VALIDATION.md/JSON. No production change or new review cycle;
+C.3 and higher-rate live order checks remain open. Lead owns evidence/docs/commit.
+Radio task completed revision5, consumed/acknowledged; final pi133 baseline,
+original app/SPI settings and pin states confirmed, pi134 untouched. USB released.
+
 ### Intermediate-width sweep and alignment check (complete)
 
 User authorized intermediate widths after 89648ba. Tasks

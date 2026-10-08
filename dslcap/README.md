@@ -217,19 +217,21 @@ probe0 and unused upper16-bits positions at X. For bits<16 the matching DSView
 reference is the bit editor with upper X positions; its hex helper instead
 zero-pads all16 positions.
 
-MSB-first serial order is assumed: the most recently shifted bit is the value
+MSB-first serial order is used: the most recently shifted bit is the value
 LSB. The asymmetric16-bit value0x1c35 distinguishes bit reversal0xac38,
 byte swap0x351c, and both0x38ac. Offline tests pin the parsed value and generated
 stage state; they do not prove hardware shift order or constitute a real DSView
-register golden. Those live comparisons and opcode checks remain separate gates
-in [TRIGGER_PLAN.md](TRIGGER_PLAN.md).
+register golden. Actual register comparison passed at 100/200/400 MS/s, and
+native aligned bit-order validation passed at 100 MS/s on CH0–7. Opcode and
+higher-rate live order checks remain open in [TRIGGER_PLAN.md](TRIGGER_PLAN.md).
 
 Treat the serial comparison as N-bit words aligned from the start condition,
 not an arbitrary sliding bit window. In real DSView tests, 16-bit `0x1c35`
 matched at clocks 17–32 after NSS assertion but missed at clocks 25–40 with
 identical trigger registers. An aligned payload word can also match, so this
 is not an opcode-only filter. See [SERIAL_INTERMEDIATE_WIDTHS.md](SERIAL_INTERMEDIATE_WIDTHS.md)
-for the measured scope and remaining native dslcap validation gates.
+for alignment evidence and [SERIAL_ALIGNED_VALIDATION.md](SERIAL_ALIGNED_VALIDATION.md)
+for the native bit-order results and their measured scope.
 Timestamps remain relative to capture start.
 
 ## Bring-up

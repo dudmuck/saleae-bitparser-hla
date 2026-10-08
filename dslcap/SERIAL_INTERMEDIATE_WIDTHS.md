@@ -72,6 +72,9 @@ The next native dslcap bit-order test should use the aligned carrier
 Prior negative results used the target across a 16-bit word boundary and
 cannot establish a bit-order error. No production trigger mapping was changed.
 
+Follow-up: the native aligned test subsequently passed at 100 MS/s on CH0–7;
+see [SERIAL_ALIGNED_VALIDATION.md](SERIAL_ALIGNED_VALIDATION.md).
+
 ## Method and evidence limits
 
 Real DSView 1.3.2 from `/home/wroberts/DSView-1.3.2`: 100 MS/s, CH0–7,

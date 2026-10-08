@@ -131,9 +131,9 @@ Resolved start/stop/clock/data join the same producer/width channel union,
 including inputs not used by SPI decoding or pin logging. All normal buffer
 lane, explicit finite-duration, timeout/action, metadata and drain rules apply.
 
-MSB-first shift order is assumed until hardware comparison: most recent bit
-is the value LSB. Generated stage3 compares the low N bits; unused upper bits
-are X (use DSView's bit editor with upper X for a short-width comparison).
+MSB-first shift order passed native hardware comparison at 100 MS/s on CH0–7:
+the most recent bit is the value LSB. Generated stage3 compares the low N bits;
+unused upper bits are X (use DSView's bit editor with upper X for a short-width comparison).
 Treat matches as N-bit words aligned from the start condition. Real DSView
 tests with identical 16-bit settings matched `0x1c35` at clocks 17–32 after
 NSS assertion but missed at clocks 25–40. Arbitrary sliding-window matching
@@ -141,8 +141,10 @@ is not supported by that evidence. Later aligned payload words can match,
 so this is not an opcode-only filter. See
 [the alignment evidence](dslcap/SERIAL_INTERMEDIATE_WIDTHS.md).
 Source-derived offline stage tests, including0x1c35, are not a real DSView
-register golden or proof of hardware bit/byte order. Live order and opcode
-validation remain separate gates. Serial requests use the same exact two-line
+register golden or proof of hardware bit/byte order. Subsequent actual register
+comparison passed at 100/200/400 MS/s; see [native aligned order results](dslcap/SERIAL_ALIGNED_VALIDATION.md)
+for the separate 100 MS/s hardware check. Opcode and higher-rate live order
+validation remain open. Serial requests use the same exact two-line
 META parsing and chronological trigger marker, keeping capture-start timestamps.
 
 ### Common prerequisites
