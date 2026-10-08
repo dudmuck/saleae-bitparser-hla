@@ -1,5 +1,8 @@
 # Paused after native aligned bit-order validation
 
+**Resumed 2026-10-07 19:20 PDT. C.3 has since passed; see OPCODE_VALIDATION.md.
+This file is retained as the record of the pause.**
+
 User requested pause on 2026-10-07 PDT / 2026-10-08 UTC. Do not start further
 tests until the user resumes. Completed evidence is committed in `c198272`
 on `main`; see SERIAL_ALIGNED_VALIDATION.md/JSON and TRIGGER_PLAN.md.

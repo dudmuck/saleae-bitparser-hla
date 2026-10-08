@@ -1,0 +1,744 @@
+{
+  "bench_date_utc": "2026-10-08",
+  "baseline_commit": "bf045bb",
+  "scope": "C.3 opcode trigger validation, native dslcap, 100 MS/s CH0-7, bits=16, LR2021 opcodes 0x0101 and 0x0002 on pi133",
+  "outcome": "PASS for scoped six-case matrix (five required + optional alias)",
+  "settings": {
+    "samplerate_hz": 100000000,
+    "channels": "0-7",
+    "samples": 1000448,
+    "position_percent": 10,
+    "threshold_volts": 1.6,
+    "timeout_seconds": 45,
+    "timeout_action": "fail",
+    "spi_mode": 0,
+    "spi_requested_hz": 8000000,
+    "serial": "start=3:f,stop=3:r,clock=0:r,data=2,value=<case>,bits=16",
+    "frames": {
+      "W": "00 02 00 00 00 00 (WriteTxFifo)",
+      "V": "01 01 ; 00 00 00 00 (GetVersion request + response read)",
+      "A": "00 02 01 01 00 00 (WriteTxFifo, payload alias)"
+    }
+  },
+  "binary": {
+    "path": "/tmp/dslcap-phase-c-build/dslcap",
+    "sha256": "5e9be8b773d8f33a74c49323cbf91638f3d68496e322f0939e0b652fae46ce8d",
+    "sha256_now": "5e9be8b773d8f33a74c49323cbf91638f3d68496e322f0939e0b652fae46ce8d"
+  },
+  "frozen_source_sha256": {
+    "dslcap/CMakeLists.txt": "8686c2c1d33bdd54798da0ceb42553ba22a0aad50bf776357878672826b19e05",
+    "dslcap/options.h": "b3e478168c5b8338ac9f48d78540f722cf98e69ca74e73b96cb563e83dfa89b4",
+    "dslcap/options.c": "1363c1114b7f37bf0f3b634b0bff2f1008d98d23819401f159bc6383af386a3e",
+    "dslcap/driver_config.c": "150832ef36c5f4279fe689a3aad668d9b2f26e1203c36568e22d1c148981a9b1",
+    "dslcap/tests/fake_driver.c": "5ddc51378f603b4aea74c3577fdaeb5a66fbb068adc5e53be776b2314aa59830",
+    "dslcap/tests/test_serial.py": "d28b386bf415c4b1e1008a5f28a5808d9642e1c7cfe9b3225007e32a158f720a",
+    "sigrok_hla.py": "1082a95492568ee2f15224953dd534a6d6db385d4ccee9108a8f6a37da3f8fc2",
+    "tests/test_dslcap_serial.py": "10d68f98ddd3010fee2e925b6b03be8424334585f81704049dabd1b999961bff"
+  },
+  "expected_register_images": {
+    "by_case": {
+      "ctl": {
+        "kind": "simple",
+        "sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+        "value_hex": null
+      },
+      "s_absent": {
+        "kind": "serial",
+        "sha256": "01f12e707ffe6a02d766863220de56b39f7383249b1e938120a9d48177bf76a7",
+        "value_hex": "0x011f"
+      },
+      "s_alias": {
+        "kind": "serial",
+        "sha256": "366e5c334b1eca464b5326f2670090f14e666b364cf5ad1935d03bcd79e8ef88",
+        "value_hex": "0x0101"
+      },
+      "s_op": {
+        "kind": "serial",
+        "sha256": "366e5c334b1eca464b5326f2670090f14e666b364cf5ad1935d03bcd79e8ef88",
+        "value_hex": "0x0101"
+      },
+      "s_op2": {
+        "kind": "serial",
+        "sha256": "22854b3f2e92d0a31439e8b2cc08755826c011c67cbecf9fd5cb39f06d975a36",
+        "value_hex": "0x0002"
+      },
+      "s_op_repeat": {
+        "kind": "serial",
+        "sha256": "366e5c334b1eca464b5326f2670090f14e666b364cf5ad1935d03bcd79e8ef88",
+        "value_hex": "0x0101"
+      }
+    },
+    "classification": "Full source-derived expected arm images, reproduced against captured C.1/simple goldens; no new UI capture claimed.",
+    "golden_selftest": {
+      "serial": {
+        "actual_log": "/tmp/dslcap-g-live/s_pos.usb.log",
+        "byte_for_byte_equal": true,
+        "sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+        "value": "0x1c35"
+      },
+      "simple": {
+        "actual_log": "/tmp/dslcap-g-live/ctl_pos.usb.log",
+        "byte_for_byte_equal": true,
+        "sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+        "trigger": "3:f"
+      },
+      "verdict": "PASS"
+    },
+    "pairwise_value_differences": [
+      {
+        "differences": [
+          {
+            "field": "trig_value0[3]",
+            "from_hex": "02",
+            "offset": 118,
+            "to_hex": "01"
+          },
+          {
+            "field": "trig_value0[3]",
+            "from_hex": "00",
+            "offset": 119,
+            "to_hex": "01"
+          }
+        ],
+        "from_value": "0x0002",
+        "to_value": "0x0101"
+      },
+      {
+        "differences": [
+          {
+            "field": "trig_value0[3]",
+            "from_hex": "02",
+            "offset": 118,
+            "to_hex": "1f"
+          },
+          {
+            "field": "trig_value0[3]",
+            "from_hex": "00",
+            "offset": 119,
+            "to_hex": "01"
+          }
+        ],
+        "from_value": "0x0002",
+        "to_value": "0x011f"
+      },
+      {
+        "differences": [
+          {
+            "field": "trig_value0[3]",
+            "from_hex": "01",
+            "offset": 118,
+            "to_hex": "1f"
+          }
+        ],
+        "from_value": "0x0101",
+        "to_value": "0x011f"
+      }
+    ],
+    "serial": {
+      "0x0002": {
+        "bytes": 372,
+        "cases": [
+          "s_op2"
+        ],
+        "differences_from_c1_1c35": [
+          {
+            "field": "trig_value0[3]",
+            "from_hex": "35",
+            "offset": 118,
+            "to_hex": "02"
+          },
+          {
+            "field": "trig_value0[3]",
+            "from_hex": "1c",
+            "offset": 119,
+            "to_hex": "00"
+          }
+        ],
+        "hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff0000fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000010000000200000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+        "sha256": "22854b3f2e92d0a31439e8b2cc08755826c011c67cbecf9fd5cb39f06d975a36",
+        "stage3_value0_le_hex": "0200",
+        "value": 2,
+        "value_hex": "0x0002"
+      },
+      "0x0101": {
+        "bytes": 372,
+        "cases": [
+          "s_op",
+          "s_op_repeat",
+          "s_alias"
+        ],
+        "differences_from_c1_1c35": [
+          {
+            "field": "trig_value0[3]",
+            "from_hex": "35",
+            "offset": 118,
+            "to_hex": "01"
+          },
+          {
+            "field": "trig_value0[3]",
+            "from_hex": "1c",
+            "offset": 119,
+            "to_hex": "01"
+          }
+        ],
+        "hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff0000fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000010000000101000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+        "sha256": "366e5c334b1eca464b5326f2670090f14e666b364cf5ad1935d03bcd79e8ef88",
+        "stage3_value0_le_hex": "0101",
+        "value": 257,
+        "value_hex": "0x0101"
+      },
+      "0x011f": {
+        "bytes": 372,
+        "cases": [
+          "s_absent"
+        ],
+        "differences_from_c1_1c35": [
+          {
+            "field": "trig_value0[3]",
+            "from_hex": "35",
+            "offset": 118,
+            "to_hex": "1f"
+          },
+          {
+            "field": "trig_value0[3]",
+            "from_hex": "1c",
+            "offset": 119,
+            "to_hex": "01"
+          }
+        ],
+        "hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff0000fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000010000001f01000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+        "sha256": "01f12e707ffe6a02d766863220de56b39f7383249b1e938120a9d48177bf76a7",
+        "stage3_value0_le_hex": "1f01",
+        "value": 287,
+        "value_hex": "0x011f"
+      }
+    },
+    "settings": {
+      "bits": 16,
+      "channels": "0-7",
+      "clock": "0:r",
+      "data": 2,
+      "enabled_count": 8,
+      "global_stage": 0,
+      "mode": "finite buffer",
+      "samplerate_hz": 100000000,
+      "samples": 1000448,
+      "start": "3:f",
+      "stop": "3:r",
+      "threshold_volts": 1.6,
+      "trigger_pos_percent": 10
+    },
+    "simple": {
+      "3:f": {
+        "bytes": 372,
+        "cases": [
+          "ctl"
+        ],
+        "hex": "a5f5a5f501000100020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+        "sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c"
+      }
+    },
+    "source_derivation": {
+      "copies_golden_bytes": false,
+      "equations": "X/C->mask1;1/R->value1;R/F/C->edge1;AND1/inv0->logic2;count1=1,count3=15;mode1|serial<<11;N>>4;pos=floor(10%N)&~63;trig_glb=8<<8",
+      "function": "derive_arm_image",
+      "implementation": "/tmp/dslcap-h-verify/verify_c3.py",
+      "layout": {
+        "counts16_uint32": 304,
+        "edge0": 176,
+        "edge1": 208,
+        "end_sync": 368,
+        "fields22_uint16": 4,
+        "logic0": 240,
+        "logic1": 272,
+        "mask0": 48,
+        "mask1": 80,
+        "sync": 0,
+        "value0": 112,
+        "value1": 144,
+        "variable_value0_stage3_offset": 118
+      },
+      "source_files": {
+        "/home/wroberts/DSView-1.3.2/DSView/pv/dock/triggerdock.cpp": {
+          "lines": "306-406 serial stage roles/counts",
+          "sha256": "6c3077380d8c2f59066f9a1ea93035ec4f4ba25413d44a29b5ada82859436488"
+        },
+        "/home/wroberts/DSView-1.3.2/libsigrok4DSL/hardware/DSL/dsl.c": {
+          "lines": "1036-1127 fixed settings;1130-1204 stage serialization",
+          "sha256": "fbd04d854400312f891abaa37fb7cff9ac29ecb4f6cb4b643ad708750dd5d3cb"
+        },
+        "/home/wroberts/DSView-1.3.2/libsigrok4DSL/hardware/DSL/dsl.h": {
+          "lines": "83-106 atomic/mode bits;416-421100M profile;1245-1282 struct",
+          "sha256": "bb5cd3c024bf4a85fe82c7d7e7ca489bb6028df262793f8860b550d0d5053ed2"
+        },
+        "/home/wroberts/DSView-1.3.2/libsigrok4DSL/libsigrok.h": {
+          "lines": "TriggerProbes16;STriggerDataStage3;DS_MAX_TRIG_PERCENT90",
+          "sha256": "8b313b1ebf8bfca3b9d1f179015fe303ff3acca42ed7244c03ea52049ca05f31"
+        },
+        "/home/wroberts/DSView-1.3.2/libsigrok4DSL/trigger.c": {
+          "lines": "58-82 initialization;101-116 string reversal;294-487 bit encoders",
+          "sha256": "9adfaa0d17433e20173890568722c92b1ce97700bb2f758ca1c285667af52a51"
+        }
+      }
+    }
+  },
+  "actual_register_images": {
+    "ctl": {
+      "sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+      "hex": "a5f5a5f501000100020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa"
+    },
+    "s_op": {
+      "sha256": "366e5c334b1eca464b5326f2670090f14e666b364cf5ad1935d03bcd79e8ef88",
+      "hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff0000fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000010000000101000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa"
+    },
+    "s_op2": {
+      "sha256": "22854b3f2e92d0a31439e8b2cc08755826c011c67cbecf9fd5cb39f06d975a36",
+      "hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff0000fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000010000000200000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa"
+    },
+    "s_absent": {
+      "sha256": "01f12e707ffe6a02d766863220de56b39f7383249b1e938120a9d48177bf76a7",
+      "hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff0000fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000010000001f01000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa"
+    },
+    "s_op_repeat": {
+      "sha256": "366e5c334b1eca464b5326f2670090f14e666b364cf5ad1935d03bcd79e8ef88",
+      "hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff0000fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000010000000101000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa"
+    },
+    "s_alias": {
+      "sha256": "366e5c334b1eca464b5326f2670090f14e666b364cf5ad1935d03bcd79e8ef88",
+      "hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff0000fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000010000000101000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa"
+    }
+  },
+  "cases": [
+    {
+      "case": "ctl",
+      "trigger": "simple 3:f",
+      "operations": "W,V",
+      "expected": "NSS fall of first frame",
+      "exit": 0,
+      "register_sha256": "c63e3ebaae8141b36d045fc5998a07c8870efc90a77b7121e43e56d2de5c0e8c",
+      "register_matches_expected": true,
+      "meta_trigger": 100039,
+      "raw_bytes": 1000496,
+      "worker_verdict": "PASS",
+      "receipt": {
+        "case": "ctl",
+        "operations": [
+          {
+            "op": "write",
+            "cmd_hex": "0002",
+            "data_hex": "00000000"
+          },
+          {
+            "op": "read",
+            "cmd_hex": "0101",
+            "read_len": 2
+          }
+        ],
+        "host_start_epoch": 1791426904.255,
+        "host_end_epoch": 1791426904.522,
+        "status": 0,
+        "completed": 2,
+        "aborted": false,
+        "cmd_err": null
+      }
+    },
+    {
+      "case": "s_op",
+      "trigger": "serial 0x0101",
+      "operations": "W,V",
+      "expected": "rising clock 16 of frame 2 (01 01)",
+      "exit": 0,
+      "register_sha256": "366e5c334b1eca464b5326f2670090f14e666b364cf5ad1935d03bcd79e8ef88",
+      "register_matches_expected": true,
+      "meta_trigger": 100062,
+      "raw_bytes": 1000496,
+      "worker_verdict": "PASS",
+      "receipt": {
+        "case": "s_op",
+        "operations": [
+          {
+            "op": "write",
+            "cmd_hex": "0002",
+            "data_hex": "00000000"
+          },
+          {
+            "op": "read",
+            "cmd_hex": "0101",
+            "read_len": 2
+          }
+        ],
+        "host_start_epoch": 1791427029.808,
+        "host_end_epoch": 1791427030.179,
+        "status": 0,
+        "completed": 2,
+        "aborted": false,
+        "cmd_err": null
+      }
+    },
+    {
+      "case": "s_op2",
+      "trigger": "serial 0x0002",
+      "operations": "V,W",
+      "expected": "rising clock 16 of frame 3 (00 02)",
+      "exit": 0,
+      "register_sha256": "22854b3f2e92d0a31439e8b2cc08755826c011c67cbecf9fd5cb39f06d975a36",
+      "register_matches_expected": true,
+      "meta_trigger": 100034,
+      "raw_bytes": 1000496,
+      "worker_verdict": "PASS",
+      "receipt": {
+        "case": "s_op2",
+        "operations": [
+          {
+            "op": "read",
+            "cmd_hex": "0101",
+            "read_len": 2
+          },
+          {
+            "op": "write",
+            "cmd_hex": "0002",
+            "data_hex": "00000000"
+          }
+        ],
+        "host_start_epoch": 1791427094.543,
+        "host_end_epoch": 1791427094.684,
+        "status": 0,
+        "completed": 2,
+        "aborted": false,
+        "cmd_err": null
+      }
+    },
+    {
+      "case": "s_absent",
+      "trigger": "serial 0x011f",
+      "operations": "W,V",
+      "expected": "timeout, exit 16",
+      "exit": 16,
+      "register_sha256": "01f12e707ffe6a02d766863220de56b39f7383249b1e938120a9d48177bf76a7",
+      "register_matches_expected": true,
+      "meta_trigger": null,
+      "raw_bytes": 27,
+      "worker_verdict": "PASS",
+      "receipt": {
+        "case": "s_absent",
+        "operations": [
+          {
+            "op": "write",
+            "cmd_hex": "0002",
+            "data_hex": "00000000"
+          },
+          {
+            "op": "read",
+            "cmd_hex": "0101",
+            "read_len": 2
+          }
+        ],
+        "host_start_epoch": 1791427143.66,
+        "host_end_epoch": 1791427143.839,
+        "status": 0,
+        "completed": 2,
+        "aborted": false,
+        "cmd_err": null
+      }
+    },
+    {
+      "case": "s_op_repeat",
+      "trigger": "serial 0x0101",
+      "operations": "V,W",
+      "expected": "rising clock 16 of frame 1 (01 01)",
+      "exit": 0,
+      "register_sha256": "366e5c334b1eca464b5326f2670090f14e666b364cf5ad1935d03bcd79e8ef88",
+      "register_matches_expected": true,
+      "meta_trigger": 100076,
+      "raw_bytes": 1000496,
+      "worker_verdict": "PASS",
+      "receipt": {
+        "case": "s_op_repeat",
+        "operations": [
+          {
+            "op": "read",
+            "cmd_hex": "0101",
+            "read_len": 2
+          },
+          {
+            "op": "write",
+            "cmd_hex": "0002",
+            "data_hex": "00000000"
+          }
+        ],
+        "host_start_epoch": 1791427229.783,
+        "host_end_epoch": 1791427229.854,
+        "status": 0,
+        "completed": 2,
+        "aborted": false,
+        "cmd_err": null
+      }
+    },
+    {
+      "case": "s_alias",
+      "trigger": "serial 0x0101",
+      "operations": "A",
+      "expected": "rising clock 32 of payload word 01 01 in 00 02 frame",
+      "exit": 0,
+      "register_sha256": "366e5c334b1eca464b5326f2670090f14e666b364cf5ad1935d03bcd79e8ef88",
+      "register_matches_expected": true,
+      "meta_trigger": 100075,
+      "raw_bytes": 1000496,
+      "worker_verdict": "PASS",
+      "receipt": {
+        "case": "s_alias",
+        "operations": [
+          {
+            "op": "write",
+            "cmd_hex": "0002",
+            "data_hex": "01010000"
+          }
+        ],
+        "host_start_epoch": 1791427280.566,
+        "host_end_epoch": 1791427280.854,
+        "status": 0,
+        "completed": 1,
+        "aborted": false,
+        "cmd_err": null
+      }
+    }
+  ],
+  "artifacts": {
+    "/tmp/dslcap-h-live/ctl.json": {
+      "bytes": 797,
+      "sha256": "8f3c411e1e4261926fd67c72a864ca73cd6f9096467d0ae6143280c2ac23efa8"
+    },
+    "/tmp/dslcap-h-live/ctl.raw": {
+      "bytes": 1000496,
+      "sha256": "4ea945a942577fb11432ec686862f76df10e841da332185f80fa629df4cde6b5"
+    },
+    "/tmp/dslcap-h-live/ctl.receipts.json": {
+      "bytes": 250,
+      "sha256": "16e799108f5adf2ddd05a3cded620cf94db7cd21f3a88798587d81bc8c1d82b9"
+    },
+    "/tmp/dslcap-h-live/ctl.stderr": {
+      "bytes": 3179,
+      "sha256": "5d5237188020c39b142cb88b68f4022c6f65d9e89d8f54b631c0232059a69d0c"
+    },
+    "/tmp/dslcap-h-live/ctl.usb.log": {
+      "bytes": 83112,
+      "sha256": "078084d3fa4d611f387981b0e27a749f30e07ebab4f24c730c7d944cb9cdbfcf"
+    },
+    "/tmp/dslcap-h-verify/ctl.json": {
+      "bytes": 15225,
+      "sha256": "98f5fc980ca62fdef575742b39a325760a96b8693a7116261c2db1efd59d0fae"
+    },
+    "/tmp/dslcap-h-live/s_op.json": {
+      "bytes": 858,
+      "sha256": "a4d1df1e370fbafd5b28b2a9c04e495df563aac6b025ad87c601fd4b507bf86a"
+    },
+    "/tmp/dslcap-h-live/s_op.raw": {
+      "bytes": 1000496,
+      "sha256": "f1b66a465f4a503b47f8403487f4a1df3f21a9a8c0802bca4dc5681d26104264"
+    },
+    "/tmp/dslcap-h-live/s_op.receipts.json": {
+      "bytes": 251,
+      "sha256": "5277877b3b161599446fffa365adc8ece636c967ec40492db327e8a40c50e4d5"
+    },
+    "/tmp/dslcap-h-live/s_op.stderr": {
+      "bytes": 3195,
+      "sha256": "f68a3cd0e04469eca315e521b427c2674219e3ca1c66774f06a2168447baedfa"
+    },
+    "/tmp/dslcap-h-live/s_op.usb.log": {
+      "bytes": 48708,
+      "sha256": "87612a76cc33fa5bb3bddbfad50a311204636643fd2c8f8989e57c34961e7117"
+    },
+    "/tmp/dslcap-h-verify/s_op.json": {
+      "bytes": 15324,
+      "sha256": "d6df4ef69096e64ca8e342faf04ff9433aafb408c843fa4b112ebb20ef2748f5"
+    },
+    "/tmp/dslcap-h-live/s_op2.json": {
+      "bytes": 858,
+      "sha256": "f4f88015fab0241e0fc6d4e4f9cc3bbc78ca212afebfc077c39d0e16f9d87436"
+    },
+    "/tmp/dslcap-h-live/s_op2.raw": {
+      "bytes": 1000496,
+      "sha256": "d24b1fffa3da269da65e4430b56ff2aef6fea85373347a092078c7a66616edd2"
+    },
+    "/tmp/dslcap-h-live/s_op2.receipts.json": {
+      "bytes": 252,
+      "sha256": "30c29ceddbebe46bad301fb7b15ed7c37e472ce4ed21f6d6465d05e8823fd3f4"
+    },
+    "/tmp/dslcap-h-live/s_op2.stderr": {
+      "bytes": 3195,
+      "sha256": "bc1b5ca62ed0c9c148d0a7e21f2beb5fcaab2ff80f7bcc9bf0e1f2d7bf436218"
+    },
+    "/tmp/dslcap-h-live/s_op2.usb.log": {
+      "bytes": 46329,
+      "sha256": "f6c143a335bb011f287abf549b0c8da400db0147c61bbd10d58159fae72b9404"
+    },
+    "/tmp/dslcap-h-verify/s_op2.json": {
+      "bytes": 15333,
+      "sha256": "11554329cb3e507e3b33700415783ec6eb26cfda29aa41af7b2d7b156e93a015"
+    },
+    "/tmp/dslcap-h-live/s_absent.json": {
+      "bytes": 863,
+      "sha256": "c97fb6510eaea09e129835a978a3f8c44bb53955c963fe783a357f1376b653bb"
+    },
+    "/tmp/dslcap-h-live/s_absent.raw": {
+      "bytes": 27,
+      "sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab"
+    },
+    "/tmp/dslcap-h-live/s_absent.receipts.json": {
+      "bytes": 255,
+      "sha256": "61569f95fa5417842382ff0183ca73538086c865bf360c8b55bfb69f492fe1d5"
+    },
+    "/tmp/dslcap-h-live/s_absent.stderr": {
+      "bytes": 3277,
+      "sha256": "ac904f2c29419414b92e7c314568761f802cd620dc33142af1e74ab057c92265"
+    },
+    "/tmp/dslcap-h-live/s_absent.usb.log": {
+      "bytes": 90701,
+      "sha256": "21be62a025603d79363b8188e252921246da4f89c11691c40a07a63b8c193a19"
+    },
+    "/tmp/dslcap-h-verify/s_absent.json": {
+      "bytes": 11249,
+      "sha256": "d93a74f14cc015e542e5af8357cdd36b515c458bc4cd948e07b0098b4e8befb6"
+    },
+    "/tmp/dslcap-h-live/s_op_repeat.json": {
+      "bytes": 865,
+      "sha256": "a118b369585fc6298d624f9cec6c37ee076647768d1c8030645533cddb636e0a"
+    },
+    "/tmp/dslcap-h-live/s_op_repeat.raw": {
+      "bytes": 1000496,
+      "sha256": "06852d9a1cf985aa515aa964ff14d82b66a7481f0b806343961d06ecdf48b3c9"
+    },
+    "/tmp/dslcap-h-live/s_op_repeat.receipts.json": {
+      "bytes": 258,
+      "sha256": "11f5a4693183b6fae13017694d6cde51defa857d36bf87143ccd10fe1e6bf8f1"
+    },
+    "/tmp/dslcap-h-live/s_op_repeat.stderr": {
+      "bytes": 3195,
+      "sha256": "e719f0ed5efe1cde25b81821c9e725fe783467ccd7686ca5d387bb641f9dcdf9"
+    },
+    "/tmp/dslcap-h-live/s_op_repeat.usb.log": {
+      "bytes": 48891,
+      "sha256": "ce317e58fce911b02bfa3fefedff7cefe1c61389b3b3d2104806e356358b54ce"
+    },
+    "/tmp/dslcap-h-verify/s_op_repeat.json": {
+      "bytes": 15466,
+      "sha256": "50babb984fad343557abad38770930bf9e836a3a5fa9a34143b097a21bc43b31"
+    },
+    "/tmp/dslcap-h-live/s_alias.json": {
+      "bytes": 861,
+      "sha256": "42a0835081218d26a980415acc70396ca2e165a5ebc8a0a027dbef30e9b7ed2e"
+    },
+    "/tmp/dslcap-h-live/s_alias.raw": {
+      "bytes": 1000496,
+      "sha256": "3d0957b62bc3837d837b924d746157a0497dc96877f4d2cd34b2952d01b43f27"
+    },
+    "/tmp/dslcap-h-live/s_alias.receipts.json": {
+      "bytes": 210,
+      "sha256": "3a65caf84ac1405e318cd1a41b154f1ca77008c1f64f4f937a964cafe1d0a892"
+    },
+    "/tmp/dslcap-h-live/s_alias.stderr": {
+      "bytes": 3195,
+      "sha256": "6d0a68e46fc3504e4cb44ff076e59c90831af3f365538d89d7fc3e47838c925a"
+    },
+    "/tmp/dslcap-h-live/s_alias.usb.log": {
+      "bytes": 49440,
+      "sha256": "a82a814f02f41c91723401844e88634a02a50ce8ee40b43106e56b11f838b2d4"
+    },
+    "/tmp/dslcap-h-verify/s_alias.json": {
+      "bytes": 12298,
+      "sha256": "86ef334e657d6ca170262d68b3d5489bea6047bdce8e8454d1d96170134e997b"
+    }
+  },
+  "radio_owner_result": {
+    "task": "dslcap-h-radio-20261008",
+    "owner": "hydra-develop-26 (75e80b13-b652-47db-a4d6-ff7d836a30d4)",
+    "record": {
+      "action_needed": "",
+      "age_seconds": 34,
+      "delivered_utc": null,
+      "delivery_diagnostics": {
+        "observation": "watcher_listening",
+        "observed_utc": "2026-10-08T02:29:06.498388+00:00",
+        "reason": "worker_mailbox_notice_queued",
+        "relay_exit_code": null,
+        "stage": "worker_hook",
+        "state": "queued",
+        "tools_called": [],
+        "transport": "worker_hook",
+        "worker_directory_match": true
+      },
+      "delivery_receipt": null,
+      "id": "dslcap-h-radio-20261008",
+      "message": "Phase H radio done: 6 GOs (ctl, s_op, s_op2, s_op_repeat, s_alias triggered; s_absent timed out as expected); pi133 baseline/app/SPI 8 MHz/pins preserved; pi134 untouched",
+      "message_delivery_alerts": [],
+      "notification": "foreground polling; automatic return only with a registered wake service",
+      "repo": "/mnt/foo/nfs_share_for_pis/hydra_develop",
+      "request": "dslcap C.3 opcode-trigger validation: pi133 radio owner task.\n\nLead: Claude session saleae-binparser-64 (9e363f42-5e01-45ab-a265-55c5d1536d0e), replacing the previous Codex DS_LEAD. The user authorized C.3 and authorized you to use the bench without asking the user. Lead owns the DSLogic analyzer exclusively (native dslcap, no DSView). dslcap_worker (Codex) verifies offline only and does not direct you.\n\nScope: pi133 radio only, through the existing mcp_radio app path (original app, mode 0, requested 8 MHz). No RF/SetTx/SetRx, no GPIO/reset/config/DIO/IRQ-mask changes, no helpers/dependencies/rebuilds/restarts. Pi134 untouched. No repository edits. Keep evidence in private host /tmp or scratch.\n\nStep 1 (now): recoordinate ownership and read the baseline. Expected from the last pause: STBY_XOSC, system IRQ 0, errors 0, TX FIFO level 0, sticky FIFO flags RX 0x03 / TX 0x27, app PID 7973, mode 0 / 8-bit / 8 MHz, GPIO20 input/pull-down/low. Report any differences. Also report pi133's radio chip, and the exact opcode and MOSI/MISO bytes of the frames for GetVersion and the 4-byte WriteTxFifo carrier (00 02 + 4 data bytes). Then send READY as a task message and hold.\n\nStep 2: the lead sends uniquely named GO messages in THIS task. Each GO names the case and the exact MOSI bytes of one or more frames, in order. Allowed frames: read-only Get* commands (e.g. GetVersion, including its response read) and the existing safe WriteTxFifo carrier with a 4-byte payload. Refuse anything else and ask. Emit exactly what the GO lists, once: no retries, no background SPI. Immediately send SENT with host UTC, status/completed, and the exact frames. Hold until CAPTURE_COMPLETE from the lead, then restore: clear TX FIFO / only newly raised FIFO_TX IRQ, verify the baseline and flags 03/27, and send RESTORED_READY. Never clean up while the analyzer is armed. A repeated GO id never re-emits. At most 12 GOs without further lead authority.\n\nStep 3: after the lead's final-cleanup message, verify the original SPI/app/state and publish all receipts and restorations as the terminal result.\n",
+      "request_sha256": "8392e88b702b315cb8af96f1cf4dd339d427680fda4d782bb6bc47fa07c8499a",
+      "requester": "9e363f42-5e01-45ab-a265-55c5d1536d0e",
+      "result": "# dslcap-h-radio-20261008: terminal result (hydra-develop-26), lead saleae-binparser-64\n\npi133 LR2021 (GetVersion 01 18). All frames went through the mcp_radio app path (mode 0, 8 MHz request \u2192 7.8125 MHz bus), one hal_script per GO, emitted once.\nBaseline at start = final (below). Allowed set honoured: read-only GetVersion + 4-byte WriteTxFifo only; nothing refused or needed.\n\n| # | case | GO id | native trigger (lead) | ops / MOSI frames in order | host emission window (UTC 2026-10-08) | result | lead CAPTURE_COMPLETE |\n|---|---|---|---|---|---|---|---|\n| 1 | ctl | go-ctl | simple NSS | WriteTxFifo [000200000000] st 0; GetVersion [0101 , 00000000] st 0 data 0118 | 02:35:04.255 to 02:35:04.522 | completed 2, aborted False, cmd_err None | triggered (exit 0) |\n| 2 | s_op | go-s_op | serial 0x0101/16 | WriteTxFifo [000200000000] st 0; GetVersion [0101 , 00000000] st 0 data 0118 | 02:37:09.808 to 02:37:10.179 | completed 2, aborted False, cmd_err None | **triggered** (exit 0) |\n| 3 | s_op2 | go-s_op2 | serial 0x0002/16 | GetVersion [0101 , 00000000] st 0 data 0118; WriteTxFifo [000200000000] st 0 | 02:38:14.543 to 02:38:14.684 | completed 2, aborted False, cmd_err None | **triggered** (exit 0) |\n| 4 | s_absent | go-s_absent | serial 0x011f/16 | WriteTxFifo [000200000000] st 0; GetVersion [0101 , 00000000] st 0 data 0118 | 02:39:03.660 to 02:39:03.839 | completed 2, aborted False, cmd_err None | timeout as expected (exit 16) |\n| 5 | s_op_repeat | go-s_op_repeat | serial 0x0101/16 | GetVersion [0101 , 00000000] st 0 data 0118; WriteTxFifo [000200000000] st 0 | 02:40:29.783 to 02:40:29.854 | completed 2, aborted False, cmd_err None | **triggered** (exit 0) |\n| 6 | s_alias | go-s_alias | serial 0x0101/16 | WriteTxFifo [000201010000] st 0 | 02:41:20.566 to 02:41:20.854 | completed 1, aborted False, cmd_err None | **triggered** (exit 0) |\n\nMISO reference (pi133): GetVersion frame A `01 01` \u2192 `04 52`; frame B `00 00 00 00` \u2192 `06 52 01 18`; WriteTxFifo `00 02 d0..d3` \u2192 `04 52 00 00 00 00`.\n6 of 12 GOs used; no duplicate GO ids; no retries; no background SPI. Receipts: hd26-h-sent-<case> / hd26-h-restored-<case>.\nThe first SENT for ctl failed to post (empty body rejected by the mailbox); it was re-posted correctly from saved evidence, with no retransmission.\n\nRestoration after each of the 6 (all baseline_ok=true): clear_tx \u2192 TX level 0; FIFO flags 03/27 unchanged; sys irq 0x00000002 (FIFO_TX newly raised by the carrier) \u2192 clear_irq_status{0x2} only \u2192 0x00000000; errors 0; STBY_XOSC.\n\n## Final state (02:41:52Z)\n- Radio: irq 0x00000000, STBY_XOSC, errors 0, TX FIFO 0, FIFO flags rx 0x03 / tx 0x27. Equals the baseline.\n- spidev: mode 0 (mode32 0x0), bits 8, lsb 0, default max 8000000 Hz. App: `./mcp_radio --mcp-http` pid 7973 (Oct 7 13:02:58), not restarted.\n- Pins unchanged: GPIO4 op hi, GPIO5 ip lo, GPIO6 ip pu hi, GPIO18 ip pd lo, GPIO20 ip pd lo. No pigpiod.\n- No RF/SetTx/SetRx, GPIO/reset/config/DIO/IRQ-mask writes, helpers, dependencies, rebuilds or repo edits. **pi134 untouched.**\n- Host evidence: scratchpad/h/ (per-case JSON, sent/restore receipts, log.txt, seen_go.txt).\n",
+      "result_sha256": "99527a5a71237293299d330d234cd4dae0f1069dd934957062a783e73f1cc3d0",
+      "revision": 5,
+      "stale": false,
+      "state": "complete",
+      "unread_messages": {
+        "requester": 0,
+        "worker": 0
+      },
+      "updated_epoch": 1791427335.314146,
+      "updated_utc": "2026-10-08T02:42:15.314136+00:00",
+      "worker": "75e80b13-b652-47db-a4d6-ff7d836a30d4",
+      "worker_name": "hydra-develop-26"
+    }
+  },
+  "usb_released": {
+    "device": "/dev/bus/usb/001/012",
+    "evidence": "lead-reported",
+    "check": {
+      "utc": "2026-10-08T02:54:28.496Z",
+      "command": "fuser -v /dev/bus/usb/001/012",
+      "exit": 1,
+      "output": "",
+      "lsusb": "Bus 001 Device 012: ID 2a0e:0034 Shenzhen DreamSource Technology Co., Ltd. USB-based DSL Instrument v2",
+      "dslcap_processes": "",
+      "note": "Run by the lead after the final native capture and owner terminal result; fuser exit 1 with empty output means no process held the device."
+    },
+    "meaning": "No process held the analyzer at the recorded check time (lead-reported, not independently probed)."
+  },
+  "independent_verification": {
+    "worker": "dslcap_worker Codex thread 01a1175b-6787-7232-92a6-a80ffff3dcd4",
+    "summary_sha256": "4dbfb93c9e5c1acb133e79aa502d2e0d7fd03dd3df6cce03a6b216854cb388b2",
+    "verifier_sha256": "e6a2b6e6c8a6422cb8ea9ae2e3e94261df54c954fc253ba1a00df5f868157223",
+    "verdict": "VERIFIED_FOR_TESTED_NATIVE_100M_CH0_7_C3_MATRIX",
+    "shutdown_fix": "FORCE_RDY after valid header and complete data is normal successful stop; early stop rejected; negative deadline/preabort IN/valid-header rules unchanged.",
+    "self_test_groups": 19,
+    "limits": [
+      "Fixed100MS/s CH0-7 bits16/current two opcodes; no higher-rate or full FPGA mechanism claim.",
+      "Alias case shows matching aligned payload word also triggers; no opcode-only selectivity.",
+      "Negative no contemporaneous waveform; separate control and normalized exact owner batch receipt support stimulus only.",
+      "Radio/pin/app/SPI restoration is owner-reported, reconciled to raw records and chronology; this worker performed no remote hardware or USB probe."
+    ]
+  },
+  "limitations": [
+    "Comparison is on bits-wide words aligned from NSS assertion; an aligned payload word equal to the value also fires (s_alias). This is not an opcode-only filter.",
+    "Expected serial register images are source-derived (they reproduce the C.1 DSView 0x1c35 golden byte for byte), not new DSView UI captures.",
+    "s_absent has no contemporaneous waveform; the ctl capture and hash-bound owner receipts support its stimulus.",
+    "Host receipt times place emissions inside the armed wait, not at sample-level synchronization.",
+    "Only 100 MS/s CH0-7, bits=16, two opcodes on LR2021 pi133. Higher-rate live bit order and full FPGA internals remain unproven."
+  ],
+  "durable_review": {
+    "reviewer": "dslcap_worker Codex thread 01a1175b-6787-7232-92a6-a80ffff3dcd4",
+    "verdict": "DURABLE_PASS",
+    "reviewed_json_sha256": "2b776e574ba09f015ceab36c6d8857b535aca948e9cbb675baa26274031c1541",
+    "exact_comparisons": 362,
+    "initial_findings": [
+      "DOC-1",
+      "DOC-2",
+      "DOC-3",
+      "PROVENANCE-1"
+    ],
+    "resolved": "all four",
+    "report_sha256": "e1e5c88c79bf0c68629b5ca1f7cb15f412660f739ea3c487d2450ed8abc75059",
+    "note": "Only this durable_review annotation was added after the reviewed JSON hash."
+  }
+}

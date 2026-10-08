@@ -2,6 +2,31 @@
 
 ## C-serial-trigger — wave 1
 
+### Native C.3 opcode validation (complete at 100 MS/s)
+
+User resumed after bf045bb, appointed a new Claude lead (saleae-binparser-64)
+and authorized analyzer use and radio-owner bench use without operator prompts.
+Lead owned exclusive USB; radio owner task `dslcap-h-radio-20261008`
+(hydra-develop-26) re-verified the pi133 baseline, then emitted one batch per
+named GO, limited to read-only Get* commands and the 4-byte WriteTxFifo frame.
+dslcap_worker (Codex thread, reached by `codex queue`; it returned notices
+through secondopinion tasks and STATUS files) designed the matrix offline and
+verified every capture under /tmp/dslcap-h-verify. Same frozen binary and
+settings as native C.2.
+Cases: NSS control; serial 0x0101 with WriteTxFifo then GetVersion; serial
+0x0002 with the order reversed; absent 0x011f; serial 0x0101 with GetVersion
+first; optional payload alias 000201010000. All five hits marked the expected
+edge with zero sample delta: NSS fall for the control, rising clock 16 of the
+opcode frame for the three opcode hits, rising clock 32 for the alias. The
+absent value exited 16 with samplerate-only output. Actual arm
+images matched source-derived expected images; those reproduce the C.1 DSView
+golden. The worker fixed its verifier's misclassification of the normal
+end-of-capture stop request. No production change or new review cycle.
+Six GOs, six verified restorations; final pi133 baseline, original app/SPI
+settings and pins confirmed, pi134 untouched. Radio task revision 5 consumed and
+acknowledged. Lead fuser check found USB released. See OPCODE_VALIDATION.md/JSON. Higher-rate live
+bit-order checks remain open.
+
 ### Native aligned bit-order validation (complete at 100 MS/s)
 
 User authorized native C.2 after cb9008d. Lead owns exclusive analyzer USB;

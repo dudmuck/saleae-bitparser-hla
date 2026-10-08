@@ -9,8 +9,9 @@ Phase C serial-trigger implementation is now present in C and Python with
 offline coverage and independent review PASS; see
 [SERIAL_REVIEW.md](SERIAL_REVIEW.md). Real DSView serial register comparison
 passed at100M/200M/400M. Native aligned bit-order validation subsequently
-**passed at 100 MS/s, CH0–7**; opcode and higher-rate live order gates remain
-open. The original crossed-word patterns timed out despite passing NSS controls; see
+**passed at 100 MS/s, CH0–7**, and C.3 opcode validation passed with the same
+settings ([OPCODE_VALIDATION.md](OPCODE_VALIDATION.md)). Higher-rate live
+order gates remain open. The original crossed-word patterns timed out despite passing NSS controls; see
 [SERIAL_VALIDATION.md](SERIAL_VALIDATION.md) and
 [TRIGGER_TASKS.md](TRIGGER_TASKS.md). A subsequent real DSView live test also
 failed to trigger serially while its NSS control passed; see
@@ -28,8 +29,11 @@ incorrect. See [SERIAL_INTERMEDIATE_WIDTHS.md](SERIAL_INTERMEDIATE_WIDTHS.md).
 Native C.2 then confirmed the intended `1c35` order twice on aligned carriers
 and rejected all three reversed variants. See
 [SERIAL_ALIGNED_VALIDATION.md](SERIAL_ALIGNED_VALIDATION.md).
-Next: C.3 opcode validation. The full FPGA mechanism and untested
-configurations, including higher-rate live bit order, remain unproven.
+C.3 then passed at 100 MS/s CH0–7: opcodes `0x0101` and `0x0002` fired at
+rising clock 16 of their own frame in first, second or third position; an
+absent opcode timed out, and an aligned payload alias fired at clock 32. See
+[OPCODE_VALIDATION.md](OPCODE_VALIDATION.md). The full FPGA mechanism and
+untested configurations, including higher-rate live bit order, remain unproven.
 Optional trigger-relative
 timestamps remain unimplemented.
 
@@ -827,8 +831,9 @@ Real DSView reproduced those misses, but a later constant-register alignment
 test hit twice with the target at clocks 17–32 and missed at clocks 25–40.
 The native aligned C.2 run now passes at100M CH0–7: intended order hits twice,
 three reversals time out, and all four separate NSS waveform controls pass.
-The old crossed-word misses do not establish order. C.3 and higher-rate live
-bit-order checks remain pending. See SERIAL_INTERMEDIATE_WIDTHS.md and
+The old crossed-word misses do not establish order. C.3 opcode validation
+then passed at100M CH0–7 (OPCODE_VALIDATION.md). Higher-rate live bit-order
+checks remain pending. See SERIAL_INTERMEDIATE_WIDTHS.md and
 SERIAL_ALIGNED_VALIDATION.md; source mapping is unchanged.
 
 1. **Golden image:** B.1-style comparison against DSView's serial tab with

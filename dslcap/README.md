@@ -222,8 +222,10 @@ LSB. The asymmetric16-bit value0x1c35 distinguishes bit reversal0xac38,
 byte swap0x351c, and both0x38ac. Offline tests pin the parsed value and generated
 stage state; they do not prove hardware shift order or constitute a real DSView
 register golden. Actual register comparison passed at 100/200/400 MS/s, and
-native aligned bit-order validation passed at 100 MS/s on CH0–7. Opcode and
-higher-rate live order checks remain open in [TRIGGER_PLAN.md](TRIGGER_PLAN.md).
+native aligned bit-order validation passed at 100 MS/s on CH0–7. C.3 opcode
+validation also passed there for LR2021 opcodes `0x0101` and `0x0002`; see
+[OPCODE_VALIDATION.md](OPCODE_VALIDATION.md). Higher-rate live order checks
+remain open in [TRIGGER_PLAN.md](TRIGGER_PLAN.md).
 
 Treat the serial comparison as N-bit words aligned from the start condition,
 not an arbitrary sliding bit window. In real DSView tests, 16-bit `0x1c35`
