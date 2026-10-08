@@ -61,9 +61,11 @@ physical channels 0–15. It reads one byte per sample when every captured
 channel is below 8, otherwise two little-endian bytes. Width follows the
 exact SPI/pin/trigger channel union passed to dslcap, not unused `-C` name mappings.
 This wider input applies only to `--dslogic`; sigrok raw behavior remains
-8-bit and Saleae automation is unchanged. `--engine srd`, `-d`, `-i`, `-I`,
-`-T` and `--saleae` cannot be combined
-with `--dslogic`. Select exactly one of `--samples`, `--time`, or
+8-bit and Saleae automation is unchanged. `--engine srd`, `-d`, `-I` and
+`--saleae` cannot be combined with `--dslogic`; `-i` replays a dslcap raw file
+([capture first, decode after](#dslogic-capture-first-decode-after)) and `-T`
+accepts only `deglitch` ([with `--dslogic`](#with---dslogic)). For a live
+capture, select exactly one of `--samples`, `--time`, or
 `--continuous`. The default rate is 25M, threshold 1.6 V; `--vth V` accepts
 0–2.5 V. Unsupported rates/channel counts are rejected before the producer
 is launched, and dslcap verifies its own configuration and readback.
@@ -272,6 +274,67 @@ DSLogic examples describe supported syntax; real dual-SPI HLA comparison
 against Saleae/Logic 2 and verbose live capture remain validation gates until
 recorded in [dslcap/VALIDATION.md](dslcap/VALIDATION.md).
 
+### DSLogic: capture first, decode after
+
+For long or busy runs, record dslcap's raw output to a local file and decode it
+afterwards. `--raw-out FILE` runs the same derived dslcap command with stdout
+going straight to FILE, so no Python sits in the sample path, and it writes a
+`FILE.json` record (command, captured channels, sample width, META line count,
+exit status, byte count). It refuses to start if either FILE or `FILE.json`
+already exists, and exits with dslcap's status (128 + signal if dslcap was
+killed). Ctrl-C or SIGTERM to sigrok_hla.py is forwarded to dslcap, which then
+drains and stops; it is escalated to TERM and KILL if dslcap is still running
+after 20 s. Decode with `--dslogic -i FILE` and the same `-C`/`--spi`/pin options:
+
+```bash
+./sigrok_hla.py --dslogic --dslcap /tmp/dslcap-build/dslcap \
+    --hla-path ~/HLA/saleae_lr2021 --spi 0,1,2,3 --spi 8,9,10,11 \
+    -C 4=pi133_busy,5=pi133_dio8,12=pi134_busy,13=pi134_dio8 \
+    --extra-pin pi133_busy --extra-pin pi134_busy \
+    --samplerate 25M --time 77s --raw-out /local/cell.raw
+
+./sigrok_hla.py --dslogic -i /local/cell.raw \
+    --hla-path ~/HLA/saleae_lr2021 --spi 0,1,2,3 --spi 8,9,10,11 \
+    -C 4=pi133_busy,5=pi133_dio8,12=pi134_busy,13=pi134_dio8 \
+    --extra-pin pi133_busy --extra-pin pi134_busy --hex
+```
+
+Replay goes through the same decoder as live capture, and its output is
+identical for the same bytes. With a `FILE.json` record, the replay reads the
+file's real sample width (so decoding one bus of a 12-channel capture works),
+and fails if a mapped channel was not captured or the record is malformed. It
+also refuses a capture whose record shows a nonzero exit, no exit status
+(unfinished), or a byte count different from the file; `--dsl-partial` decodes
+it anyway with a warning, since its last transaction may be cut. A continuous
+capture stopped with Ctrl-C records exit 130, so replay it with `--dsl-partial`.
+Without a record, the width comes from the mapping as in a live run. A file captured with a trigger has a
+second META line: pass `--dsl-triggered`. Capture options (`--samples`,
+`--time`, `--vth`, triggers, `--dsl-mode`) are rejected with `-i`. Raw size at
+12 channels and 25 MSa/s is 50 MB/s: about 460 MB for 9 s and 11.5 GB for
+230 s, so write to local disk, not NFS.
+
+**Sustained decode rate.** Measured by replaying synthetic 12-channel, uint16
+dual-bus ping-pong (10 MHz SCLK at 25 MSa/s, 511-byte FIFO writes and reads,
+prbs9 payloads; every transfer byte-exact against the expected bytes), as
+`sigrok_hla.py --dslogic -i FILE --spi 0,1,2,3 --spi 8,9,10,11 [--hex]`
+wall time, startup included. Ranges span medians of three runs from two
+independent measurements on this host while other jobs loaded it (load
+average up to 11 of 20 CPUs), so treat them as indicative:
+
+| SPI load (CS active per bus) | `--hex` | plain | `--hex` + deglitch | vs 50 MB/s live |
+| --- | ---: | ---: | ---: | --- |
+| ~18% (planned pcycle ping-pong, 4.6 ms period) | 102-118 MB/s | 130-132 MB/s | 79-85 MB/s | 1.6-2.6x margin |
+| ~59% | 33-35 MB/s | 36-41 MB/s | | below real time |
+
+Decode cost is dominated by decoded SPI bytes (the per-byte HLA frame path,
+about 0.64 µs per byte), not samples (about 2 ns each). Live decode keeps up
+while the two buses together carry under roughly 1-1.5 MB/s of SPI data; heavier
+traffic slowly fills dslcap's 256 MiB ring and ends with an overflow. Use
+`--raw-out` and replay for those, or for any run where a missed byte matters.
+Numbers include about 0.6 s of startup and were taken on this host (20 CPUs,
+NumPy 2.2, numba 0.63); without numba the SPI scan falls back to NumPy and is
+roughly three times slower.
+
 ### Saleae backend
 
 Single SPI port, timed capture:
@@ -355,7 +418,7 @@ From a raw binary file:
 
 | Engine | Decoder | Throughput | Use |
 |--------|---------|-----------|-----|
-| `numpy` (default) | `fast_spi.py`, vectorized | ~36 MB/s (1.4x the 25 MB/s live rate) | live capture, large files |
+| `numpy` (default) | `fast_spi.py`, vectorized (numba scan) | ~100-130 MB/s at planned 12-ch load; see [sustained decode rate](#dslogic-capture-first-decode-after) | live capture, large files |
 | `srd` | libsigrokdecode SPI PD | ~1.3 MB/s (~20x slower than real time) | reference / cross-check |
 
 The `numpy` engine reads sigrok-cli's raw sample stream (`-O binary`) and
@@ -581,6 +644,39 @@ its final few samples (≤ ~10) at end of capture.
 
 For sustained burst traffic, decode from a recorded file rather than live —
 see [High-throughput traffic: capture first, decode after](#high-throughput-traffic-capture-first-decode-after).
+
+### With `--dslogic`
+
+The DSLogic path has no sigrok-cli, so `-T deglitch:...` runs in-process:
+`deglitch.py` is a streaming port of the same transform, applied to the
+physical sample array before SPI decode and pin logging. Same syntax and
+options, except that `channels=` is required (name the SPI clocks; the C
+default of every logic channel is not offered). Channel names resolve through
+`-C`, and numbers are physical bits:
+
+```
+-T "deglitch:channels=0,8:clock_period=2.5:frame_pulses=8"
+```
+
+Its output and counters match libsigrok's transform byte for byte (oracle
+tests against the patched sigrok-cli on uint8 and uint16 data, both sampling
+phases, random chunk splits). Per-clock counters are printed to stderr at the
+end. It applies at replay too (`--dslogic -i FILE -T ...`); `--raw-out` refuses
+`-T`, so the recorded file is always the unmodified producer stream. Lookahead
+at these options is 14 samples (560 ns), which are dropped at end of stream as
+in C. It needs numba (about 690 MB/s alone; the NumPy fallback runs at about
+6 MB/s and warns). With it, the 12-channel planned-load decode runs at
+79-85 MB/s with `--hex`, and the output on clean data is identical with zero
+corrections.
+
+At 25 MSa/s a sample is 40 ns, and each 10 MHz SCLK phase is nominally 50 ns.
+On synthetic traffic without deglitch, decode is byte-exact down to a 41% duty
+cycle and starts slipping bits at 40%, where a phase shrinks to one sample.
+With deglitch at 40% the corrupted transfers fall from 59 to 8 of 400; at 39%
+they fall from 321 to 127 of 400, so many remain wrong: the framing is
+restored, but data at a lost pulse cannot always be recovered. Treat deglitch as a mitigation; the margin
+that matters is the effective SCLK duty at the analyzer threshold. Whether
+the DSLogic sees 10 MHz SCLK with enough margin is not yet validated live.
 
 ## Buffer and Memory
 

@@ -36,7 +36,6 @@ Examples:
 """
 
 import argparse
-import contextlib
 import csv
 import heapq
 import importlib
@@ -50,6 +49,7 @@ import math
 import queue
 import select
 import threading
+from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from saleae.analyzers import AnalyzerFrame
@@ -131,10 +131,17 @@ def _feed_hla(hla, port_name, frame, results_heap, seq, show_port_prefix,
     out of order. Callers that want chronological output pass flush=False
     and drain the heap themselves once a batch is complete.
     """
+    # An HLA's own prints go to stderr. A plain swap: redirect_stdout costs
+    # more than the decode itself at one call per SPI byte.
+    saved, sys.stdout = sys.stdout, sys.stderr
     try:
-        with contextlib.redirect_stdout(sys.stderr):
-            result = hla.decode(frame)
+        result = hla.decode(frame)
     except Exception as e:
+        result = e
+    finally:
+        sys.stdout = saved
+    if isinstance(result, Exception):
+        e = result
         error_msg = f"*** DECODE ERROR: {type(e).__name__}: {e} ***"
         port_prefix = f"[{port_name}] " if show_port_prefix else ""
         heapq.heappush(results_heap, (frame.start_time, seq, port_name,
@@ -451,6 +458,12 @@ def resolve_channel_indices(args, spi_ports, include_triggers=False, include_ser
     it needs indices rather than the names the SPI PD takes. Names come from
     -C (e.g. "0=SCLK,1=MISO,..."); bare numbers are accepted directly.
     """
+    to_index = _channel_index_resolver(args)
+    return _resolve_ports_after_names(args, spi_ports, to_index, include_triggers, include_serial)
+
+
+def _channel_index_resolver(args):
+    """Return to_index(name_or_number, what) for this command's -C mapping."""
     name_to_idx = {}
     maximum = 15 if getattr(args, 'dslogic', False) else 7
     if args.channels:
@@ -487,6 +500,51 @@ def resolve_channel_indices(args, spi_ports, include_triggers=False, include_ser
                 f"this backend's packed sample stream holds {maximum + 1} channels.")
         return idx
 
+    return to_index
+
+
+def parse_dslogic_transform(args):
+    """Parse ``-T deglitch:channels=A,B:clock_period=P:...`` for the DSLogic path.
+
+    Same syntax and options as the libsigrok transform, run in-process by
+    deglitch.py on the physical sample array. Returns None without -T.
+    """
+    spec = getattr(args, 'transform', None)
+    if not spec:
+        return None
+    module, *options = spec.split(':')
+    if module != 'deglitch':
+        raise SystemExit('--dslogic supports only -T deglitch:... (run in-process).')
+    to_index = _channel_index_resolver(args)
+    config = dict(bits=None, clock_period=None, frame_pulses=None, min_period=None, pulse_level=1)
+    for option in options:
+        key, sep, value = option.partition('=')
+        try:
+            if not sep or not value:
+                raise ValueError
+            if key == 'channels':
+                config['bits'] = sorted({to_index(name, '-T deglitch channels') for name in value.split(',')})
+            elif key == 'clock_period':
+                # As in C: 0 disables clock recovery; otherwise >= 2 samples.
+                config[key] = float(value)
+                if not math.isfinite(config[key]) or config[key] < 0 or 0 < config[key] < 2:
+                    raise ValueError
+            elif key in ('frame_pulses', 'min_period', 'pulse_level'):
+                config[key] = int(value)
+                if config[key] < 0:
+                    raise ValueError
+                if key == 'pulse_level':
+                    config[key] = int(config[key] != 0)   # C treats any nonzero level as 1
+            else:
+                raise SystemExit(f'-T deglitch: unknown option {key!r}.')
+        except ValueError:
+            raise SystemExit(f'-T deglitch: invalid option {option!r}.')
+    if config['bits'] is None:
+        raise SystemExit('-T deglitch with --dslogic needs channels=NAME[,NAME] (the SPI clocks).')
+    return config
+
+
+def _resolve_ports_after_names(args, spi_ports, to_index, include_triggers, include_serial):
     resolved = []
     for port in spi_ports:
         resolved.append({role: to_index(port[role], '--engine numpy')
@@ -568,11 +626,26 @@ def validate_backend_args(args, spi_ports):
                 any(getattr(args, key, None) is not None for key in
                     ('trigger', 'serial_trigger', 'trigger_pos', 'trigger_timeout', 'on_timeout', 'drain_timeout'))):
             raise SystemExit('DSLogic capture options require --dslogic.')
+        if (getattr(args, 'raw_out', None) or getattr(args, 'dsl_triggered', False) or
+                getattr(args, 'dsl_partial', False)):
+            raise SystemExit('--raw-out, --dsl-triggered and --dsl-partial require --dslogic.')
         return
-    if args.saleae or args.driver or args.input_file or args.input_format or args.transform:
-        raise SystemExit('--dslogic cannot be combined with --saleae, -d, -i, -I or -T.')
+    if args.saleae or args.driver or args.input_format:
+        raise SystemExit('--dslogic cannot be combined with --saleae, -d or -I.')
+    transform = parse_dslogic_transform(args)
     if args.engine != 'numpy':
         raise SystemExit('--dslogic supports --engine numpy; the srd pipeline is not implemented.')
+    if transform is not None:
+        ports, pins, triggers = resolve_channel_indices(args, spi_ports, include_triggers=True)
+        missing = sorted(set(transform['bits']) - set(_used_channel_bits(ports, pins, triggers)))
+        if missing:
+            raise SystemExit(f'-T deglitch channels {missing} are not SPI, pin or trigger channels; '
+                             'they would not be captured.')
+    if args.input_file:
+        _validate_dslogic_replay_args(args, spi_ports)
+        return
+    if getattr(args, 'dsl_triggered', False) or getattr(args, 'dsl_partial', False):
+        raise SystemExit('--dsl-triggered and --dsl-partial only apply to a --dslogic -i input file.')
     if not any((args.samples, args.time, args.continuous)):
         raise SystemExit('--dslogic requires --samples, --time or --continuous.')
     mode = getattr(args, 'dsl_mode', 'stream')
@@ -615,16 +688,7 @@ def validate_backend_args(args, spi_ports):
         if mode != 'buffer' or not math.isfinite(value) or not 1 <= value <= 3600:
             raise SystemExit('--drain-timeout requires buffer mode and 1..3600 seconds.')
     ports, pins, triggers = resolve_channel_indices(args, spi_ports, include_triggers=True)
-    if args.channels:
-        labels = set()
-        for item in args.channels.split(','):
-            match = re.fullmatch(r'(?:D)?([0-9]|1[0-5])\s*=\s*(.+)', item.strip(), re.IGNORECASE)
-            if not match or not match[2].strip():
-                raise SystemExit('--dslogic -C is a name mapping using indices 0..15, e.g. 0=SCLK.')
-            label = match[2].strip().casefold()
-            if label in labels:
-                raise SystemExit('--dslogic -C has ambiguous duplicate channel names.')
-            labels.add(label)
+    _validate_dslogic_names(args)
     vth = getattr(args, 'vth', None)
     if vth is not None and (not math.isfinite(vth) or not 0 <= vth <= 2.5):
         raise SystemExit('--vth must be finite and within 0..2.5 V.')
@@ -655,6 +719,94 @@ def validate_backend_args(args, spi_ports):
         raise SystemExit('Fast DSLogic buffer mode exceeds physical lane limits.')
 
 
+def _validate_dslogic_names(args):
+    if args.channels:
+        labels = set()
+        for item in args.channels.split(','):
+            match = re.fullmatch(r'(?:D)?([0-9]|1[0-5])\s*=\s*(.+)', item.strip(), re.IGNORECASE)
+            if not match or not match[2].strip():
+                raise SystemExit('--dslogic -C is a name mapping using indices 0..15, e.g. 0=SCLK.')
+            label = match[2].strip().casefold()
+            if label in labels:
+                raise SystemExit('--dslogic -C has ambiguous duplicate channel names.')
+            labels.add(label)
+
+
+def _validate_dslogic_replay_args(args, spi_ports):
+    """A dslcap raw file replays through the live decoder; capture options do not apply."""
+    if getattr(args, 'raw_out', None):
+        raise SystemExit('Choose either --raw-out (capture) or -i (replay).')
+    if any((args.samples, args.time, args.continuous)):
+        raise SystemExit('--dslogic -i decodes the whole file; drop --samples, --time and --continuous.')
+    if (getattr(args, 'vth', None) is not None or getattr(args, 'dsl_mode', 'stream') != 'stream' or
+            any(getattr(args, key, None) is not None for key in
+                ('trigger', 'serial_trigger', 'trigger_pos', 'trigger_timeout', 'on_timeout', 'drain_timeout'))):
+        raise SystemExit('DSLogic capture options do not apply to --dslogic -i; '
+                         'use --dsl-triggered for a file with a META trigger line.')
+    resolve_channel_indices(args, spi_ports, include_triggers=True)
+    _validate_dslogic_names(args)
+
+
+def dslcap_raw_sidecar(path):
+    """Load and validate the capture record written next to a --raw-out file, if any."""
+    side = Path(str(path) + '.json')
+    if not side.exists():
+        return None
+    try:
+        record = json.loads(side.read_text())
+    except (OSError, ValueError) as error:
+        raise SystemExit(f'Unreadable raw capture record {side}: {error}')
+    if not isinstance(record, dict) or record.get('format') != 'dslcap-raw-v1':
+        raise SystemExit(f'{side} is not a dslcap raw capture record.')
+    channels = record.get('channels')
+    if (not isinstance(channels, list) or not channels or
+            any(type(bit) is not int or not 0 <= bit <= 15 for bit in channels) or
+            channels != sorted(set(channels))):
+        raise SystemExit(f'{side}: channels must be sorted unique physical indices 0..15.')
+    # type() checks: 2.0 == 2 would pass a plain comparison, then break slicing.
+    unitsize, meta_lines = record.get('unitsize'), record.get('meta_lines')
+    if type(unitsize) is not int or unitsize != (2 if channels[-1] >= 8 else 1):
+        raise SystemExit(f'{side}: unitsize does not match the captured channels.')
+    if type(meta_lines) is not int or meta_lines not in (1, 2):
+        raise SystemExit(f'{side}: meta_lines must be 1 or 2.')
+    for key in ('exit', 'bytes'):
+        if key in record and type(record[key]) is not int:
+            raise SystemExit(f'{side}: {key} must be an integer.')
+    return record
+
+
+def dslcap_replay_layout(args, spi_ports):
+    """Return (unitsize, meta_lines) for a dslcap raw file, checked against its record."""
+    ports, pins, triggers = resolve_channel_indices(args, spi_ports, include_triggers=True)
+    bits = _used_channel_bits(ports, pins, triggers)
+    unitsize = 2 if any(bit >= 8 for bit in bits) else 1
+    meta_lines = 2 if getattr(args, 'dsl_triggered', False) else 1
+    record = dslcap_raw_sidecar(args.input_file)
+    if record is None:
+        return unitsize, meta_lines
+    problem = None
+    if 'exit' not in record:
+        problem = 'is unfinished (no exit status recorded)'
+    elif record['exit'] != 0:
+        problem = f'ended with dslcap exit {record["exit"]}'
+    elif 'bytes' in record and record['bytes'] != os.path.getsize(args.input_file):
+        problem = f'is {os.path.getsize(args.input_file)} bytes, but its record says {record["bytes"]}'
+    if problem:
+        if not getattr(args, 'dsl_partial', False):
+            raise SystemExit(f'Capture {args.input_file} {problem}; pass --dsl-partial to decode it anyway.')
+        print(f'Warning: capture {args.input_file} {problem}; decoding with --dsl-partial, '
+              'so the final transaction may be incomplete.', file=sys.stderr)
+    missing = sorted(set(bits) - set(record['channels']))
+    if missing:
+        raise SystemExit(f'Channels {missing} were not captured in {args.input_file} '
+                         f'(captured: {record["channels"]}).')
+    # The record states the file's real width; a subset mapping (one bus of a
+    # wide capture) still reads uint16 samples.
+    if getattr(args, 'dsl_triggered', False) and record['meta_lines'] != 2:
+        raise SystemExit(f'{args.input_file} was not captured with a trigger.')
+    return record['unitsize'], record['meta_lines']
+
+
 
 def build_dslcap_cmd(args, spi_ports):
     """Build dslcap's physical channel list from resolved SPI and logged pins.
@@ -664,6 +816,8 @@ def build_dslcap_cmd(args, spi_ports):
     mapping, and must never be passed directly as the producer channel list.
     """
     validate_backend_args(args, spi_ports)
+    if args.input_file:
+        raise SystemExit('--dslogic -i replays a file; it builds no dslcap command.')
     ports, pins, triggers, serial = resolve_channel_indices(args, spi_ports, include_triggers=True, include_serial=True)
     bits = _used_channel_bits(ports, pins, triggers)
     rate = parse_samplerate(args.samplerate) if args.samplerate else 25_000_000
@@ -692,6 +846,27 @@ def build_dslcap_cmd(args, spi_ports):
     if verbosity:
         cmd += ['-' + 'v' * verbosity]
     return cmd
+
+
+class FileProducer:
+    """Replay a recorded producer stream with the CaptureProducer interface."""
+    CHUNK = 1 << 22
+
+    def __init__(self, path):
+        try:
+            self.file = open(path, 'rb')
+        except OSError as error:
+            raise CaptureError(f'Cannot open input file: {error}') from error
+
+    def chunks(self):
+        while True:
+            data = self.file.read(self.CHUNK)
+            if not data:
+                return
+            yield data
+
+    def finish(self, cancel=False):
+        self.file.close()
 
 
 class CaptureError(RuntimeError):
@@ -973,6 +1148,89 @@ def build_sigrok_cmd(args, spi_ports):
 LINE_RE = re.compile(r'^(\d+)-(\d+)\s+spi-(\d+):\s+([0-9A-Fa-f]+(?:\s+[0-9A-Fa-f]+)*)$')
 
 
+def run_dslcap_raw_out(args, spi_ports):
+    """Capture only: dslcap writes straight to a local file, decoded later with -i.
+
+    No Python sits in the sample path, so the file keeps up with the producer
+    at any supported rate. A FILE.json record keeps the channel layout so the
+    replay can check its -C/--spi mapping.
+    """
+    import datetime
+
+    if getattr(args, 'transform', None):
+        raise SystemExit('--raw-out records the unmodified producer stream; apply -T at replay (-i).')
+    cmd = build_dslcap_cmd(args, spi_ports)
+    ports, pins, triggers = resolve_channel_indices(args, spi_ports, include_triggers=True)
+    bits = _used_channel_bits(ports, pins, triggers)
+    triggered = bool(getattr(args, 'trigger', None) or getattr(args, 'serial_trigger', None))
+    record = dict(format='dslcap-raw-v1', command=cmd, channels=bits,
+                  unitsize=2 if any(bit >= 8 for bit in bits) else 1,
+                  meta_lines=2 if triggered else 1,
+                  start_utc=datetime.datetime.now(datetime.timezone.utc).isoformat())
+    side = Path(args.raw_out + '.json')
+    # Reserve both paths before starting: never replace an earlier capture
+    # or its record, and never leave a new record without its data file.
+    try:
+        side_file = open(side, 'x')
+    except OSError as error:
+        raise SystemExit(f'--raw-out: {error}')
+    try:
+        out = open(args.raw_out, 'xb')
+    except OSError as error:
+        side_file.close()
+        side.unlink()
+        raise SystemExit(f'--raw-out: {error}')
+    with side_file:
+        side_file.write(json.dumps(record, indent=2) + '\n')
+    with out:
+        print(f"Running: {' '.join(cmd)} > {args.raw_out}", file=sys.stderr)
+        try:
+            proc = subprocess.Popen(cmd, stdout=out)
+        except OSError as error:
+            raise CaptureError(f'dslcap could not start: {error}') from error
+        returncode = _wait_raw_producer(proc)
+    # Like the live path: a signal death is reported as 128 + signal.
+    code = 128 - returncode if returncode < 0 else returncode
+    record.update(exit=code, bytes=os.path.getsize(args.raw_out),
+                  end_utc=datetime.datetime.now(datetime.timezone.utc).isoformat())
+    side.write_text(json.dumps(record, indent=2) + '\n')
+    print(f'Wrote {record["bytes"]} bytes to {args.raw_out} (dslcap exit {code}); '
+          f'decode with --dslogic -i {args.raw_out} and the same -C/--spi options.', file=sys.stderr)
+    if code:
+        raise CaptureError(f'dslcap exited with status {code}; the raw file may be partial', code)
+
+
+def _wait_raw_producer(proc):
+    """Wait for dslcap; on Ctrl-C or SIGTERM to this process, stop it cleanly.
+
+    The signal is forwarded (a terminal also signals dslcap directly; a
+    repeat is harmless), then escalated if dslcap outlives its own signal
+    grace. Returns the child's status, negative for a signal as Popen does.
+    """
+    import signal
+
+    def interrupted(signum, frame):
+        raise KeyboardInterrupt
+    previous = signal.signal(signal.SIGTERM, interrupted)
+    try:
+        try:
+            return proc.wait()
+        except KeyboardInterrupt:
+            pass
+        for sig, grace in ((signal.SIGINT, 20), (signal.SIGTERM, 5), (signal.SIGKILL, 5)):
+            if proc.poll() is None:
+                proc.send_signal(sig)
+            try:
+                return proc.wait(timeout=grace)
+            except subprocess.TimeoutExpired:
+                continue
+            except KeyboardInterrupt:
+                continue
+        raise CaptureError('dslcap did not exit even after SIGKILL; check the USB device', 1)
+    finally:
+        signal.signal(signal.SIGTERM, previous)
+
+
 def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate, cmd=None):
     """Decode a raw producer with the shared vectorized engine.
 
@@ -986,7 +1244,11 @@ def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate, cmd=None):
     from fast_spi import MultiPortDecoder, PinLogger
 
     chan, log_pins = resolve_channel_indices(args, spi_ports)
-    unitsize = dslcap_sample_unitsize(args, spi_ports) if getattr(args, 'dslogic', False) else 1
+    replay = bool(getattr(args, 'dslogic', False) and args.input_file)
+    if replay:
+        unitsize, meta_lines = dslcap_replay_layout(args, spi_ports)
+    else:
+        unitsize = dslcap_sample_unitsize(args, spi_ports) if getattr(args, 'dslogic', False) else 1
     sample_dtype = '<u2' if unitsize == 2 else np.uint8
     ports = [dict(name=name, **idx) for name, idx in zip(port_name_list, chan)]
     for p in ports:
@@ -1006,69 +1268,112 @@ def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate, cmd=None):
     sample_tail = b''
     triggered = bool(getattr(args, 'dslogic', False) and
                      (getattr(args, 'trigger', None) or getattr(args, 'serial_trigger', None)))
+    if replay:
+        triggered = meta_lines == 2
     prefix = MetaPrefix(samplerate, required=getattr(args, 'dslogic', False),
                         expected_lines=2 if triggered else 1)
-    cmd = cmd if cmd is not None else build_sigrok_cmd(args, spi_ports)
-    print(f"Running: {' '.join(cmd)}", file=sys.stderr)
+    deglitch = parse_dslogic_transform(args) if getattr(args, 'dslogic', False) else None
+    deglitcher = None
+    if deglitch is not None:
+        from deglitch import Deglitcher, HAVE_NUMBA as DEGLITCH_NUMBA
+        if not DEGLITCH_NUMBA:
+            print('Warning: numba is unavailable; -T deglitch runs at ~6 MB/s and cannot '
+                  'keep up with live capture.', file=sys.stderr)
+        options = {k: deglitch[k] for k in ('clock_period', 'frame_pulses', 'min_period', 'pulse_level')}
+        # Compile before the producer starts, on a disposable instance.
+        Deglitcher(deglitch['bits'], samplerate, dtype=sample_dtype, **options).feed(
+            np.zeros(64, dtype=sample_dtype))
+        print(f"  deglitch: bits {deglitch['bits']} " +
+              ' '.join(f'{k}={v}' for k, v in options.items() if v is not None), file=sys.stderr)
+    if replay:
+        print(f"Replaying dslcap raw file: {args.input_file}", file=sys.stderr)
+    else:
+        cmd = cmd if cmd is not None else build_sigrok_cmd(args, spi_ports)
+        print(f"Running: {' '.join(cmd)}", file=sys.stderr)
     # Output is held back this long (in capture seconds) so a transaction
     # spanning a chunk boundary can finish before later events are printed.
     # Far longer than any SPI transfer, far shorter than a chunk.
     HOLD = 0.05
-    producer = CaptureProducer(cmd, 'dslcap' if getattr(args, 'dslogic', False) else 'sigrok')
+    if replay:
+        producer = FileProducer(args.input_file)
+    else:
+        producer = CaptureProducer(cmd, 'dslcap' if getattr(args, 'dslogic', False) else 'sigrok')
 
     results_heap = []
     seq = 0
 
     want_hex = args.hex
 
-    def handle(name, frame):
-        nonlocal seq
-        if not want_hex:
-            pass
-        elif frame.type == 'enable':
-            hex_bufs[name] = {'mosi': bytearray(), 'miso': bytearray()}
-        elif frame.type == 'result':
-            hex_bufs[name]['mosi'] += frame.data['mosi']
-            hex_bufs[name]['miso'] += frame.data['miso']
-        if frame.type == 'disable' and want_hex:
-            buf = hex_bufs[name]
-            if buf['mosi'] or buf['miso']:
-                prefix = f"  [{name}] " if show_port_prefix else "  "
-                heapq.heappush(results_heap, (frame.start_time, seq, name,
-                    f"{prefix}MOSI: {buf['mosi'].hex(' ')}\n"
-                    f"{prefix}MISO: {buf['miso'].hex(' ')}"))
-                seq += 1
-        _feed_hla(hla_map[name], name, frame, results_heap, seq,
-                  show_port_prefix, flush=False)
-        seq += 1
+    def dispatch(name, frames):
+        """Feed one port's frames, in order, to its HLA.
 
-    def process(chunk_events):
-        """Emit one chunk's events in timestamp order.
-
-        Each port is decoded over the whole chunk before the next, so the
-        per-port streams have to be merged here to read chronologically --
-        which is also what makes a logged pin edge appear at the point in
-        the traffic where it actually happened.
+        Only results go through the time-ordered heap; per-byte frames are
+        handed straight to their own port's HLA, which needs nothing from
+        the other port. HLA prints go to stderr for the whole batch.
         """
         nonlocal seq
-        chunk_events.sort(key=lambda e: e[0])
-        for _, kind, payload in chunk_events:
-            if kind == 'frame':
-                handle(*payload)
-            else:
-                t, name, edge = payload
-                heapq.heappush(results_heap, (t, seq, name,
-                    f"{t:.9f}: [{name}] {edge}"))
+        hla_decode = hla_map[name].decode
+        port_prefix = f"[{name}] " if show_port_prefix else ""
+        hex_prefix = f"  [{name}] " if show_port_prefix else "  "
+        buf = hex_bufs[name]
+        push = heapq.heappush
+        saved, sys.stdout = sys.stdout, sys.stderr
+        try:
+            for frame in frames:
+                if want_hex:
+                    kind = frame.type
+                    if kind == 'result':
+                        buf['mosi'] += frame.data['mosi']
+                        buf['miso'] += frame.data['miso']
+                    elif kind == 'enable':
+                        buf = hex_bufs[name] = {'mosi': bytearray(), 'miso': bytearray()}
+                    elif kind == 'disable' and (buf['mosi'] or buf['miso']):
+                        push(results_heap, (frame.start_time, seq, name,
+                             f"{hex_prefix}MOSI: {buf['mosi'].hex(' ')}\n"
+                             f"{hex_prefix}MISO: {buf['miso'].hex(' ')}"))
+                        seq += 1
+                try:
+                    result = hla_decode(frame)
+                except Exception as e:
+                    push(results_heap, (frame.start_time, seq, name,
+                         f"{frame.start_time:.9f}: {port_prefix}"
+                         f"*** DECODE ERROR: {type(e).__name__}: {e} ***"))
+                    seq += 1
+                    continue
+                if result is not None:
+                    push(results_heap, (result.start_time, seq, name,
+                         f"{result.start_time:.9f}: {port_prefix}{_format_hla_result(result)}"))
                 seq += 1
-        # Results are queued, not printed, while the chunk is processed.
-        # Everything older than the newest event minus HOLD is now settled:
-        # a transaction still open across the chunk boundary can only carry
-        # a timestamp newer than that.
-        if chunk_events:
-            _flush_results_until(results_heap, chunk_events[-1][0] - HOLD)
+        finally:
+            sys.stdout = saved
+
+    def settled_until():
+        """Time before which no further result can appear.
+
+        Results are timestamped at their transaction's start. A transaction
+        still open at the chunk boundary will report at its own start, which
+        may be long before the chunk's end, so the watermark never passes it.
+        HOLD keeps a margin for HLAs that report slightly earlier times.
+        """
+        rate = prefix.rate
+        bound = decoder.decoders[0].abs_pos / rate - HOLD
+        for dec in decoder.decoders:
+            if dec.cs_asserted and dec.open_start is not None:
+                bound = min(bound, dec.open_start / rate)
+        return bound
+
+    def process(port_frames, pin_events, settled):
+        """Queue one chunk's results and pin edges, then print those before ``settled``."""
+        nonlocal seq
+        for name, frames in port_frames:
+            dispatch(name, frames)
+        for t, name, edge in pin_events:
+            heapq.heappush(results_heap, (t, seq, name, f"{t:.9f}: [{name}] {edge}"))
+            seq += 1
+        _flush_results_until(results_heap, settled)
 
     def decode(buf):
-        nonlocal decoder, pin_logger, sample_tail, seq
+        nonlocal decoder, pin_logger, sample_tail, seq, deglitcher
         if not prefix.ready:
             return
         if decoder is None:
@@ -1082,6 +1387,8 @@ def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate, cmd=None):
                     heapq.heappush(results_heap, (t, seq, '', f'{t:.9f}: {text}'))
                     seq += 1
             decoder = MultiPortDecoder(ports, prefix.rate, cpol=args.cpol, cpha=args.cpha)
+            if deglitch is not None:
+                deglitcher = Deglitcher(deglitch['bits'], prefix.rate, dtype=sample_dtype, **options)
             pin_logger = PinLogger(log_pins, prefix.rate) if log_pins else None
         if sample_tail:
             buf = sample_tail + buf
@@ -1092,12 +1399,11 @@ def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate, cmd=None):
             buf = buf[:aligned]
         if buf:
             chunk = np.frombuffer(buf, dtype=sample_dtype)
-            events = [(f.start_time, 'frame', (n, f))
-                      for n, f in decoder.feed(chunk)]
-            if pin_logger is not None:
-                events += [(t, 'pin', (t, name, edge))
-                           for t, name, edge in pin_logger.feed(chunk)]
-            process(events)
+            if deglitcher is not None:
+                chunk = deglitcher.feed(chunk)
+            port_frames = list(decoder.feed(chunk))
+            pins = pin_logger.feed(chunk) if pin_logger is not None else ()
+            process(port_frames, pins, settled_until())
 
     complete = False
     try:
@@ -1108,8 +1414,13 @@ def run_sigrok_numpy(args, spi_ports, port_name_list, samplerate, cmd=None):
         if sample_tail:
             raise CaptureError('Truncated DSLogic uint16 sample: one byte remains at EOF')
         complete = True
-        process([(f.start_time, 'frame', (n, f)) for n, f in decoder.end()])
+        process(list(decoder.end()), (), float('-inf'))
         _flush_results(results_heap)
+        if deglitcher is not None:
+            deglitcher.end()
+            for bit, counts in deglitcher.stats.items():
+                print(f'deglitch bit {bit}: ' + ', '.join(f'{k} {v}' for k, v in counts.items()),
+                      file=sys.stderr)
     except KeyboardInterrupt:
         print("\nInterrupted", file=sys.stderr)
         _flush_results(results_heap)
@@ -1130,8 +1441,14 @@ def run_sigrok_backend(args, spi_ports, port_name_list):
                 break
     print(f"Sample rate: {samplerate:.0f} Hz", file=sys.stderr)
 
+    if dslogic and getattr(args, 'raw_out', None):
+        run_dslcap_raw_out(args, spi_ports)
+        return
     if getattr(args, 'engine', 'srd') == 'numpy':
-        cmd = build_dslcap_cmd(args, spi_ports) if dslogic else build_sigrok_cmd(args, spi_ports)
+        if dslogic and args.input_file:
+            cmd = None
+        else:
+            cmd = build_dslcap_cmd(args, spi_ports) if dslogic else build_sigrok_cmd(args, spi_ports)
         run_sigrok_numpy(args, spi_ports, port_name_list, samplerate, cmd)
         return
 
@@ -1334,6 +1651,13 @@ def main():
     parser.add_argument('--trigger-timeout', help='[dslogic trigger] Wait timeout; absent waits indefinitely')
     parser.add_argument('--on-timeout', choices=('fail', 'upload'), help='[dslogic trigger] Timeout action (default: fail)')
     parser.add_argument('--drain-timeout', help='[dslogic buffer] Output stall timeout 1..3600s (default: 30)')
+    parser.add_argument('--raw-out', metavar='FILE',
+                        help='[dslogic] Capture only: write dslcap raw output (META + samples) to FILE '
+                             'plus FILE.json, for later decode with --dslogic -i FILE')
+    parser.add_argument('--dsl-triggered', action='store_true',
+                        help='[dslogic -i] The raw file has a META trigger line (captured with a trigger)')
+    parser.add_argument('--dsl-partial', action='store_true',
+                        help='[dslogic -i] Decode a capture whose record shows failure or truncation')
     parser.add_argument('--saleae-port', type=int, default=10430,
                         help='Saleae automation server port (default: 10430)')
 
@@ -1341,7 +1665,8 @@ def main():
     parser.add_argument('-d', '--driver', type=str, default=None,
                         help='[sigrok] Driver (e.g., fx2lafw, saleae-logic16)')
     parser.add_argument('-i', '--input-file', type=str, default=None,
-                        help='[sigrok] Input file instead of live capture')
+                        help='[sigrok/dslogic] Input file instead of live capture '
+                             '(with --dslogic: a dslcap raw file from --raw-out)')
     parser.add_argument('-I', '--input-format', type=str, default=None,
                         help='[sigrok] Input format (e.g., binary:numchannels=4:samplerate=1000000)')
     parser.add_argument('-C', '--channels', type=str, default=None,
@@ -1362,7 +1687,8 @@ def main():
                         help='Capture duration (e.g., 5s, 100ms)')
     parser.add_argument('-T', '--transform', type=str, default=None,
                         metavar='MODULE[:OPT=VAL...]',
-                        help='[sigrok] Transform module applied before decoding, '
+                        help='[sigrok/dslogic] Transform module applied before decoding '
+                             '(with --dslogic only deglitch, run in-process), '
                              'e.g. deglitch:channels=SCLK,SCLK_B:clock_period=2.5:frame_pulses=8')
     parser.add_argument('--int-pin', type=str, default=None, metavar='NAME',
                         help='[sigrok/dslogic] Log transitions of an interrupt pin, '

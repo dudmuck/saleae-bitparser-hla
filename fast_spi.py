@@ -67,6 +67,47 @@ else:
     bits_to_bytes = _bits_to_bytes_numpy
 
 
+if HAVE_NUMBA:
+    @numba.jit(nopython=True, cache=True)
+    def _scan_port(chunk, clk, miso, mosi, cs, prev, has_prev, rising):
+        """One pass over packed samples: CS edges, and every sampling edge of
+        CLK with the MOSI/MISO bits latched there. Matches find_edges: with
+        no history the first sample is never an edge."""
+        n = chunk.size
+        cs_edges = np.empty(n, dtype=np.int64)
+        idx = np.empty(n, dtype=np.int64)
+        mo = np.empty(n, dtype=np.uint8)
+        mi = np.empty(n, dtype=np.uint8)
+        ncs = 0
+        ne = 0
+        want = 1 if rising else 0
+        pclk = (prev >> clk) & 1
+        pcs = (prev >> cs) & 1
+        start = 0
+        if not has_prev:
+            pclk = (chunk[0] >> clk) & 1
+            pcs = (chunk[0] >> cs) & 1
+            start = 1
+        for t in range(start, n):
+            v = chunk[t]
+            c = (v >> cs) & 1
+            if c != pcs:
+                cs_edges[ncs] = t
+                ncs += 1
+                pcs = c
+            k = (v >> clk) & 1
+            if k != pclk:
+                if k == want:
+                    idx[ne] = t
+                    mo[ne] = (v >> mosi) & 1
+                    mi[ne] = (v >> miso) & 1
+                    ne += 1
+                pclk = k
+        # Compact copies: a transaction held open across chunks keeps its
+        # latched slices, which must not pin chunk-sized scratch arrays.
+        return cs_edges[:ncs].copy(), idx[:ne].copy(), mo[:ne].copy(), mi[:ne].copy()
+
+
 # Cap on buffered bits for a transaction that never ends (CS stuck asserted),
 # so a wiring fault cannot exhaust memory. 8 Mbit ~= 1 M bytes of payload.
 MAX_OPEN_BITS = 8 * 1024 * 1024
@@ -220,9 +261,60 @@ class SpiPortDecoder:
 
     def feed(self, chunk):
         """Process one chunk of packed samples; return a list of frames."""
-        frames = []
         if chunk.size == 0:
-            return frames
+            return []
+        if HAVE_NUMBA:
+            return self._feed_scanned(chunk)
+        return self._feed_numpy(chunk)
+
+    def _latch(self, idx, mo, mi, lo, hi, base):
+        """Buffer the sampling edges with chunk index in [lo, hi)."""
+        a, b = np.searchsorted(idx, (lo, hi))
+        if b <= a:
+            return
+        if self.open_bit_count >= MAX_OPEN_BITS:
+            if not self.overflowed:
+                print(f"[fast_spi] {self.name}: transaction exceeded "
+                      f"{MAX_OPEN_BITS} bits, truncating", file=sys.stderr)
+                self.overflowed = True
+            return
+        self.mosi_bits.append(mo[a:b])
+        self.miso_bits.append(mi[a:b])
+        self.bit_times.append((idx[a:b] + base).astype(np.float64))
+        self.open_bit_count += b - a
+
+    def _feed_scanned(self, chunk):
+        frames = []
+        prev = self.prev_sample
+        cs_edges, idx, mo, mi = _scan_port(chunk, self.clk, self.miso, self.mosi, self.cs,
+                                           0 if prev is None else prev, prev is not None,
+                                           self.sample_on_rising)
+        active = 0 if self.cs_active_low else 1
+        base = self.abs_pos
+        pos = 0
+        for e in cs_edges.tolist():
+            now_asserted = ((int(chunk[e]) >> self.cs) & 1) == active
+            if now_asserted and not self.cs_asserted:
+                self.cs_asserted = True
+                self.open_start = base + e
+                self.mosi_bits = []
+                self.miso_bits = []
+                self.bit_times = []
+                self.open_bit_count = 0
+            elif not now_asserted and self.cs_asserted:
+                self._latch(idx, mo, mi, pos, e, base)
+                self._emit_transaction(self.open_start, base + e, frames)
+                self.cs_asserted = False
+                self.open_start = None
+            pos = e
+        if self.cs_asserted:
+            self._latch(idx, mo, mi, pos, chunk.size, base)
+        self.abs_pos += chunk.size
+        self.prev_sample = int(chunk[-1])
+        return frames
+
+    def _feed_numpy(self, chunk):
+        frames = []
 
         clk = (chunk >> self.clk) & 1
         miso = (chunk >> self.miso) & 1
@@ -286,14 +378,18 @@ class MultiPortDecoder:
         ]
 
     def feed(self, raw):
-        """Feed a chunk (bytes or uint8 array); yield (port_name, frame)."""
+        """Feed a chunk (bytes or sample array); yield (port_name, frames).
+
+        One item per port, in port order, holding that port's frames for
+        the chunk in time order. Ports are independent, so a consumer can
+        hand each list to its own HLA without merging them frame by frame.
+        """
         chunk = raw if isinstance(raw, np.ndarray) \
             else np.frombuffer(raw, dtype=np.uint8)
         for dec in self.decoders:
-            for frame in dec.feed(chunk):
-                yield dec.name, frame
+            yield dec.name, dec.feed(chunk)
 
     def end(self):
+        """Flush open transactions; yield (port_name, frames) per port."""
         for dec in self.decoders:
-            for frame in dec.end():
-                yield dec.name, frame
+            yield dec.name, dec.end()
