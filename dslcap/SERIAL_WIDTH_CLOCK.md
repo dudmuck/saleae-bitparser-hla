@@ -2,6 +2,11 @@
 
 Live matrix completed, 2026-10-07 PDT / 2026-10-08 UTC.
 
+Follow-up: [intermediate-width and alignment tests](SERIAL_INTERMEDIATE_WIDTHS.md)
+later demonstrated a working 16-bit match when the target ends on a complete
+word boundary. The results below remain the record of the earlier crossed-word
+stimulus; they do not imply a general 16-bit limitation.
+
 Real DSView 1.3.2 triggered naturally for a 1-bit value `1` and an 8-bit
 value `0x35` at the original requested 8 MHz SPI speed. The 8-bit trigger sample
 equals the last rising clock edge of the unique `0x35` byte. The earlier

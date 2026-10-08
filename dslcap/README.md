@@ -224,9 +224,13 @@ stage state; they do not prove hardware shift order or constitute a real DSView
 register golden. Those live comparisons and opcode checks remain separate gates
 in [TRIGGER_PLAN.md](TRIGGER_PLAN.md).
 
-The shift register matches the last N bits anywhere after start, including
-payload bits later in the same transfer, until stop clears it. This is not an
-opcode-only filter. Timestamps remain relative to capture start.
+Treat the serial comparison as N-bit words aligned from the start condition,
+not an arbitrary sliding bit window. In real DSView tests, 16-bit `0x1c35`
+matched at clocks 17–32 after NSS assertion but missed at clocks 25–40 with
+identical trigger registers. An aligned payload word can also match, so this
+is not an opcode-only filter. See [SERIAL_INTERMEDIATE_WIDTHS.md](SERIAL_INTERMEDIATE_WIDTHS.md)
+for the measured scope and remaining native dslcap validation gates.
+Timestamps remain relative to capture start.
 
 ## Bring-up
 

@@ -8,9 +8,9 @@ review and restored wiring; see [A2_VALIDATION.md](A2_VALIDATION.md).
 Phase C serial-trigger implementation is now present in C and Python with
 offline coverage and independent review PASS; see
 [SERIAL_REVIEW.md](SERIAL_REVIEW.md). Real DSView serial register comparison
-passed at100M/200M/400M. Hardware bit-order validation is **blocked**: all four
-isolated patterns and an exact-reference positive retry timed out, despite
-passing NSS controls. No serial order or opcode acceptance is claimed; see
+passed at100M/200M/400M. Hardware bit-order validation remains **incomplete**:
+the original crossed-word patterns timed out despite passing NSS controls.
+No complete native serial order or opcode acceptance is claimed; see
 [SERIAL_VALIDATION.md](SERIAL_VALIDATION.md) and
 [TRIGGER_TASKS.md](TRIGGER_TASKS.md). A subsequent real DSView live test also
 failed to trigger serially while its NSS control passed; see
@@ -20,7 +20,13 @@ the 16-bit 0x1c35 match still missed at measured 1 MHz and 100 kHz, with passing
 NSS controls. The 8-bit hit lands exactly on the final matching clock edge.
 See [SERIAL_WIDTH_CLOCK.md](SERIAL_WIDTH_CLOCK.md). This narrows the diagnosis;
 it does not close the original 16-bit bit-order/opcode gates or establish a
-general width limit. Cause remains unproven.
+general width limit. A subsequent intermediate-width sweep and constant-register
+16-bit alignment test produced aligned hit / crossed-word miss / aligned hit.
+This demonstrates working 16-bit comparison in DSView and supports word-boundary
+matching on this setup; the earlier arbitrary sliding-window assumption was
+incorrect. See [SERIAL_INTERMEDIATE_WIDTHS.md](SERIAL_INTERMEDIATE_WIDTHS.md).
+Next: repeat native dslcap C.2 with word-aligned carriers before C.3. The full
+FPGA mechanism and untested configurations remain unproven.
 Optional trigger-relative
 timestamps remain unimplemented.
 
@@ -103,8 +109,10 @@ disabled, SIMPLE, pos 0, and all 'X'.
   (trigger0) and stop (trigger1). Stage 1 is the clock edge. Stage 2 marks
   the data channel. Stage 3 (`STriggerDataStage`) holds the value. The
   counts are `stage1 = 1` and `stage3 = bits - 1`, with at most 16 bits.
-  After start, data is shifted in on each clock edge, and the trigger fires
-  when the last `bits` bits equal the value. Stop clears the shift register.
+  After start, data is shifted in on each clock edge. Live DSView tests
+  support comparison on complete `bits`-wide word boundaries counted from
+  start, not every sliding window. Stop clears the serial state. See
+  SERIAL_INTERMEDIATE_WIDTHS.md for the tested scope.
 - Value strings are `"X X ... X"`, highest channel first, every second
   character (`ds_trigger_stage_set_value`).
 
@@ -811,11 +819,12 @@ GetVersion decode. Independent review: [A2_REVIEW.md](A2_REVIEW.md).
 serial template (stage roles and counts above; logic = AND, non-contiguous,
 `==` invert, as in the UI defaults). The clock is `r`/`f` only.
 
-Validation update: C.1 passed; C.2 attempted and blocked on the missing
-positive match at100M. C.3 remains pending. Preserve source mapping until a
-controlled diagnosis establishes the cause; four misses do not establish order.
-Real DSView subsequently reproduced the missing serial hit on the same pattern,
-with actual header hit bit0 after forced upload and a successful simple control.
+Validation update: C.1 passed; C.2's original crossed-word tests missed at100M.
+Real DSView reproduced those misses, but a later constant-register alignment
+test hit twice with the target at clocks 17–32 and missed at clocks 25–40.
+Use aligned carriers for the next native C.2 run; retain source mapping.
+The old misses do not establish order. C.3 remains pending. Full evidence is
+in SERIAL_INTERMEDIATE_WIDTHS.md; no native C.2 PASS is inferred from DSView.
 
 1. **Golden image:** B.1-style comparison against DSView's serial tab with
    an identical setup, including value `0x1c35`/`bits=16`, so the
@@ -827,14 +836,19 @@ with actual header hit bit0 after forced upload and a successful simple control.
    rules. Generating the traffic needs the radio owner (e.g. a read-only
    command whose MOSI bytes carry the pattern) and is arranged with them,
    like A1.
+   Put the test value at a complete 16-bit word boundary after NSS assertion:
+   for the existing FIFO carrier use `00 02 VV VV 00 00` (target clocks 17–32),
+   not `00 02 00 VV VV 00` (clocks 25–40). First verify the aligned positive,
+   then test each reversal with the same alignment. The previous crossed-word
+   misses cannot establish bit order.
 3. **Opcode trigger:** trigger on a specific LR1110/LR2021 opcode
    (`bits=16`) and check that the decoded transaction at the trigger
    carries it.
 
-Limitation to document: the shift register matches the last `bits` bits
-anywhere after the start flag. An opcode value can therefore also fire on a
-matching payload byte pair later in the same transfer. Only stop (nSS rise)
-clears it.
+Limitation to document: comparison is observed at complete `bits`-wide word
+boundaries after start in the tested DSView setup. An opcode value can also
+fire on an aligned payload word later in the same transfer. A matching value
+crossing a word boundary is not sufficient. Stop (nSS rise) clears serial state.
 
 ## Later / not planned
 

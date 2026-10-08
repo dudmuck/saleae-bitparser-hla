@@ -1,0 +1,1765 @@
+{
+  "baseline_commit": "89648ba",
+  "application": "/home/wroberts/DSView-1.3.2",
+  "settings": {
+    "rate_hz": 100000000,
+    "channels": "0-7",
+    "samples": 1000448,
+    "position_percent": 10,
+    "vth_volts": 1.6,
+    "spi_requested_hz": 8000000,
+    "serial_roles": "start=3:f,stop=3:r,clock=0:r,data=2"
+  },
+  "runs": [
+    {
+      "case": "ctl8_before",
+      "bits": 8,
+      "value": 53,
+      "emitted_mosi_hex": "0002001c3500",
+      "arm_epoch": 1791421710.268371,
+      "register_hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff00fffffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001000000350000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000800010000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200000000000100000000000000070000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_sha256": "4176aa28329f8a65725dac84703217a2df8969326d60072b9e87f3df8903d0a1",
+      "stages": [
+        {
+          "count": 0,
+          "edge0": 8,
+          "edge1": 8,
+          "index": 0,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65527,
+          "mask1": 65527,
+          "value0": 0,
+          "value1": 8
+        },
+        {
+          "count": 1,
+          "edge0": 1,
+          "edge1": 0,
+          "index": 1,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65534,
+          "mask1": 65535,
+          "value0": 1,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 2,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65531,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 7,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 3,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65280,
+          "mask1": 65535,
+          "value0": 53,
+          "value1": 0
+        }
+      ],
+      "global_stage": 0,
+      "header": {
+        "after_force_seconds": null,
+        "after_stop_seconds": null,
+        "aligned_samples": 1000448,
+        "check_id": 1431655765,
+        "epoch": 1791421728.109879,
+        "meaningful_trigger_sample": 100076,
+        "ram_saddr": 1845376,
+        "real_pos_raw": 100076,
+        "remaining": 0,
+        "status_word": 1,
+        "triggered": true
+      },
+      "callbacks": [
+        {
+          "ep": 134,
+          "epoch": 1791421728.109879,
+          "label": "TRIG_HEADER",
+          "prefix": "55555555ec86010080281c0000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "req": 512,
+          "status": 0,
+          "xfer": 512
+        },
+        {
+          "ep": 134,
+          "epoch": 1791421728.134442,
+          "label": "BULK_IN_CB",
+          "prefix": null,
+          "req": 1048576,
+          "status": 0,
+          "xfer": 1048576
+        }
+      ],
+      "stop_marks": [],
+      "force_stop_times": [],
+      "log_path": "/tmp/dslcap-f-dsview/run_ctl8_before.complete.log",
+      "log_sha256": "5823ad201e6de5e690b768325007ac7bc9eb04012b8ec352398c960846bfd897",
+      "independent_report_sha256": "3553dd504e933bb07406c619550b18bc93d4a68386ac07a1a723f0cb0b48220a",
+      "natural_completion": true,
+      "raw_dump_sha256": "5b026235cec5accebe2d2bd727f9c584a209fd19e6ec465acffa274901118841",
+      "raw_dump_bytes": 1048576,
+      "waveform": {
+        "samples": 1000448,
+        "transactions": [
+          {
+            "bit_count": 48,
+            "bit_offset_origin": "first selected rising edge after nss assertion",
+            "first_rising_sample": 99526,
+            "index": 0,
+            "last_rising_sample": 100191,
+            "matches": [
+              0
+            ],
+            "miso_hex": "04 52 00 00 00 00",
+            "mosi_hex": "00 02 00 1c 35 00",
+            "nss_assert_sample": 99006,
+            "nss_release_sample": 100426,
+            "partial_left": false,
+            "partial_right": false,
+            "trailing_miso_bits": "",
+            "trailing_mosi_bits": ""
+          }
+        ],
+        "within_byte_clock_period_histogram": {
+          "12": 9,
+          "13": 33
+        },
+        "within_byte_mean_period_samples": 12.785714285714286,
+        "source_setting_serial_matches": [
+          {
+            "delta_from_trigger_samples": 0,
+            "end_bit_offset": 39,
+            "end_sample": 100076,
+            "start_bit_offset": 32,
+            "start_sample": 99987,
+            "transaction": 0,
+            "value": 53,
+            "width": 8
+          }
+        ]
+      },
+      "emission": {
+        "clock": "host",
+        "utc_start": "2026-10-08T01:08:47.894Z",
+        "utc_end": "2026-10-08T01:08:48.118Z",
+        "app_status": 0,
+        "completed": 1,
+        "retransmitted": false
+      }
+    },
+    {
+      "case": "w9",
+      "bits": 9,
+      "value": 53,
+      "emitted_mosi_hex": "0002001c3500",
+      "arm_epoch": 1791421770.312306,
+      "register_hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff00fefffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001000000350000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000800010000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200000000000100000000000000080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_sha256": "b56f0f6d52863d1c5637e1bda05bd018a25e96e84de0e262a41be2e3c0f36096",
+      "stages": [
+        {
+          "count": 0,
+          "edge0": 8,
+          "edge1": 8,
+          "index": 0,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65527,
+          "mask1": 65527,
+          "value0": 0,
+          "value1": 8
+        },
+        {
+          "count": 1,
+          "edge0": 1,
+          "edge1": 0,
+          "index": 1,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65534,
+          "mask1": 65535,
+          "value0": 1,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 2,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65531,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 8,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 3,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65024,
+          "mask1": 65535,
+          "value0": 53,
+          "value1": 0
+        }
+      ],
+      "global_stage": 0,
+      "header": {
+        "after_force_seconds": 0.00034999847412109375,
+        "after_stop_seconds": 0.6572682857513428,
+        "aligned_samples": 99328,
+        "check_id": 1431655765,
+        "epoch": 1791421818.738264,
+        "meaningful_trigger_sample": null,
+        "ram_saddr": 4798144,
+        "real_pos_raw": 100034,
+        "remaining": 900415,
+        "status_word": 0,
+        "triggered": false
+      },
+      "callbacks": [
+        {
+          "ep": 134,
+          "epoch": 1791421818.738264,
+          "label": "TRIG_HEADER",
+          "prefix": "55555555c2860100c03649003fbd0d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "req": 512,
+          "status": 0,
+          "xfer": 512
+        },
+        {
+          "ep": 134,
+          "epoch": 1791421818.760318,
+          "label": "BULK_IN_CB",
+          "prefix": null,
+          "req": 1048576,
+          "status": 0,
+          "xfer": 1048576
+        }
+      ],
+      "stop_marks": [
+        1791421818.0809958
+      ],
+      "force_stop_times": [
+        1791421818.737914
+      ],
+      "log_path": "/tmp/dslcap-f-dsview/run_w9.complete.log",
+      "log_sha256": "9d4da855a65bb6b9b4621b4c2a81508c85f66a262cea18577143e0cf0c67b3f9",
+      "independent_report_sha256": "618bbb6ee2669322fac5ecef592f10b3cf5275c520820d93d039a6df3a9f41a7",
+      "natural_completion": false,
+      "raw_dump_sha256": "9b37030c27c593245ca3cddef2228b601492b0d329e6035728799dc428e30c1f",
+      "raw_dump_bytes": 1048576,
+      "waveform": {
+        "samples": 99328,
+        "transactions": [],
+        "within_byte_clock_period_histogram": {},
+        "within_byte_mean_period_samples": null,
+        "source_setting_serial_matches": []
+      },
+      "emission": {
+        "clock": "host",
+        "utc_start": "2026-10-08T01:09:43.280Z",
+        "utc_end": "2026-10-08T01:09:43.406Z",
+        "app_status": 0,
+        "completed": 1,
+        "retransmitted": false
+      }
+    },
+    {
+      "case": "w10",
+      "bits": 10,
+      "value": 53,
+      "emitted_mosi_hex": "0002001c3500",
+      "arm_epoch": 1791421854.375645,
+      "register_hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff00fcfffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001000000350000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000800010000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200000000000100000000000000090000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_sha256": "934470815d8e878fac84378834d36eb635e887120c5529b9b6766531c00c4144",
+      "stages": [
+        {
+          "count": 0,
+          "edge0": 8,
+          "edge1": 8,
+          "index": 0,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65527,
+          "mask1": 65527,
+          "value0": 0,
+          "value1": 8
+        },
+        {
+          "count": 1,
+          "edge0": 1,
+          "edge1": 0,
+          "index": 1,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65534,
+          "mask1": 65535,
+          "value0": 1,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 2,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65531,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 9,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 3,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 64512,
+          "mask1": 65535,
+          "value0": 53,
+          "value1": 0
+        }
+      ],
+      "global_stage": 0,
+      "header": {
+        "after_force_seconds": null,
+        "after_stop_seconds": null,
+        "aligned_samples": 1000448,
+        "check_id": 1431655765,
+        "epoch": 1791421866.344094,
+        "meaningful_trigger_sample": 100054,
+        "ram_saddr": 10161696,
+        "real_pos_raw": 100054,
+        "remaining": 0,
+        "status_word": 1,
+        "triggered": true
+      },
+      "callbacks": [
+        {
+          "ep": 134,
+          "epoch": 1791421866.344094,
+          "label": "TRIG_HEADER",
+          "prefix": "55555555d6860100200e9b0000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "req": 512,
+          "status": 0,
+          "xfer": 512
+        },
+        {
+          "ep": 134,
+          "epoch": 1791421866.36583,
+          "label": "BULK_IN_CB",
+          "prefix": null,
+          "req": 1048576,
+          "status": 0,
+          "xfer": 1048576
+        }
+      ],
+      "stop_marks": [],
+      "force_stop_times": [],
+      "log_path": "/tmp/dslcap-f-dsview/run_w10.complete.log",
+      "log_sha256": "cedb8099c332a74c47c45568d8fc44c6a5b9f1dba6dd8c92d61941a90b713557",
+      "independent_report_sha256": "d9b22fcfdc564feabaabf9dd04f1070ef45d5947ce89005f17dc83c44985729f",
+      "natural_completion": true,
+      "raw_dump_sha256": "90d2c60c7a378da31c3742d0640eb16ed525ee292ab96c791a112061361cf54c",
+      "raw_dump_bytes": 1048576,
+      "waveform": {
+        "samples": 1000448,
+        "transactions": [
+          {
+            "bit_count": 48,
+            "bit_offset_origin": "first selected rising edge after nss assertion",
+            "first_rising_sample": 99504,
+            "index": 0,
+            "last_rising_sample": 100169,
+            "matches": [
+              0
+            ],
+            "miso_hex": "04 52 00 00 00 00",
+            "mosi_hex": "00 02 00 1c 35 00",
+            "nss_assert_sample": 99018,
+            "nss_release_sample": 100405,
+            "partial_left": false,
+            "partial_right": false,
+            "trailing_miso_bits": "",
+            "trailing_mosi_bits": ""
+          }
+        ],
+        "within_byte_clock_period_histogram": {
+          "12": 9,
+          "13": 33
+        },
+        "within_byte_mean_period_samples": 12.785714285714286,
+        "source_setting_serial_matches": [
+          {
+            "delta_from_trigger_samples": 0,
+            "end_bit_offset": 39,
+            "end_sample": 100054,
+            "start_bit_offset": 30,
+            "start_sample": 99926,
+            "transaction": 0,
+            "value": 53,
+            "width": 10
+          }
+        ]
+      },
+      "emission": {
+        "clock": "host",
+        "utc_start": "2026-10-08T01:11:06.095Z",
+        "utc_end": "2026-10-08T01:11:06.348Z",
+        "app_status": 0,
+        "completed": 1,
+        "retransmitted": false
+      }
+    },
+    {
+      "case": "w11",
+      "bits": 11,
+      "value": 1077,
+      "emitted_mosi_hex": "0002001c3500",
+      "arm_epoch": 1791421927.063883,
+      "register_hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff00f8fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000010000003504000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_sha256": "e626c77390bd25d9222795748262a746a829aada00e683e3e16079afe739ca6c",
+      "stages": [
+        {
+          "count": 0,
+          "edge0": 8,
+          "edge1": 8,
+          "index": 0,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65527,
+          "mask1": 65527,
+          "value0": 0,
+          "value1": 8
+        },
+        {
+          "count": 1,
+          "edge0": 1,
+          "edge1": 0,
+          "index": 1,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65534,
+          "mask1": 65535,
+          "value0": 1,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 2,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65531,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 10,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 3,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 63488,
+          "mask1": 65535,
+          "value0": 1077,
+          "value1": 0
+        }
+      ],
+      "global_stage": 0,
+      "header": {
+        "after_force_seconds": 0.0004220008850097656,
+        "after_stop_seconds": 0.7772016525268555,
+        "aligned_samples": 99328,
+        "check_id": 1431655765,
+        "epoch": 1791421972.554238,
+        "meaningful_trigger_sample": null,
+        "ram_saddr": 8993312,
+        "real_pos_raw": 100070,
+        "remaining": 900415,
+        "status_word": 0,
+        "triggered": false
+      },
+      "callbacks": [
+        {
+          "ep": 134,
+          "epoch": 1791421972.554238,
+          "label": "TRIG_HEADER",
+          "prefix": "55555555e6860100203a89003fbd0d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "req": 512,
+          "status": 0,
+          "xfer": 512
+        },
+        {
+          "ep": 134,
+          "epoch": 1791421972.576707,
+          "label": "BULK_IN_CB",
+          "prefix": null,
+          "req": 1048576,
+          "status": 0,
+          "xfer": 1048576
+        }
+      ],
+      "stop_marks": [
+        1791421971.7770364
+      ],
+      "force_stop_times": [
+        1791421972.553816
+      ],
+      "log_path": "/tmp/dslcap-f-dsview/run_w11.complete.log",
+      "log_sha256": "d16b0df6f8153e2327c52a1e7b8da12a1b4d20601cc7e9e745bb0375beb36397",
+      "independent_report_sha256": "c4e27a6541825ebbce75ef30f6bcc2c83e03ea914d968300d7fc7395e38d22a2",
+      "natural_completion": false,
+      "raw_dump_sha256": "9b37030c27c593245ca3cddef2228b601492b0d329e6035728799dc428e30c1f",
+      "raw_dump_bytes": 1048576,
+      "waveform": {
+        "samples": 99328,
+        "transactions": [],
+        "within_byte_clock_period_histogram": {},
+        "within_byte_mean_period_samples": null,
+        "source_setting_serial_matches": []
+      },
+      "emission": {
+        "clock": "host",
+        "utc_start": "2026-10-08T01:12:24.172Z",
+        "utc_end": "2026-10-08T01:12:24.694Z",
+        "app_status": 0,
+        "completed": 1,
+        "retransmitted": false
+      }
+    },
+    {
+      "case": "w12",
+      "bits": 12,
+      "value": 3125,
+      "emitted_mosi_hex": "0002001c3500",
+      "arm_epoch": 1791422003.382186,
+      "register_hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff00f0fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001000000350c000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_sha256": "3088ab806341fa574d95c2b9cbc95e3042009da600bae4e6437d7817265a3cb9",
+      "stages": [
+        {
+          "count": 0,
+          "edge0": 8,
+          "edge1": 8,
+          "index": 0,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65527,
+          "mask1": 65527,
+          "value0": 0,
+          "value1": 8
+        },
+        {
+          "count": 1,
+          "edge0": 1,
+          "edge1": 0,
+          "index": 1,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65534,
+          "mask1": 65535,
+          "value0": 1,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 2,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65531,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 11,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 3,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 61440,
+          "mask1": 65535,
+          "value0": 3125,
+          "value1": 0
+        }
+      ],
+      "global_stage": 0,
+      "header": {
+        "after_force_seconds": 0.0004439353942871094,
+        "after_stop_seconds": 0.6549944877624512,
+        "aligned_samples": 99328,
+        "check_id": 1431655765,
+        "epoch": 1791422042.830603,
+        "meaningful_trigger_sample": null,
+        "ram_saddr": 8899968,
+        "real_pos_raw": 100051,
+        "remaining": 900415,
+        "status_word": 0,
+        "triggered": false
+      },
+      "callbacks": [
+        {
+          "ep": 134,
+          "epoch": 1791422042.830603,
+          "label": "TRIG_HEADER",
+          "prefix": "55555555d386010080cd87003fbd0d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "req": 512,
+          "status": 0,
+          "xfer": 512
+        },
+        {
+          "ep": 134,
+          "epoch": 1791422042.85234,
+          "label": "BULK_IN_CB",
+          "prefix": null,
+          "req": 1048576,
+          "status": 0,
+          "xfer": 1048576
+        }
+      ],
+      "stop_marks": [
+        1791422042.1756084
+      ],
+      "force_stop_times": [
+        1791422042.830159
+      ],
+      "log_path": "/tmp/dslcap-f-dsview/run_w12.complete.log",
+      "log_sha256": "3d9d56c144a26739816f5b08a6291b4897da41d3c7df51600067a33b29a339c0",
+      "independent_report_sha256": "876e4cd818997009a00037dc2a697eba918c070bae394c91063aa1c8f6b09afc",
+      "natural_completion": false,
+      "raw_dump_sha256": "9b37030c27c593245ca3cddef2228b601492b0d329e6035728799dc428e30c1f",
+      "raw_dump_bytes": 1048576,
+      "waveform": {
+        "samples": 99328,
+        "transactions": [],
+        "within_byte_clock_period_histogram": {},
+        "within_byte_mean_period_samples": null,
+        "source_setting_serial_matches": []
+      },
+      "emission": {
+        "clock": "host",
+        "utc_start": "2026-10-08T01:13:35.801Z",
+        "utc_end": "2026-10-08T01:13:35.842Z",
+        "app_status": 0,
+        "completed": 1,
+        "retransmitted": false
+      }
+    },
+    {
+      "case": "w13",
+      "bits": 13,
+      "value": 7221,
+      "emitted_mosi_hex": "0002001c3500",
+      "arm_epoch": 1791422073.554583,
+      "register_hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff00e0fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001000000351c000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_sha256": "3fc25b7cd49939f27bb61c48f95ed421f20324caa6c4dae5d53708bc49ae98b9",
+      "stages": [
+        {
+          "count": 0,
+          "edge0": 8,
+          "edge1": 8,
+          "index": 0,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65527,
+          "mask1": 65527,
+          "value0": 0,
+          "value1": 8
+        },
+        {
+          "count": 1,
+          "edge0": 1,
+          "edge1": 0,
+          "index": 1,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65534,
+          "mask1": 65535,
+          "value0": 1,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 2,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65531,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 12,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 3,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 57344,
+          "mask1": 65535,
+          "value0": 7221,
+          "value1": 0
+        }
+      ],
+      "global_stage": 0,
+      "header": {
+        "after_force_seconds": 0.00040793418884277344,
+        "after_stop_seconds": 0.6849730014801025,
+        "aligned_samples": 99328,
+        "check_id": 1431655765,
+        "epoch": 1791422108.845198,
+        "meaningful_trigger_sample": null,
+        "ram_saddr": 2327424,
+        "real_pos_raw": 100047,
+        "remaining": 900415,
+        "status_word": 0,
+        "triggered": false
+      },
+      "callbacks": [
+        {
+          "ep": 134,
+          "epoch": 1791422108.845198,
+          "label": "TRIG_HEADER",
+          "prefix": "55555555cf860100808323003fbd0d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "req": 512,
+          "status": 0,
+          "xfer": 512
+        },
+        {
+          "ep": 134,
+          "epoch": 1791422108.867041,
+          "label": "BULK_IN_CB",
+          "prefix": null,
+          "req": 1048576,
+          "status": 0,
+          "xfer": 1048576
+        }
+      ],
+      "stop_marks": [
+        1791422108.160225
+      ],
+      "force_stop_times": [
+        1791422108.84479
+      ],
+      "log_path": "/tmp/dslcap-f-dsview/run_w13.complete.log",
+      "log_sha256": "fb091851b07fa245ebe4849a591cf7cf9c68e22f66e6462ddc1d908246dbd7ca",
+      "independent_report_sha256": "4ff4366539ca6a09bd7ec341ac7c0246e523dd8478e54e0434864e6bdd1da7f3",
+      "natural_completion": false,
+      "raw_dump_sha256": "9b37030c27c593245ca3cddef2228b601492b0d329e6035728799dc428e30c1f",
+      "raw_dump_bytes": 1048576,
+      "waveform": {
+        "samples": 99328,
+        "transactions": [],
+        "within_byte_clock_period_histogram": {},
+        "within_byte_mean_period_samples": null,
+        "source_setting_serial_matches": []
+      },
+      "emission": {
+        "clock": "host",
+        "utc_start": "2026-10-08T01:14:46.155Z",
+        "utc_end": "2026-10-08T01:14:46.311Z",
+        "app_status": 0,
+        "completed": 1,
+        "retransmitted": false
+      }
+    },
+    {
+      "case": "w14",
+      "bits": 14,
+      "value": 7221,
+      "emitted_mosi_hex": "0002001c3500",
+      "arm_epoch": 1791422148.373292,
+      "register_hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff00c0fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001000000351c000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000d0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_sha256": "2a4a732707a9edffe7be4bb9ec858d82e2fa6e996478fc2710267078ba80636b",
+      "stages": [
+        {
+          "count": 0,
+          "edge0": 8,
+          "edge1": 8,
+          "index": 0,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65527,
+          "mask1": 65527,
+          "value0": 0,
+          "value1": 8
+        },
+        {
+          "count": 1,
+          "edge0": 1,
+          "edge1": 0,
+          "index": 1,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65534,
+          "mask1": 65535,
+          "value0": 1,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 2,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65531,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 13,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 3,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 49152,
+          "mask1": 65535,
+          "value0": 7221,
+          "value1": 0
+        }
+      ],
+      "global_stage": 0,
+      "header": {
+        "after_force_seconds": 0.0004010200500488281,
+        "after_stop_seconds": 0.9559452533721924,
+        "aligned_samples": 99328,
+        "check_id": 1431655765,
+        "epoch": 1791422190.497736,
+        "meaningful_trigger_sample": null,
+        "ram_saddr": 8489280,
+        "real_pos_raw": 100037,
+        "remaining": 900415,
+        "status_word": 0,
+        "triggered": false
+      },
+      "callbacks": [
+        {
+          "ep": 134,
+          "epoch": 1791422190.497736,
+          "label": "TRIG_HEADER",
+          "prefix": "55555555c5860100408981003fbd0d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "req": 512,
+          "status": 0,
+          "xfer": 512
+        },
+        {
+          "ep": 134,
+          "epoch": 1791422190.519618,
+          "label": "BULK_IN_CB",
+          "prefix": null,
+          "req": 1048576,
+          "status": 0,
+          "xfer": 1048576
+        }
+      ],
+      "stop_marks": [
+        1791422189.5417907
+      ],
+      "force_stop_times": [
+        1791422190.497335
+      ],
+      "log_path": "/tmp/dslcap-f-dsview/run_w14.complete.log",
+      "log_sha256": "de69062db2d7c90b84d11cad51882b723ae61e408e02df5e1fc9abacd406493d",
+      "independent_report_sha256": "f9621401c5114ea48f2493b1b0e98b1ab73ed359546115fe1af666544d781a1f",
+      "natural_completion": false,
+      "raw_dump_sha256": "9b37030c27c593245ca3cddef2228b601492b0d329e6035728799dc428e30c1f",
+      "raw_dump_bytes": 1048576,
+      "waveform": {
+        "samples": 99328,
+        "transactions": [],
+        "within_byte_clock_period_histogram": {},
+        "within_byte_mean_period_samples": null,
+        "source_setting_serial_matches": []
+      },
+      "emission": {
+        "clock": "host",
+        "utc_start": "2026-10-08T01:16:06.864Z",
+        "utc_end": "2026-10-08T01:16:07.109Z",
+        "app_status": 0,
+        "completed": 1,
+        "retransmitted": false
+      }
+    },
+    {
+      "case": "w15",
+      "bits": 15,
+      "value": 7221,
+      "emitted_mosi_hex": "0002001c3500",
+      "arm_epoch": 1791422226.232959,
+      "register_hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff0080fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001000000351c000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_sha256": "a771e2984bbba6530e7c5409295a47b9c3dc19ed1410358b4def36fd74dd38ef",
+      "stages": [
+        {
+          "count": 0,
+          "edge0": 8,
+          "edge1": 8,
+          "index": 0,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65527,
+          "mask1": 65527,
+          "value0": 0,
+          "value1": 8
+        },
+        {
+          "count": 1,
+          "edge0": 1,
+          "edge1": 0,
+          "index": 1,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65534,
+          "mask1": 65535,
+          "value0": 1,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 2,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65531,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 14,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 3,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 32768,
+          "mask1": 65535,
+          "value0": 7221,
+          "value1": 0
+        }
+      ],
+      "global_stage": 0,
+      "header": {
+        "after_force_seconds": 0.0004169940948486328,
+        "after_stop_seconds": 0.7756564617156982,
+        "aligned_samples": 99328,
+        "check_id": 1431655765,
+        "epoch": 1791422262.813376,
+        "meaningful_trigger_sample": null,
+        "ram_saddr": 16487456,
+        "real_pos_raw": 100071,
+        "remaining": 900415,
+        "status_word": 0,
+        "triggered": false
+      },
+      "callbacks": [
+        {
+          "ep": 134,
+          "epoch": 1791422262.813376,
+          "label": "TRIG_HEADER",
+          "prefix": "55555555e78601002094fb003fbd0d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "req": 512,
+          "status": 0,
+          "xfer": 512
+        },
+        {
+          "ep": 134,
+          "epoch": 1791422262.835978,
+          "label": "BULK_IN_CB",
+          "prefix": null,
+          "req": 1048576,
+          "status": 0,
+          "xfer": 1048576
+        }
+      ],
+      "stop_marks": [
+        1791422262.0377195
+      ],
+      "force_stop_times": [
+        1791422262.812959
+      ],
+      "log_path": "/tmp/dslcap-f-dsview/run_w15.complete.log",
+      "log_sha256": "199ec3395b5684a0d1354a45c203851c5ea1ddf4726a4bedcbb91beba908b3da",
+      "independent_report_sha256": "d8aebea04fb29cb37edb555ad2a2db8ad81708df764d5dd42ef051861786d74a",
+      "natural_completion": false,
+      "raw_dump_sha256": "9b37030c27c593245ca3cddef2228b601492b0d329e6035728799dc428e30c1f",
+      "raw_dump_bytes": 1048576,
+      "waveform": {
+        "samples": 99328,
+        "transactions": [],
+        "within_byte_clock_period_histogram": {},
+        "within_byte_mean_period_samples": null,
+        "source_setting_serial_matches": []
+      },
+      "emission": {
+        "clock": "host",
+        "utc_start": "2026-10-08T01:17:19.760Z",
+        "utc_end": "2026-10-08T01:17:19.918Z",
+        "app_status": 0,
+        "completed": 1,
+        "retransmitted": false
+      }
+    },
+    {
+      "case": "w16",
+      "bits": 16,
+      "value": 7221,
+      "emitted_mosi_hex": "0002001c3500",
+      "arm_epoch": 1791422295.151701,
+      "register_hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff0000fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001000000351c000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+      "stages": [
+        {
+          "count": 0,
+          "edge0": 8,
+          "edge1": 8,
+          "index": 0,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65527,
+          "mask1": 65527,
+          "value0": 0,
+          "value1": 8
+        },
+        {
+          "count": 1,
+          "edge0": 1,
+          "edge1": 0,
+          "index": 1,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65534,
+          "mask1": 65535,
+          "value0": 1,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 2,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65531,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 15,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 3,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 0,
+          "mask1": 65535,
+          "value0": 7221,
+          "value1": 0
+        }
+      ],
+      "global_stage": 0,
+      "header": {
+        "after_force_seconds": 0.00041413307189941406,
+        "after_stop_seconds": 0.7993316650390625,
+        "aligned_samples": 99328,
+        "check_id": 1431655765,
+        "epoch": 1791422331.573713,
+        "meaningful_trigger_sample": null,
+        "ram_saddr": 8580480,
+        "real_pos_raw": 100079,
+        "remaining": 900415,
+        "status_word": 0,
+        "triggered": false
+      },
+      "callbacks": [
+        {
+          "ep": 134,
+          "epoch": 1791422331.573713,
+          "label": "TRIG_HEADER",
+          "prefix": "55555555ef86010080ed82003fbd0d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "req": 512,
+          "status": 0,
+          "xfer": 512
+        },
+        {
+          "ep": 134,
+          "epoch": 1791422331.59551,
+          "label": "BULK_IN_CB",
+          "prefix": null,
+          "req": 1048576,
+          "status": 0,
+          "xfer": 1048576
+        }
+      ],
+      "stop_marks": [
+        1791422330.7743814
+      ],
+      "force_stop_times": [
+        1791422331.573299
+      ],
+      "log_path": "/tmp/dslcap-f-dsview/run_w16.complete.log",
+      "log_sha256": "d86c17c565ec3f1f742c3d503b497214e5ab302eeb3822c22e3717a3456ecf74",
+      "independent_report_sha256": "292ed8e50b6c78b6819f09557e47355c1c0eee15e1918efd09424b4a191e83f4",
+      "natural_completion": false,
+      "raw_dump_sha256": "9b37030c27c593245ca3cddef2228b601492b0d329e6035728799dc428e30c1f",
+      "raw_dump_bytes": 1048576,
+      "waveform": {
+        "samples": 99328,
+        "transactions": [],
+        "within_byte_clock_period_histogram": {},
+        "within_byte_mean_period_samples": null,
+        "source_setting_serial_matches": []
+      },
+      "emission": {
+        "clock": "host",
+        "utc_start": "2026-10-08T01:18:28.313Z",
+        "utc_end": "2026-10-08T01:18:28.420Z",
+        "app_status": 0,
+        "completed": 1,
+        "retransmitted": false
+      }
+    },
+    {
+      "case": "ctl8_after",
+      "bits": 8,
+      "value": 53,
+      "emitted_mosi_hex": "0002001c3500",
+      "arm_epoch": 1791422371.389405,
+      "register_hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff00fffffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001000000350000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000800010000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200000000000100000000000000070000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_sha256": "4176aa28329f8a65725dac84703217a2df8969326d60072b9e87f3df8903d0a1",
+      "stages": [
+        {
+          "count": 0,
+          "edge0": 8,
+          "edge1": 8,
+          "index": 0,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65527,
+          "mask1": 65527,
+          "value0": 0,
+          "value1": 8
+        },
+        {
+          "count": 1,
+          "edge0": 1,
+          "edge1": 0,
+          "index": 1,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65534,
+          "mask1": 65535,
+          "value0": 1,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 2,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65531,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 7,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 3,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65280,
+          "mask1": 65535,
+          "value0": 53,
+          "value1": 0
+        }
+      ],
+      "global_stage": 0,
+      "header": {
+        "after_force_seconds": null,
+        "after_stop_seconds": null,
+        "aligned_samples": 1000448,
+        "check_id": 1431655765,
+        "epoch": 1791422385.528117,
+        "meaningful_trigger_sample": 100033,
+        "ram_saddr": 1259904,
+        "real_pos_raw": 100033,
+        "remaining": 0,
+        "status_word": 1,
+        "triggered": true
+      },
+      "callbacks": [
+        {
+          "ep": 134,
+          "epoch": 1791422385.528117,
+          "label": "TRIG_HEADER",
+          "prefix": "55555555c18601008039130000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "req": 512,
+          "status": 0,
+          "xfer": 512
+        },
+        {
+          "ep": 134,
+          "epoch": 1791422385.550718,
+          "label": "BULK_IN_CB",
+          "prefix": null,
+          "req": 1048576,
+          "status": 0,
+          "xfer": 1048576
+        }
+      ],
+      "stop_marks": [],
+      "force_stop_times": [],
+      "log_path": "/tmp/dslcap-f-dsview/run_ctl8_after.complete.log",
+      "log_sha256": "3736e578564e41b52d4ebf5a110636548e3f0ea0b19d7004b4a77aee54dffa61",
+      "independent_report_sha256": "4c26ecb25188a8aaef418f1d86d4ad8284779fe1c72bd0c42277470b19211165",
+      "natural_completion": true,
+      "raw_dump_sha256": "9451b1e0604e5e6207fa577277a1738c835821cd0106bf3f2a21d4e8c2417026",
+      "raw_dump_bytes": 1048576,
+      "waveform": {
+        "samples": 1000448,
+        "transactions": [
+          {
+            "bit_count": 48,
+            "bit_offset_origin": "first selected rising edge after nss assertion",
+            "first_rising_sample": 99483,
+            "index": 0,
+            "last_rising_sample": 100148,
+            "matches": [
+              0
+            ],
+            "miso_hex": "04 52 00 00 00 00",
+            "mosi_hex": "00 02 00 1c 35 00",
+            "nss_assert_sample": 98986,
+            "nss_release_sample": 100394,
+            "partial_left": false,
+            "partial_right": false,
+            "trailing_miso_bits": "",
+            "trailing_mosi_bits": ""
+          }
+        ],
+        "within_byte_clock_period_histogram": {
+          "12": 9,
+          "13": 33
+        },
+        "within_byte_mean_period_samples": 12.785714285714286,
+        "source_setting_serial_matches": [
+          {
+            "delta_from_trigger_samples": 0,
+            "end_bit_offset": 39,
+            "end_sample": 100033,
+            "start_bit_offset": 32,
+            "start_sample": 99944,
+            "transaction": 0,
+            "value": 53,
+            "width": 8
+          }
+        ]
+      },
+      "emission": {
+        "clock": "host",
+        "utc_start": "2026-10-08T01:19:45.213Z",
+        "utc_end": "2026-10-08T01:19:45.531Z",
+        "app_status": 0,
+        "completed": 1,
+        "retransmitted": false
+      }
+    },
+    {
+      "case": "align16_a",
+      "bits": 16,
+      "value": 7221,
+      "emitted_mosi_hex": "00021c350000",
+      "arm_epoch": 1791422434.276304,
+      "register_hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff0000fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001000000351c000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+      "stages": [
+        {
+          "count": 0,
+          "edge0": 8,
+          "edge1": 8,
+          "index": 0,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65527,
+          "mask1": 65527,
+          "value0": 0,
+          "value1": 8
+        },
+        {
+          "count": 1,
+          "edge0": 1,
+          "edge1": 0,
+          "index": 1,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65534,
+          "mask1": 65535,
+          "value0": 1,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 2,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65531,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 15,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 3,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 0,
+          "mask1": 65535,
+          "value0": 7221,
+          "value1": 0
+        }
+      ],
+      "global_stage": 0,
+      "header": {
+        "after_force_seconds": null,
+        "after_stop_seconds": null,
+        "aligned_samples": 1000448,
+        "check_id": 1431655765,
+        "epoch": 1791422448.815798,
+        "meaningful_trigger_sample": 100040,
+        "ram_saddr": 4513824,
+        "real_pos_raw": 100040,
+        "remaining": 0,
+        "status_word": 1,
+        "triggered": true
+      },
+      "callbacks": [
+        {
+          "ep": 134,
+          "epoch": 1791422448.815798,
+          "label": "TRIG_HEADER",
+          "prefix": "55555555c886010020e0440000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "req": 512,
+          "status": 0,
+          "xfer": 512
+        },
+        {
+          "ep": 134,
+          "epoch": 1791422448.837727,
+          "label": "BULK_IN_CB",
+          "prefix": null,
+          "req": 1048576,
+          "status": 0,
+          "xfer": 1048576
+        }
+      ],
+      "stop_marks": [],
+      "force_stop_times": [],
+      "log_path": "/tmp/dslcap-f-dsview/run_align16_a.complete.log",
+      "log_sha256": "90d71ee9954a633b2aa8b106192b2c911edb18a2395935c6b678ddb5526076a4",
+      "independent_report_sha256": "fbae367861f1e2d7e9d02238cddcee14c50d644ebf4887b3fe78066557c5a8ba",
+      "natural_completion": true,
+      "raw_dump_sha256": "4e197451dd59d542e5b1f86b7dc0518f33101711c04f9c4909873c397d0da65d",
+      "raw_dump_bytes": 1048576,
+      "waveform": {
+        "samples": 1000448,
+        "transactions": [
+          {
+            "bit_count": 48,
+            "bit_offset_origin": "first selected rising edge after nss assertion",
+            "first_rising_sample": 99605,
+            "index": 0,
+            "last_rising_sample": 100270,
+            "matches": [
+              0
+            ],
+            "miso_hex": "04 52 00 00 00 00",
+            "mosi_hex": "00 02 1c 35 00 00",
+            "nss_assert_sample": 99132,
+            "nss_release_sample": 100519,
+            "partial_left": false,
+            "partial_right": false,
+            "trailing_miso_bits": "",
+            "trailing_mosi_bits": ""
+          }
+        ],
+        "within_byte_clock_period_histogram": {
+          "12": 9,
+          "13": 33
+        },
+        "within_byte_mean_period_samples": 12.785714285714286,
+        "source_setting_serial_matches": [
+          {
+            "delta_from_trigger_samples": 0,
+            "end_bit_offset": 31,
+            "end_sample": 100040,
+            "start_bit_offset": 16,
+            "start_sample": 99835,
+            "transaction": 0,
+            "value": 7221,
+            "width": 16
+          }
+        ]
+      },
+      "emission": {
+        "clock": "host",
+        "utc_start": "2026-10-08T01:20:48.467Z",
+        "utc_end": "2026-10-08T01:20:48.820Z",
+        "app_status": 0,
+        "completed": 1,
+        "retransmitted": false
+      }
+    },
+    {
+      "case": "cross16_repeat",
+      "bits": 16,
+      "value": 7221,
+      "emitted_mosi_hex": "0002001c3500",
+      "arm_epoch": 1791422495.103928,
+      "register_hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff0000fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001000000351c000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+      "stages": [
+        {
+          "count": 0,
+          "edge0": 8,
+          "edge1": 8,
+          "index": 0,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65527,
+          "mask1": 65527,
+          "value0": 0,
+          "value1": 8
+        },
+        {
+          "count": 1,
+          "edge0": 1,
+          "edge1": 0,
+          "index": 1,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65534,
+          "mask1": 65535,
+          "value0": 1,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 2,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65531,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 15,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 3,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 0,
+          "mask1": 65535,
+          "value0": 7221,
+          "value1": 0
+        }
+      ],
+      "global_stage": 0,
+      "header": {
+        "after_force_seconds": 0.0046901702880859375,
+        "after_stop_seconds": 0.7001011371612549,
+        "aligned_samples": 99328,
+        "check_id": 1431655765,
+        "epoch": 1791422585.035685,
+        "meaningful_trigger_sample": null,
+        "ram_saddr": 16271936,
+        "real_pos_raw": 100087,
+        "remaining": 900415,
+        "status_word": 0,
+        "triggered": false
+      },
+      "callbacks": [
+        {
+          "ep": 134,
+          "epoch": 1791422585.035685,
+          "label": "TRIG_HEADER",
+          "prefix": "55555555f7860100404af8003fbd0d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "req": 512,
+          "status": 0,
+          "xfer": 512
+        },
+        {
+          "ep": 134,
+          "epoch": 1791422585.053691,
+          "label": "BULK_IN_CB",
+          "prefix": null,
+          "req": 1048576,
+          "status": 0,
+          "xfer": 1048576
+        }
+      ],
+      "stop_marks": [
+        1791422584.335584
+      ],
+      "force_stop_times": [
+        1791422585.030995
+      ],
+      "log_path": "/tmp/dslcap-f-dsview/run_cross16_repeat.complete.log",
+      "log_sha256": "1b055193e9a2152dc9ef7052bf87f49ada9254810fa84f9bc3b5abc1defa6774",
+      "independent_report_sha256": "e504a2cbe1021d2fd2da9ac8a779fa7463bdc214ccf8a426fd20ae74c7bdaa33",
+      "natural_completion": false,
+      "raw_dump_sha256": "9b37030c27c593245ca3cddef2228b601492b0d329e6035728799dc428e30c1f",
+      "raw_dump_bytes": 1048576,
+      "waveform": {
+        "samples": 99328,
+        "transactions": [],
+        "within_byte_clock_period_histogram": {},
+        "within_byte_mean_period_samples": null,
+        "source_setting_serial_matches": []
+      },
+      "emission": {
+        "clock": "host",
+        "utc_start": "2026-10-08T01:21:48.746Z",
+        "utc_end": "2026-10-08T01:21:49.029Z",
+        "app_status": 0,
+        "completed": 1,
+        "retransmitted": false
+      }
+    },
+    {
+      "case": "align16_b",
+      "bits": 16,
+      "value": 7221,
+      "emitted_mosi_hex": "00021c350000",
+      "arm_epoch": 1791422621.138966,
+      "register_hex": "a5f5a5f501000108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7fffefffbff0000fffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001000000351c000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000100000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "register_sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+      "stages": [
+        {
+          "count": 0,
+          "edge0": 8,
+          "edge1": 8,
+          "index": 0,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65527,
+          "mask1": 65527,
+          "value0": 0,
+          "value1": 8
+        },
+        {
+          "count": 1,
+          "edge0": 1,
+          "edge1": 0,
+          "index": 1,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65534,
+          "mask1": 65535,
+          "value0": 1,
+          "value1": 0
+        },
+        {
+          "count": 0,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 2,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 65531,
+          "mask1": 65535,
+          "value0": 0,
+          "value1": 0
+        },
+        {
+          "count": 15,
+          "edge0": 0,
+          "edge1": 0,
+          "index": 3,
+          "logic0": 2,
+          "logic1": 2,
+          "mask0": 0,
+          "mask1": 65535,
+          "value0": 7221,
+          "value1": 0
+        }
+      ],
+      "global_stage": 0,
+      "header": {
+        "after_force_seconds": null,
+        "after_stop_seconds": null,
+        "aligned_samples": 1000448,
+        "check_id": 1431655765,
+        "epoch": 1791422635.149088,
+        "meaningful_trigger_sample": 100058,
+        "ram_saddr": 11603328,
+        "real_pos_raw": 100058,
+        "remaining": 0,
+        "status_word": 1,
+        "triggered": true
+      },
+      "callbacks": [
+        {
+          "ep": 134,
+          "epoch": 1791422635.149088,
+          "label": "TRIG_HEADER",
+          "prefix": "55555555da860100800db10000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "req": 512,
+          "status": 0,
+          "xfer": 512
+        },
+        {
+          "ep": 134,
+          "epoch": 1791422635.170867,
+          "label": "BULK_IN_CB",
+          "prefix": null,
+          "req": 1048576,
+          "status": 0,
+          "xfer": 1048576
+        }
+      ],
+      "stop_marks": [],
+      "force_stop_times": [],
+      "log_path": "/tmp/dslcap-f-dsview/run_align16_b.complete.log",
+      "log_sha256": "2b087ce81304981b636d2aaaf377c65bf9bbe2e9e7e726e5bb16214631aa4858",
+      "independent_report_sha256": "ed1b338de7146bf29a8f32a050335dd48531007eb3890a03643fbfe5940d25b2",
+      "natural_completion": true,
+      "raw_dump_sha256": "b000bf589588982c39c51cb2b9342f0b200f594d588d47390fe942384fb7c4aa",
+      "raw_dump_bytes": 1048576,
+      "waveform": {
+        "samples": 1000448,
+        "transactions": [
+          {
+            "bit_count": 48,
+            "bit_offset_origin": "first selected rising edge after nss assertion",
+            "first_rising_sample": 99623,
+            "index": 0,
+            "last_rising_sample": 100288,
+            "matches": [
+              0
+            ],
+            "miso_hex": "04 52 00 00 00 00",
+            "mosi_hex": "00 02 1c 35 00 00",
+            "nss_assert_sample": 99121,
+            "nss_release_sample": 100518,
+            "partial_left": false,
+            "partial_right": false,
+            "trailing_miso_bits": "",
+            "trailing_mosi_bits": ""
+          }
+        ],
+        "within_byte_clock_period_histogram": {
+          "12": 9,
+          "13": 33
+        },
+        "within_byte_mean_period_samples": 12.785714285714286,
+        "source_setting_serial_matches": [
+          {
+            "delta_from_trigger_samples": 0,
+            "end_bit_offset": 31,
+            "end_sample": 100058,
+            "start_bit_offset": 16,
+            "start_sample": 99853,
+            "transaction": 0,
+            "value": 7221,
+            "width": 16
+          }
+        ]
+      },
+      "emission": {
+        "clock": "host",
+        "utc_start": "2026-10-08T01:23:55.113Z",
+        "utc_end": "2026-10-08T01:23:55.152Z",
+        "app_status": 0,
+        "completed": 1,
+        "retransmitted": false
+      }
+    }
+  ],
+  "artifact_hashes": {
+    "/tmp/dslcap-f-dsview/usbshim_live.c": "61b3e96be2a0b660af9e5748aced27c1e21510ceb794d953abaf35d23fc3f2b4",
+    "/tmp/dslcap-f-dsview/usbshim_live.so": "13c7dab04585d9230f153b81b7e4fb983424889fbb037f0ab2bb5ae90110012b",
+    "/tmp/dslcap-f-verify/evidence.py": "75b9a4e28ac254a286ef3e06125cbe4d6405addfba60736b18ee23ba9a957fb0"
+  },
+  "tasks": [
+    "dslcap-f-dsview-20261008",
+    "dslcap-f-radio-20261008"
+  ],
+  "restoration": {
+    "dsview": {
+      "revision": 5,
+      "result_sha256": "21e9d23efde40c4ff30d7aea506590779004809c4ffc497f80ccfc9430efc5c1",
+      "usb_released_utc": "2026-10-08T01:24:20.996Z",
+      "original_session_config_restored": true,
+      "lead_verified_no_usb_holder_or_capture_process": true
+    },
+    "radio": {
+      "revision": 5,
+      "result_sha256": "4291881bf937dd13648ddacfa98b21c860c44ea9eace6eb27cf6b6e6e1592baa",
+      "verified_utc": "2026-10-08T01:24:29.756Z",
+      "mode": "STBY_XOSC",
+      "system_irq": 0,
+      "errors": 0,
+      "tx_fifo_level": 0,
+      "fifo_flags_rx": "03",
+      "fifo_flags_tx": "27",
+      "spi_mode": 0,
+      "spi_bits": 8,
+      "spi_lsb_first": false,
+      "spi_default_hz": 8000000,
+      "app_pid_unchanged": 7973,
+      "pi134": "untouched",
+      "restored_after_each_case": true
+    }
+  },
+  "receipt_anomaly": "cross16_repeat native SENT dropped once; lead relayed existing receipt; no SPI retransmission.",
+  "outcome": "Non-monotonic original-frame width results. Constant16-bit registers with aligned/crossed/aligned payload give hit/miss/hit, supporting word-alignment-dependent matching on this setup.",
+  "limitations": [
+    "Original sweep couples width, mask and count; numerical value also changes at11,12,13.",
+    "Failed forced dumps are late idle windows, not contemporaneous proof of the emitted frame.",
+    "Word-boundary interpretation is scoped to tested DSView setup and finite cases, not every serial mode or trigger role.",
+    "Clock estimates use nominal analyzer100MHz, not new absolute clock calibration.",
+    "Native dslcap hardware order/opcode acceptance remains a separate gate."
+  ]
+}

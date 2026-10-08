@@ -2,6 +2,45 @@
 
 ## C-serial-trigger — wave 1
 
+### Intermediate-width sweep and alignment check (complete)
+
+User authorized intermediate widths after 89648ba. Tasks
+`dslcap-f-dsview-20261008` and `dslcap-f-radio-20261008` own analyzer and pi133
+respectively. Lead explicitly authorized direct coordination between these
+same verified owners: radio baseline READY, DSView ARM/register verification,
+named GO, one frame, SENT, natural completion or bounded Stop, CAPTURE_COMPLETE,
+radio restoration, then next READY. No overlapping captures or cleanup traffic.
+Cases: serial 8-bit control, widths 9 through 16, final serial 8-bit control.
+Values are low N bits of 0x1c35; upper unused match bits X. Same carrier
+0002001c3500, app requested 8 MHz, DSView 100 MS/s CH0-7, N1000448, position10%.
+No new dependency, production edit, GPIO/RF/reset/config write or Pi134 action.
+First-control failure stops the sweep. Existing dslcap_worker independently
+verifies raw artifacts under /tmp/dslcap-f-verify using the frozen E parser.
+Lead owns durable results, review and scoped commit. No new formal review cycle.
+Early results: 8-bit control hit, 9-bit missed, 10-bit hit. Lead directed
+owners to complete the original sequence then hold restored/idle for a bounded
+repeat decision. This already rules out a monotonic 8-bit cutoff for these
+observations; no general width limit is inferred.
+The worker's independent bitstring oracle suggested word alignment: the
+original target ends after 40 clocks (divisible by 8 and 10). Lead authorized
+three follow-up 16-bit captures after a passing closing control: carrier
+00021c350000, original 0002001c3500, then 00021c350000 again. These keep the
+16-bit value/count/mask and all capture settings fixed while moving the target
+from clock 40 to clock 32. Same FIFO operation and restoration, no new dependency.
+After these 13 total cases owners restore and finish; no open-ended repeats.
+Completed outcome: controls 8/8 and width10 naturally hit at clock40;
+width9 and widths11–16 missed on the original carrier. The constant-register
+16-bit follow-up produced aligned hit / crossing miss / aligned hit, with
+positive trigger samples exactly at clock32. Independent worker checked all13
+raw settings/headers/waveforms. This supports alignment-dependent comparison
+and disproves a simple maximum-width explanation for this setup. Lead corrected
+the unsupported sliding-window claim in both READMEs and the plan, and specified
+word-aligned carriers for native C.2. No production code or new review cycle.
+Both owner tasks completed revision5, consumed and acknowledged. DSView restored
+settings/released USB; pi133 baseline and original app/SPI settings restored,
+Pi134 untouched. One dropped native SENT receipt was relayed by lead without
+re-emitting a frame. See SERIAL_INTERMEDIATE_WIDTHS.md/JSON for full evidence.
+
 ### Short-width and slow-clock diagnosis
 
 User authorized shorter matches and slower SPI clocks after 61963d2.
