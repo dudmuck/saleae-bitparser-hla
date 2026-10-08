@@ -7,9 +7,12 @@ limitations. A2 continuous-clock validation also passed, with independent
 review and restored wiring; see [A2_VALIDATION.md](A2_VALIDATION.md).
 Phase C serial-trigger implementation is now present in C and Python with
 offline coverage and independent review PASS; see
-[SERIAL_REVIEW.md](SERIAL_REVIEW.md). Real
-DSView serial register comparison, hardware bit/byte order and opcode tests
-remain open. See [TRIGGER_TASKS.md](TRIGGER_TASKS.md). Optional trigger-relative
+[SERIAL_REVIEW.md](SERIAL_REVIEW.md). Real DSView serial register comparison
+passed at100M/200M/400M. Hardware bit-order validation is **blocked**: all four
+isolated patterns and an exact-reference positive retry timed out, despite
+passing NSS controls. No serial order or opcode acceptance is claimed; see
+[SERIAL_VALIDATION.md](SERIAL_VALIDATION.md) and
+[TRIGGER_TASKS.md](TRIGGER_TASKS.md). Optional trigger-relative
 timestamps remain unimplemented.
 
 Plan review history: proposed 2026-10-07, revised the same day for review
@@ -798,6 +801,11 @@ GetVersion decode. Independent review: [A2_REVIEW.md](A2_REVIEW.md).
 **C. Serial trigger (SPI opcode).** Map `--serial-trigger` to DSView's
 serial template (stage roles and counts above; logic = AND, non-contiguous,
 `==` invert, as in the UI defaults). The clock is `r`/`f` only.
+
+Validation update: C.1 passed; C.2 attempted and blocked on the missing
+positive match at100M. C.3 remains pending. Preserve source mapping until a
+controlled diagnosis establishes the cause; four misses do not establish order.
+
 1. **Golden image:** B.1-style comparison against DSView's serial tab with
    an identical setup, including value `0x1c35`/`bits=16`, so the
    per-bit placement in the stage-3 value strings is pinned byte for byte.

@@ -2,6 +2,30 @@
 
 ## C-serial-trigger — wave 1
 
+### Live comparison follow-up
+
+User authorized register comparison then bit-order validation after d6dfd2e.
+DSView owner has exclusive USB for real serial reference task
+`dslcap-c-golden-20261007` in /home/wroberts/DSView-1.3.2; lead must wait for
+explicit release before capturing. Radio owner task `dslcap-c-radio-20261007`
+in /mnt/foo/nfs_share_for_pis/hydra_develop prepares safe isolated transactions
+and waits for lead GO. dslcap_worker prepares only offline capture verification
+under /tmp/dslcap-c-verify; no shared source edits or GPIO generation.
+Live results: real372-byte serial register comparison PASS at100/200/400M.
+At100M allfour NSS controls passed exactbytes/unique pattern, but allfour
+serial trials timed out exit16. Exact-reference CH0-7 retry also timed out,
+with its actual arm image byte-identical to DSView. C.2 is blocked, not passed;
+C.3 and live higher-rate bit-order gates remain open. SERIAL_GOLDEN.json and
+SERIAL_VALIDATION.md/JSON preserve results and limitations. Source mapping and
+production code stayed unchanged; no speculative bit-order fix.
+
+Both secondopinion tasks completed revision5, consumed and acknowledged.
+DSView settings restored/USB released; radio owner restored pi133 after all9
+frames, final modeSTBY_XOSC/errors0/IRQ0/TXlevel0 with original FIFO flags
+rx0x03/tx0x27 preserved. Only newly raised FIFO_TX was cleared. Pi134 untouched,
+no RF/GPIO/reset/config changes. Worker independently checked waveform and
+source/guide; temporary verifier six synthetic tests passed. No new dependency.
+
 User authorized Phase C item 1: serial-trigger implementation and offline
 tests. Baseline b2c5369; spec TRIGGER_PLAN.md; read-only reference
 /home/wroberts/DSView-1.3.2. No new dependencies or live hardware work.

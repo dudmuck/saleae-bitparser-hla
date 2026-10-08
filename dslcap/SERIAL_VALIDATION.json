@@ -1,0 +1,954 @@
+{
+  "implementation_commit": "d6dfd2e",
+  "register_comparison": "PASS at100M/200M/400M; see SERIAL_GOLDEN.json",
+  "bit_order_gate": "BLOCKED: no positive serial match",
+  "tests": [
+    {
+      "label": "control-100M-1c35",
+      "rate": "100M",
+      "count": 1000448,
+      "kind": "simple",
+      "value": "0x1c35",
+      "command": [
+        "/tmp/dslcap-phase-c-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-3",
+        "--samples",
+        "1000448",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "120s",
+        "--vth",
+        "1.6",
+        "-v",
+        "--trigger",
+        "3:f"
+      ],
+      "pid": 2124399,
+      "start_epoch": 1791417736.4210944,
+      "arm_observed_epoch": 1791417737.3237166,
+      "exit": 0,
+      "end_epoch": 1791417761.3902051,
+      "raw_sha256": "041491c09e118563fd929b5e9d3da5a8de75604c28f8d3722447fcfd5731e079",
+      "raw_bytes": 1000496,
+      "stderr_sha256": "e8f7d3772a3fd819ec0e94a52c5250fea277e5c98657c2f3e5ab6ec0743664ac",
+      "raw_path": "/tmp/dslcap-c-live/control-100M-1c35.raw",
+      "owner_sent": {
+        "id": "hd26-c-r1-sent",
+        "sha256": "a8208781613fce0e74c7eade7f3b595d6458c47f163b5239e6d2af0bffdee52e",
+        "body": "# control-100M-1c35: frame SENT (reply to go-control-100m-1c35)\n- Exactly one hal_script op: write cmd `0002` data `001c3500` \u2192 one NSS frame, MOSI **`00 02 00 1C 35 00`**.\n- Host window **2026-10-08T00:02:40.885Z to 00:02:41.158Z** (Unix 1791417760.885 to .158; includes HTTP).\n- Result: status 0, completed 1, no abort, no cmd_err (chip accepted it; stat not FAIL/PERR).\n- TX FIFO now holds 4 B (00 1C 35 00). No other SPI. Holding until your capture-complete/restore notice.\n",
+        "created_utc": "2026-10-08T00:02:49.889983+00:00"
+      },
+      "stimulus_within_armed_window": true,
+      "analysis": {
+        "channels": {
+          "miso": 1,
+          "mosi": 2,
+          "nss": 3,
+          "sclk": 0
+        },
+        "diagnostics": [],
+        "format_valid": true,
+        "interpretation": "Decode assumes mode 0 and MSB-first wire bytes. Rolling windows include unaligned/payload matches within each NSS frame. Partial frame offsets are relative to the observed suffix. Simultaneous NSS/clock rises are flagged and not shifted. File inspection cannot prove producer exit status or hardware trigger bit order by itself.",
+        "match_counts": {
+          "0x1c35": 1,
+          "0x351c": 0,
+          "0x38ac": 0,
+          "0xac38": 0
+        },
+        "metadata_lines": 2,
+        "mode": "SPI mode 0, rising SCLK, MSB-first decode, NSS active low",
+        "path": "/tmp/dslcap-c-live/control-100M-1c35.raw",
+        "requested_value": "0x1c35",
+        "rolling_matches": [
+          {
+            "bit_offset_origin": "nss frame",
+            "delta_from_trigger_samples": 1037,
+            "end_bit_offset": 39,
+            "end_sample": 101126,
+            "start_bit_in_byte": 0,
+            "start_bit_offset": 24,
+            "start_byte_offset": 3,
+            "start_sample": 100921,
+            "transaction": 0,
+            "value": "0x1c35"
+          }
+        ],
+        "samplerate_hz": 100000000,
+        "samples": 1000448,
+        "sha256": "041491c09e118563fd929b5e9d3da5a8de75604c28f8d3722447fcfd5731e079",
+        "transactions": [
+          {
+            "bit_count": 48,
+            "bit_offset_origin": "first selected rising edge after nss assertion",
+            "first_rising_sample": 100576,
+            "index": 0,
+            "last_rising_sample": 101241,
+            "matches": [
+              0
+            ],
+            "miso_hex": "04 52 00 00 00 00",
+            "mosi_hex": "00 02 00 1c 35 00",
+            "nss_assert_sample": 100089,
+            "nss_release_sample": 101471,
+            "partial_left": false,
+            "partial_right": false,
+            "trailing_miso_bits": "",
+            "trailing_mosi_bits": ""
+          }
+        ],
+        "trigger_association": {
+          "interpretation": "Sampled association only: deltas are observed, no fixed trigger latency or causal match is assumed.",
+          "nearest_events": {
+            "clock_falling": {
+              "after": {
+                "delta_samples": 493,
+                "sample": 100582,
+                "selected": true,
+                "time_s": 0.00100582,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            },
+            "clock_rising": {
+              "after": {
+                "delta_samples": 487,
+                "sample": 100576,
+                "selected": true,
+                "time_s": 0.00100576,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            },
+            "nss_assert": {
+              "after": null,
+              "at": {
+                "delta_samples": 0,
+                "sample": 100089,
+                "selected": true,
+                "time_s": 0.00100089,
+                "transaction": 0
+              },
+              "before": null
+            },
+            "nss_release": {
+              "after": {
+                "delta_samples": 1382,
+                "sample": 101471,
+                "selected": false,
+                "time_s": 0.00101471,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            }
+          },
+          "nearest_matching_windows": [
+            {
+              "bit_offset_origin": "nss frame",
+              "delta_from_trigger_samples": 1037,
+              "end_bit_offset": 39,
+              "end_sample": 101126,
+              "start_bit_in_byte": 0,
+              "start_bit_offset": 24,
+              "start_byte_offset": 3,
+              "start_sample": 100921,
+              "transaction": 0,
+              "value": "0x1c35"
+            }
+          ],
+          "transaction_indices": [
+            0
+          ]
+        },
+        "trigger_sample": 100089,
+        "trigger_time_s": 0.00100089,
+        "variants": [
+          "0x1c35",
+          "0xac38",
+          "0x351c",
+          "0x38ac"
+        ]
+      }
+    },
+    {
+      "label": "serial-100M-1c35",
+      "rate": "100M",
+      "count": 1000448,
+      "kind": "serial",
+      "value": "0x1c35",
+      "command": [
+        "/tmp/dslcap-phase-c-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-3",
+        "--samples",
+        "1000448",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "120s",
+        "--vth",
+        "1.6",
+        "-v",
+        "--serial-trigger",
+        "start=3:f,stop=3:r,clock=0:r,data=2,value=0x1c35,bits=16"
+      ],
+      "pid": 2127320,
+      "start_epoch": 1791417831.2987223,
+      "arm_observed_epoch": 1791417832.201764,
+      "exit": 16,
+      "end_epoch": 1791417952.7350469,
+      "raw_sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab",
+      "raw_bytes": 27,
+      "stderr_sha256": "f3f6f1575ceff8bc4470a4fbb8182f1b629afe29569bc1a170df08541de37535",
+      "raw_path": "/tmp/dslcap-c-live/serial-100M-1c35.raw",
+      "owner_sent": {
+        "id": "hd26-c-r2-sent",
+        "sha256": "03591e996bc8124d0b2e282d5fe6de00a535f1846f9b44c81438f329441dfe2e",
+        "body": "# serial-100M-1c35: frame SENT (reply to go-serial-100m-1c35)\n- Exactly one write op: cmd `0002` data `001c3500` \u2192 MOSI **`00 02 00 1C 35 00`** (one NSS frame).\n- Host window **2026-10-08T00:04:05.109Z to 00:04:05.333Z** (Unix 1791417845.110 to .333, incl. HTTP).\n- status 0, completed 1, no abort/cmd_err. TX FIFO holds 4 B. Quiet until capture-complete/restore.\n- CH5 = pi133 DIO8 noted. If FIFO_TX is in its mask it may go high after this write, and it drops when I clear sys IRQ bit 1 at restore.\n",
+        "created_utc": "2026-10-08T00:04:14.492127+00:00"
+      },
+      "stimulus_within_armed_window": true,
+      "sample_payload_bytes": 0
+    },
+    {
+      "label": "control-100M-ac38",
+      "rate": "100M",
+      "count": 1000448,
+      "kind": "simple",
+      "value": "0x1c35",
+      "command": [
+        "/tmp/dslcap-phase-c-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-3",
+        "--samples",
+        "1000448",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "45s",
+        "--vth",
+        "1.6",
+        "-v",
+        "--trigger",
+        "3:f"
+      ],
+      "pid": 2131337,
+      "start_epoch": 1791418007.0320349,
+      "arm_observed_epoch": 1791418007.9345906,
+      "exit": 0,
+      "end_epoch": 1791418020.976331,
+      "raw_sha256": "0311d52752a0ed5f0ba35808bcdf89f4270e740db3db0791092a3325e11da169",
+      "raw_bytes": 1000496,
+      "stderr_sha256": "8c3cd6da8096b122f3d904366e75165ac8daa8bf38ef68be2037132673c1e183",
+      "raw_path": "/tmp/dslcap-c-live/control-100M-ac38.raw",
+      "owner_sent": {
+        "id": "hd26-c-r3-sent",
+        "sha256": "4f170a6de4335111c1118d8966a5f62345887b90116d61b24c76804f0946b9a5",
+        "body": "# control-100M-ac38: frame SENT (reply to go-control-100m-ac38)\n- Exactly one write op: cmd `0002` data `00ac3800` \u2192 MOSI **`00 02 00 AC 38 00`**.\n- Host window **2026-10-08T00:07:00.562Z to 00:07:00.750Z** (Unix 1791418020.563 to .751).\n- status 0, completed 1, no abort/cmd_err. Quiet until restore.\n",
+        "created_utc": "2026-10-08T00:07:09.005626+00:00"
+      },
+      "stimulus_within_armed_window": true,
+      "analysis": {
+        "channels": {
+          "miso": 1,
+          "mosi": 2,
+          "nss": 3,
+          "sclk": 0
+        },
+        "diagnostics": [],
+        "format_valid": true,
+        "interpretation": "Decode assumes mode 0 and MSB-first wire bytes. Rolling windows include unaligned/payload matches within each NSS frame. Partial frame offsets are relative to the observed suffix. Simultaneous NSS/clock rises are flagged and not shifted. File inspection cannot prove producer exit status or hardware trigger bit order by itself.",
+        "match_counts": {
+          "0x1c35": 0,
+          "0x351c": 0,
+          "0x38ac": 0,
+          "0xac38": 1
+        },
+        "metadata_lines": 2,
+        "mode": "SPI mode 0, rising SCLK, MSB-first decode, NSS active low",
+        "path": "/tmp/dslcap-c-live/control-100M-ac38.raw",
+        "requested_value": "0x1c35",
+        "rolling_matches": [
+          {
+            "bit_offset_origin": "nss frame",
+            "delta_from_trigger_samples": 1059,
+            "end_bit_offset": 39,
+            "end_sample": 101133,
+            "start_bit_in_byte": 0,
+            "start_bit_offset": 24,
+            "start_byte_offset": 3,
+            "start_sample": 100928,
+            "transaction": 0,
+            "value": "0xac38"
+          }
+        ],
+        "samplerate_hz": 100000000,
+        "samples": 1000448,
+        "sha256": "0311d52752a0ed5f0ba35808bcdf89f4270e740db3db0791092a3325e11da169",
+        "transactions": [
+          {
+            "bit_count": 48,
+            "bit_offset_origin": "first selected rising edge after nss assertion",
+            "first_rising_sample": 100582,
+            "index": 0,
+            "last_rising_sample": 101248,
+            "matches": [
+              0
+            ],
+            "miso_hex": "04 52 00 00 00 00",
+            "mosi_hex": "00 02 00 ac 38 00",
+            "nss_assert_sample": 100074,
+            "nss_release_sample": 101493,
+            "partial_left": false,
+            "partial_right": false,
+            "trailing_miso_bits": "",
+            "trailing_mosi_bits": ""
+          }
+        ],
+        "trigger_association": {
+          "interpretation": "Sampled association only: deltas are observed, no fixed trigger latency or causal match is assumed.",
+          "nearest_events": {
+            "clock_falling": {
+              "after": {
+                "delta_samples": 515,
+                "sample": 100589,
+                "selected": true,
+                "time_s": 0.00100589,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            },
+            "clock_rising": {
+              "after": {
+                "delta_samples": 508,
+                "sample": 100582,
+                "selected": true,
+                "time_s": 0.00100582,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            },
+            "nss_assert": {
+              "after": null,
+              "at": {
+                "delta_samples": 0,
+                "sample": 100074,
+                "selected": true,
+                "time_s": 0.00100074,
+                "transaction": 0
+              },
+              "before": null
+            },
+            "nss_release": {
+              "after": {
+                "delta_samples": 1419,
+                "sample": 101493,
+                "selected": false,
+                "time_s": 0.00101493,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            }
+          },
+          "nearest_matching_windows": [
+            {
+              "bit_offset_origin": "nss frame",
+              "delta_from_trigger_samples": 1059,
+              "end_bit_offset": 39,
+              "end_sample": 101133,
+              "start_bit_in_byte": 0,
+              "start_bit_offset": 24,
+              "start_byte_offset": 3,
+              "start_sample": 100928,
+              "transaction": 0,
+              "value": "0xac38"
+            }
+          ],
+          "transaction_indices": [
+            0
+          ]
+        },
+        "trigger_sample": 100074,
+        "trigger_time_s": 0.00100074,
+        "variants": [
+          "0x1c35",
+          "0xac38",
+          "0x351c",
+          "0x38ac"
+        ]
+      }
+    },
+    {
+      "label": "serial-100M-ac38",
+      "rate": "100M",
+      "count": 1000448,
+      "kind": "serial",
+      "value": "0x1c35",
+      "command": [
+        "/tmp/dslcap-phase-c-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-3",
+        "--samples",
+        "1000448",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "45s",
+        "--vth",
+        "1.6",
+        "-v",
+        "--serial-trigger",
+        "start=3:f,stop=3:r,clock=0:r,data=2,value=0x1c35,bits=16"
+      ],
+      "pid": 2133398,
+      "start_epoch": 1791418083.2221146,
+      "arm_observed_epoch": 1791418084.1245854,
+      "exit": 16,
+      "end_epoch": 1791418129.5806735,
+      "raw_sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab",
+      "raw_bytes": 27,
+      "stderr_sha256": "dc58b3891610d455ee0d9de0a431738c248cf4dce580f6141e84655ce2ffbf88",
+      "raw_path": "/tmp/dslcap-c-live/serial-100M-ac38.raw",
+      "owner_sent": {
+        "id": "hd26-c-r4-sent",
+        "sha256": "04df771799bba1b45717484abe7193e7a13936ae559b9ccd84a9e8c9d071ca1b",
+        "body": "# serial-100M-ac38: frame SENT (reply to go-serial-100m-ac38)\n- Exactly one write op \u2192 MOSI **`00 02 00 AC 38 00`** (note 0xac38 = bit-reverse of the armed 0x1c35).\n- Host window **2026-10-08T00:08:19.525Z to 00:08:19.706Z** (Unix 1791418099.526 to .707).\n- status 0, completed 1, no abort/cmd_err. Quiet until restore.\n",
+        "created_utc": "2026-10-08T00:08:28.208322+00:00"
+      },
+      "stimulus_within_armed_window": true,
+      "sample_payload_bytes": 0
+    },
+    {
+      "label": "control-100M-351c",
+      "rate": "100M",
+      "count": 1000448,
+      "kind": "simple",
+      "value": "0x1c35",
+      "command": [
+        "/tmp/dslcap-phase-c-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-3",
+        "--samples",
+        "1000448",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "45s",
+        "--vth",
+        "1.6",
+        "-v",
+        "--trigger",
+        "3:f"
+      ],
+      "pid": 2135720,
+      "start_epoch": 1791418175.999886,
+      "arm_observed_epoch": 1791418176.902384,
+      "exit": 0,
+      "end_epoch": 1791418190.8471575,
+      "raw_sha256": "09df669a35894651cd6713a663e5532654f8f3fe369c227ba3876448eb792c7e",
+      "raw_bytes": 1000496,
+      "stderr_sha256": "ec13011b68fbe2569e685e05860f96f7557d93e190fdba512e6edc5f4215480e",
+      "raw_path": "/tmp/dslcap-c-live/control-100M-351c.raw",
+      "owner_sent": {
+        "id": "hd26-c-r5-sent",
+        "sha256": "c7be2599ef83156f73bb728151e5c228d1797c3c3e2aee51d7b80e32ae4bef2c",
+        "body": "# control-100M-351c: frame SENT (reply to go-control-100m-351c)\n- Exactly one write op \u2192 MOSI **`00 02 00 35 1C 00`**.\n- Host window **2026-10-08T00:09:50.655Z to 00:09:50.695Z** (Unix 1791418190.655 to .696).\n- status 0, completed 1, no abort/cmd_err. Quiet until restore.\n",
+        "created_utc": "2026-10-08T00:09:58.480241+00:00"
+      },
+      "stimulus_within_armed_window": true,
+      "analysis": {
+        "channels": {
+          "miso": 1,
+          "mosi": 2,
+          "nss": 3,
+          "sclk": 0
+        },
+        "diagnostics": [],
+        "format_valid": true,
+        "interpretation": "Decode assumes mode 0 and MSB-first wire bytes. Rolling windows include unaligned/payload matches within each NSS frame. Partial frame offsets are relative to the observed suffix. Simultaneous NSS/clock rises are flagged and not shifted. File inspection cannot prove producer exit status or hardware trigger bit order by itself.",
+        "match_counts": {
+          "0x1c35": 0,
+          "0x351c": 1,
+          "0x38ac": 0,
+          "0xac38": 0
+        },
+        "metadata_lines": 2,
+        "mode": "SPI mode 0, rising SCLK, MSB-first decode, NSS active low",
+        "path": "/tmp/dslcap-c-live/control-100M-351c.raw",
+        "requested_value": "0x1c35",
+        "rolling_matches": [
+          {
+            "bit_offset_origin": "nss frame",
+            "delta_from_trigger_samples": 1082,
+            "end_bit_offset": 39,
+            "end_sample": 101171,
+            "start_bit_in_byte": 0,
+            "start_bit_offset": 24,
+            "start_byte_offset": 3,
+            "start_sample": 100966,
+            "transaction": 0,
+            "value": "0x351c"
+          }
+        ],
+        "samplerate_hz": 100000000,
+        "samples": 1000448,
+        "sha256": "09df669a35894651cd6713a663e5532654f8f3fe369c227ba3876448eb792c7e",
+        "transactions": [
+          {
+            "bit_count": 48,
+            "bit_offset_origin": "first selected rising edge after nss assertion",
+            "first_rising_sample": 100621,
+            "index": 0,
+            "last_rising_sample": 101286,
+            "matches": [
+              0
+            ],
+            "miso_hex": "04 52 00 00 00 00",
+            "mosi_hex": "00 02 00 35 1c 00",
+            "nss_assert_sample": 100089,
+            "nss_release_sample": 101523,
+            "partial_left": false,
+            "partial_right": false,
+            "trailing_miso_bits": "",
+            "trailing_mosi_bits": ""
+          }
+        ],
+        "trigger_association": {
+          "interpretation": "Sampled association only: deltas are observed, no fixed trigger latency or causal match is assumed.",
+          "nearest_events": {
+            "clock_falling": {
+              "after": {
+                "delta_samples": 538,
+                "sample": 100627,
+                "selected": true,
+                "time_s": 0.00100627,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            },
+            "clock_rising": {
+              "after": {
+                "delta_samples": 532,
+                "sample": 100621,
+                "selected": true,
+                "time_s": 0.00100621,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            },
+            "nss_assert": {
+              "after": null,
+              "at": {
+                "delta_samples": 0,
+                "sample": 100089,
+                "selected": true,
+                "time_s": 0.00100089,
+                "transaction": 0
+              },
+              "before": null
+            },
+            "nss_release": {
+              "after": {
+                "delta_samples": 1434,
+                "sample": 101523,
+                "selected": false,
+                "time_s": 0.00101523,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            }
+          },
+          "nearest_matching_windows": [
+            {
+              "bit_offset_origin": "nss frame",
+              "delta_from_trigger_samples": 1082,
+              "end_bit_offset": 39,
+              "end_sample": 101171,
+              "start_bit_in_byte": 0,
+              "start_bit_offset": 24,
+              "start_byte_offset": 3,
+              "start_sample": 100966,
+              "transaction": 0,
+              "value": "0x351c"
+            }
+          ],
+          "transaction_indices": [
+            0
+          ]
+        },
+        "trigger_sample": 100089,
+        "trigger_time_s": 0.00100089,
+        "variants": [
+          "0x1c35",
+          "0xac38",
+          "0x351c",
+          "0x38ac"
+        ]
+      }
+    },
+    {
+      "label": "serial-100M-351c",
+      "rate": "100M",
+      "count": 1000448,
+      "kind": "serial",
+      "value": "0x1c35",
+      "command": [
+        "/tmp/dslcap-phase-c-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-3",
+        "--samples",
+        "1000448",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "45s",
+        "--vth",
+        "1.6",
+        "-v",
+        "--serial-trigger",
+        "start=3:f,stop=3:r,clock=0:r,data=2,value=0x1c35,bits=16"
+      ],
+      "pid": 2137419,
+      "start_epoch": 1791418254.0866292,
+      "arm_observed_epoch": 1791418254.9895217,
+      "exit": 16,
+      "end_epoch": 1791418300.4533238,
+      "raw_sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab",
+      "raw_bytes": 27,
+      "stderr_sha256": "1b0d8e1c968685da562ad310ea0d7b8be51a85ef836452c249078e275e274e4d",
+      "raw_path": "/tmp/dslcap-c-live/serial-100M-351c.raw",
+      "owner_sent": {
+        "id": "hd26-c-r6-sent",
+        "sha256": "aef367e6159a994c17a31b86e55a3a45cffa0c5ec5e946af2741800045e98200",
+        "body": "# serial-100M-351c: frame SENT (reply to go-serial-100m-351c)\n- Exactly one write op \u2192 MOSI **`00 02 00 35 1C 00`** (byte-swapped 0x1c35).\n- Host window **2026-10-08T00:11:09.041Z to 00:11:09.276Z** (Unix 1791418269.042 to .276).\n- status 0, completed 1, no abort/cmd_err. Quiet until restore.\n",
+        "created_utc": "2026-10-08T00:11:17.291369+00:00"
+      },
+      "stimulus_within_armed_window": true,
+      "sample_payload_bytes": 0
+    },
+    {
+      "label": "control-100M-38ac",
+      "rate": "100M",
+      "count": 1000448,
+      "kind": "simple",
+      "value": "0x1c35",
+      "command": [
+        "/tmp/dslcap-phase-c-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-3",
+        "--samples",
+        "1000448",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "45s",
+        "--vth",
+        "1.6",
+        "-v",
+        "--trigger",
+        "3:f"
+      ],
+      "pid": 2139683,
+      "start_epoch": 1791418354.1909597,
+      "arm_observed_epoch": 1791418355.0935621,
+      "exit": 0,
+      "end_epoch": 1791418369.0362875,
+      "raw_sha256": "806eea25b312e712888977cfafc66206f60048376b575c0fa1468872b3c23773",
+      "raw_bytes": 1000496,
+      "stderr_sha256": "819cf5aa8385dd2696b848baaeffc51f3540b4633fc4a250e22e1ea123f4e0cd",
+      "raw_path": "/tmp/dslcap-c-live/control-100M-38ac.raw",
+      "owner_sent": {
+        "id": "hd26-c-r7-sent",
+        "sha256": "2074a98a019f7af41ae6fdfccfa3073b7a5732b8e30a4e445e2c959295b74855",
+        "body": "# control-100M-38ac: frame SENT (reply to go-control-100m-38ac)\n- Exactly one write op \u2192 MOSI **`00 02 00 38 AC 00`**.\n- Host window **2026-10-08T00:12:48.550Z to 00:12:48.810Z** (Unix 1791418368.550 to .810).\n- status 0, completed 1, no abort/cmd_err. Quiet until restore. Order noted: serial-100M-38ac next, then the CH0-7 retry.\n",
+        "created_utc": "2026-10-08T00:12:57.380919+00:00"
+      },
+      "stimulus_within_armed_window": true,
+      "analysis": {
+        "channels": {
+          "miso": 1,
+          "mosi": 2,
+          "nss": 3,
+          "sclk": 0
+        },
+        "diagnostics": [],
+        "format_valid": true,
+        "interpretation": "Decode assumes mode 0 and MSB-first wire bytes. Rolling windows include unaligned/payload matches within each NSS frame. Partial frame offsets are relative to the observed suffix. Simultaneous NSS/clock rises are flagged and not shifted. File inspection cannot prove producer exit status or hardware trigger bit order by itself.",
+        "match_counts": {
+          "0x1c35": 0,
+          "0x351c": 0,
+          "0x38ac": 1,
+          "0xac38": 0
+        },
+        "metadata_lines": 2,
+        "mode": "SPI mode 0, rising SCLK, MSB-first decode, NSS active low",
+        "path": "/tmp/dslcap-c-live/control-100M-38ac.raw",
+        "requested_value": "0x1c35",
+        "rolling_matches": [
+          {
+            "bit_offset_origin": "nss frame",
+            "delta_from_trigger_samples": 1046,
+            "end_bit_offset": 39,
+            "end_sample": 101097,
+            "start_bit_in_byte": 0,
+            "start_bit_offset": 24,
+            "start_byte_offset": 3,
+            "start_sample": 100892,
+            "transaction": 0,
+            "value": "0x38ac"
+          }
+        ],
+        "samplerate_hz": 100000000,
+        "samples": 1000448,
+        "sha256": "806eea25b312e712888977cfafc66206f60048376b575c0fa1468872b3c23773",
+        "transactions": [
+          {
+            "bit_count": 48,
+            "bit_offset_origin": "first selected rising edge after nss assertion",
+            "first_rising_sample": 100546,
+            "index": 0,
+            "last_rising_sample": 101212,
+            "matches": [
+              0
+            ],
+            "miso_hex": "04 52 00 00 00 00",
+            "mosi_hex": "00 02 00 38 ac 00",
+            "nss_assert_sample": 100051,
+            "nss_release_sample": 101458,
+            "partial_left": false,
+            "partial_right": false,
+            "trailing_miso_bits": "",
+            "trailing_mosi_bits": ""
+          }
+        ],
+        "trigger_association": {
+          "interpretation": "Sampled association only: deltas are observed, no fixed trigger latency or causal match is assumed.",
+          "nearest_events": {
+            "clock_falling": {
+              "after": {
+                "delta_samples": 502,
+                "sample": 100553,
+                "selected": true,
+                "time_s": 0.00100553,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            },
+            "clock_rising": {
+              "after": {
+                "delta_samples": 495,
+                "sample": 100546,
+                "selected": true,
+                "time_s": 0.00100546,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            },
+            "nss_assert": {
+              "after": null,
+              "at": {
+                "delta_samples": 0,
+                "sample": 100051,
+                "selected": true,
+                "time_s": 0.00100051,
+                "transaction": 0
+              },
+              "before": null
+            },
+            "nss_release": {
+              "after": {
+                "delta_samples": 1407,
+                "sample": 101458,
+                "selected": false,
+                "time_s": 0.00101458,
+                "transaction": 0
+              },
+              "at": null,
+              "before": null
+            }
+          },
+          "nearest_matching_windows": [
+            {
+              "bit_offset_origin": "nss frame",
+              "delta_from_trigger_samples": 1046,
+              "end_bit_offset": 39,
+              "end_sample": 101097,
+              "start_bit_in_byte": 0,
+              "start_bit_offset": 24,
+              "start_byte_offset": 3,
+              "start_sample": 100892,
+              "transaction": 0,
+              "value": "0x38ac"
+            }
+          ],
+          "transaction_indices": [
+            0
+          ]
+        },
+        "trigger_sample": 100051,
+        "trigger_time_s": 0.00100051,
+        "variants": [
+          "0x1c35",
+          "0xac38",
+          "0x351c",
+          "0x38ac"
+        ]
+      }
+    },
+    {
+      "label": "serial-100M-38ac",
+      "rate": "100M",
+      "count": 1000448,
+      "kind": "serial",
+      "value": "0x1c35",
+      "command": [
+        "/tmp/dslcap-phase-c-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-3",
+        "--samples",
+        "1000448",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "45s",
+        "--vth",
+        "1.6",
+        "-v",
+        "--serial-trigger",
+        "start=3:f,stop=3:r,clock=0:r,data=2,value=0x1c35,bits=16"
+      ],
+      "pid": 2141562,
+      "start_epoch": 1791418427.953247,
+      "arm_observed_epoch": 1791418428.8551404,
+      "exit": 16,
+      "end_epoch": 1791418474.314628,
+      "raw_sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab",
+      "raw_bytes": 27,
+      "stderr_sha256": "b420cbbbf45d835fbe1e75668681b08fc75b936ba07652f399562853db68e2da",
+      "raw_path": "/tmp/dslcap-c-live/serial-100M-38ac.raw",
+      "owner_sent": {
+        "id": "hd26-c-r8-sent",
+        "sha256": "b8e58428771e639a06b0beea620c2750d0c3d5d19cb658a49f112588d8b9ba94",
+        "body": "# serial-100M-38ac: frame SENT (reply to go-serial-100m-38ac)\n- Exactly one write op \u2192 MOSI **`00 02 00 38 AC 00`**.\n- Host window **2026-10-08T00:14:02.421Z to 00:14:02.547Z** (Unix 1791418442.421 to .547).\n- status 0, completed 1, no abort/cmd_err. Quiet until restore.\n",
+        "created_utc": "2026-10-08T00:14:10.323207+00:00"
+      },
+      "stimulus_within_armed_window": true,
+      "sample_payload_bytes": 0
+    },
+    {
+      "label": "serial-100M-exact8-1c35",
+      "rate": "100M",
+      "count": 1000448,
+      "kind": "serial",
+      "value": "0x1c35",
+      "command": [
+        "/tmp/dslcap-phase-c-build/dslcap",
+        "--mode",
+        "buffer",
+        "--samplerate",
+        "100M",
+        "--channels",
+        "0-7",
+        "--samples",
+        "1000448",
+        "--trigger-pos",
+        "10",
+        "--trigger-timeout",
+        "45s",
+        "--vth",
+        "1.6",
+        "-v",
+        "--serial-trigger",
+        "start=3:f,stop=3:r,clock=0:r,data=2,value=0x1c35,bits=16"
+      ],
+      "pid": 2143778,
+      "start_epoch": 1791418535.9576004,
+      "arm_observed_epoch": 1791418536.8600745,
+      "exit": 16,
+      "end_epoch": 1791418582.3222523,
+      "raw_sha256": "2dc8ac6479491bbf63374f7b2139deaf2d2b23f1c591060d77938e7cd67a0fab",
+      "raw_bytes": 27,
+      "stderr_sha256": "e5354733bbcdd4cd4ddbcbbce461e37062b142e219e51bef1a977cb95f5bdb14",
+      "raw_path": "/tmp/dslcap-c-live/serial-100M-exact8-1c35.raw",
+      "owner_sent": {
+        "id": "hd26-c-r9-sent",
+        "sha256": "758b3711be3bc1c789b0778e3b093aec808cde1442d81e47160015d08ed3dcaa",
+        "body": "# serial-100M-exact8-1c35: frame SENT (reply to go-serial-100m-exact8)\n- Exactly one write op \u2192 MOSI **`00 02 00 1C 35 00`**.\n- Host window **2026-10-08T00:15:50.911Z to 00:15:50.958Z** (Unix 1791418550.912 to .958).\n- status 0, completed 1, no abort/cmd_err. Quiet until the final restore notification.\n",
+        "created_utc": "2026-10-08T00:15:58.983892+00:00"
+      },
+      "stimulus_within_armed_window": true,
+      "sample_payload_bytes": 0
+    }
+  ],
+  "exact8_register_comparison": {
+    "identical": true,
+    "sha256": "ba88189cd2d1c83133f3016954ffc6d1e80b09b1501e3b018a90b6cc3eba75bc",
+    "reference": "/tmp/dslcap-c-golden/run100M.setting.bin",
+    "bytes": 372
+  },
+  "radio_task": "dslcap-c-radio-20261007",
+  "radio_final_restoration": {
+    "revision": 5,
+    "result_sha256": "28c72f46ed01ec46935d667b59dc1cb80c02c7d9d70a638371ac58a76f6e2753",
+    "verified_utc_approx": "2026-10-08T00:17:13Z",
+    "state": "baseline restored; mcp_radio idle",
+    "mode": "STBY_XOSC",
+    "errors": 0,
+    "system_irq": 0,
+    "tx_fifo_level": 0,
+    "fifo_flags_rx": "0x03",
+    "fifo_flags_tx": "0x27",
+    "pi134": "untouched",
+    "gpio_changes": false,
+    "rf_transmission": false
+  },
+  "limitations": [
+    "Serial stimulus evidenced by owner operation/timestamps; no simultaneous raw samples were emitted by timed-out serial captures. Separate NSS controls verify waveform.",
+    "Hardware bit order, serial opcode triggering and live200M/400M behavior not established.",
+    "Cached status has no hard freshness guarantee. No trigger header or successful serial capture observed."
+  ]
+}
