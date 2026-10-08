@@ -2,6 +2,25 @@
 
 ## C-serial-trigger — wave 1
 
+### Higher-rate native bit-order validation (complete at 200/400 MS/s)
+
+User authorized the higher-rate live bit-order gate after 1e9d826. Lead owned
+exclusive USB; radio owner task `dslcap-i-radio-20261008` (hydra-develop-26)
+re-verified the pi133 baseline and emitted one aligned carrier frame per named
+GO, limited to the four C.2 variants. dslcap_worker designed the matrix offline
+and independently verified every capture under /tmp/dslcap-i-verify.
+Per rate (200M CH0–7 N1000448, then 400M CH0–3 N2000896): NSS control,
+serial 1c35 positive, bit/byte/both reversals, positive repeat. Twelve captures.
+Controls hit at NSS fall; all four positives hit at rising clock 32 with zero
+sample delta; all six reversals exited 16 with samplerate-only output. Actual
+arm images matched the direct C.1 serial and Phase B simple DSView images.
+Per-variant controls were not repeated at the new rates; C.2 controls, same-rate
+positives and exact owner receipts support the negatives' stimulus. Twelve GOs,
+twelve verified restorations; final pi133 baseline, original app/SPI settings
+and pins confirmed, pi134 untouched. Radio task revision 5 consumed and
+acknowledged. Lead fuser check found USB released. No production change.
+See SERIAL_HIGHRATE_VALIDATION.md/JSON.
+
 ### Native C.3 opcode validation (complete at 100 MS/s)
 
 User resumed after bf045bb, appointed a new Claude lead (saleae-binparser-64)

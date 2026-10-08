@@ -224,8 +224,9 @@ stage state; they do not prove hardware shift order or constitute a real DSView
 register golden. Actual register comparison passed at 100/200/400 MS/s, and
 native aligned bit-order validation passed at 100 MS/s on CH0–7. C.3 opcode
 validation also passed there for LR2021 opcodes `0x0101` and `0x0002`; see
-[OPCODE_VALIDATION.md](OPCODE_VALIDATION.md). Higher-rate live order checks
-remain open in [TRIGGER_PLAN.md](TRIGGER_PLAN.md).
+[OPCODE_VALIDATION.md](OPCODE_VALIDATION.md). Live bit order also passed at
+200 MS/s CH0–7 and 400 MS/s CH0–3; see
+[SERIAL_HIGHRATE_VALIDATION.md](SERIAL_HIGHRATE_VALIDATION.md).
 
 Treat the serial comparison as N-bit words aligned from the start condition,
 not an arbitrary sliding bit window. In real DSView tests, 16-bit `0x1c35`

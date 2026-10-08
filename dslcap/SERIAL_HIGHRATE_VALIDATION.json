@@ -1,0 +1,982 @@
+{
+  "bench_date_utc": "2026-10-08",
+  "baseline_commit": "1e9d826",
+  "scope": "Native serial bit order at 200 MS/s CH0-7 and 400 MS/s CH0-3, fixed 0x1c35/16, aligned carrier 0002VVVV0000",
+  "outcome": "PASS for scoped 12-case matrix (6 per rate)",
+  "settings": {
+    "rates": {
+      "200M": {
+        "channels": "0-7",
+        "samples": 1000448
+      },
+      "400M": {
+        "channels": "0-3",
+        "samples": 2000896
+      }
+    },
+    "position_percent": 10,
+    "threshold_volts": 1.6,
+    "timeout_seconds": 45,
+    "timeout_action": "fail",
+    "spi_mode": 0,
+    "spi_requested_hz": 8000000,
+    "serial": "start=3:f,stop=3:r,clock=0:r,data=2,value=0x1c35,bits=16",
+    "simple": "3:f",
+    "carrier": "0002VVVV0000"
+  },
+  "binary": {
+    "path": "/tmp/dslcap-phase-c-build/dslcap",
+    "sha256": "5e9be8b773d8f33a74c49323cbf91638f3d68496e322f0939e0b652fae46ce8d"
+  },
+  "frozen_source_sha256": {
+    "dslcap/CMakeLists.txt": "8686c2c1d33bdd54798da0ceb42553ba22a0aad50bf776357878672826b19e05",
+    "dslcap/options.h": "b3e478168c5b8338ac9f48d78540f722cf98e69ca74e73b96cb563e83dfa89b4",
+    "dslcap/options.c": "1363c1114b7f37bf0f3b634b0bff2f1008d98d23819401f159bc6383af386a3e",
+    "dslcap/driver_config.c": "150832ef36c5f4279fe689a3aad668d9b2f26e1203c36568e22d1c148981a9b1",
+    "dslcap/tests/fake_driver.c": "5ddc51378f603b4aea74c3577fdaeb5a66fbb068adc5e53be776b2314aa59830",
+    "dslcap/tests/test_serial.py": "d28b386bf415c4b1e1008a5f28a5808d9642e1c7cfe9b3225007e32a158f720a",
+    "sigrok_hla.py": "1082a95492568ee2f15224953dd534a6d6db385d4ccee9108a8f6a37da3f8fc2",
+    "tests/test_dslcap_serial.py": "10d68f98ddd3010fee2e925b6b03be8424334585f81704049dabd1b999961bff"
+  },
+  "reference_images": {
+    "images": {
+      "serial_200": {
+        "bytes": 372,
+        "cases": [
+          "s_pos_200",
+          "s_bit_200",
+          "s_byte_200",
+          "s_both_200",
+          "s_pos_repeat_200"
+        ],
+        "hex": "a5f5a5f501002108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7f7fefefbfb0000fffffffffffffffffffffffffffffffffffffffffffffffff7f7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001010000351c000000000000000000000000000000000000000000000000080800000000000000000000000000000000000000000000000000000000000008080101000000000000000000000000000000000000000000000000000000000808000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+        "path": "/tmp/dslcap-i-verify/reference-serial-200.setting.bin",
+        "primary_record": "dslcap/SERIAL_GOLDEN.json:comparisons[200M]",
+        "provenance": "Real DSView EP2 captured golden, independently reproduced by full source derivation",
+        "sha256": "ae1eb6448b359ce405d709ba36a683f633860a24e7c01653ce59c04e16e24241",
+        "source_derivation": "H derive_arm_image + DSView dsl.c1178-1204 half/quarter replication except compare stage3"
+      },
+      "serial_400": {
+        "bytes": 372,
+        "cases": [
+          "s_pos_400",
+          "s_bit_400",
+          "s_byte_400",
+          "s_both_400",
+          "s_pos_repeat_400"
+        ],
+        "hex": "a5f5a5f501004108020101000000020380e801000205800d030001070004020800881e00020a0f000000010c0000a0407777eeeebbbb0000ffffffffffffffffffffffffffffffffffffffffffffffff7777ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000011110000351c000000000000000000000000000000000000000000000000888800000000000000000000000000000000000000000000000000000000000088881111000000000000000000000000000000000000000000000000000000008888000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+        "path": "/tmp/dslcap-i-verify/reference-serial-400.setting.bin",
+        "primary_record": "dslcap/SERIAL_GOLDEN.json:comparisons[400M]",
+        "provenance": "Real DSView EP2 captured golden, independently reproduced by full source derivation",
+        "sha256": "701f35896f05fc95ecc16ce4c1d42b42c5272f5fc8840f7203aa87f0dbdc32c1",
+        "source_derivation": "H derive_arm_image + DSView dsl.c1178-1204 half/quarter replication except compare stage3"
+      },
+      "simple_200": {
+        "bytes": 372,
+        "cases": [
+          "ctl_pos_200"
+        ],
+        "hex": "a5f5a5f501002100020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7f7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000808000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+        "path": "/tmp/dslcap-i-verify/reference-simple-200.setting.bin",
+        "primary_record": "dslcap/TRIGGER_GOLDEN.json:captures[200000000]",
+        "provenance": "Real DSView EP2 captured golden, independently reproduced by full source derivation",
+        "sha256": "0d80e20b2e0621b09a98f4e7ee060c00021a74e21fa5a25b05d78258be2bdf17",
+        "source_derivation": "H derive_arm_image + DSView dsl.c1178-1204 half/quarter replication except compare stage3"
+      },
+      "simple_400": {
+        "bytes": 372,
+        "cases": [
+          "ctl_pos_400"
+        ],
+        "hex": "a5f5a5f501004100020101000000020380e801000205800d030001070004020800881e00020a0f000000010c0000a0407777ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008888000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+        "path": "/tmp/dslcap-i-verify/reference-simple-400.setting.bin",
+        "primary_record": "dslcap/TRIGGER_GOLDEN.json:captures[400000000]",
+        "provenance": "Real DSView EP2 captured golden, independently reproduced by full source derivation",
+        "sha256": "0e46b4425b99908ce3f6d2baf509f1c1faedd19ea08a24d43081da9f54038690",
+        "source_derivation": "H derive_arm_image + DSView dsl.c1178-1204 half/quarter replication except compare stage3"
+      }
+    }
+  },
+  "cases": [
+    {
+      "case": "ctl_pos_200",
+      "rate_hz": 200000000,
+      "channels": "0-7",
+      "samples": 1000448,
+      "kind": "simple",
+      "frame": "00021c350000",
+      "exit": 0,
+      "meta_trigger": 100054,
+      "raw_bytes": 1000496,
+      "register_sha256": "0d80e20b2e0621b09a98f4e7ee060c00021a74e21fa5a25b05d78258be2bdf17",
+      "register_expected_sha256": "0d80e20b2e0621b09a98f4e7ee060c00021a74e21fa5a25b05d78258be2bdf17",
+      "register_image_hex": "a5f5a5f501002100020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7f7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000808000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "worker_verdict": "PASS",
+      "receipt": {
+        "case": "ctl_pos_200",
+        "operations": [
+          {
+            "op": "write",
+            "cmd_hex": "0002",
+            "data_hex": "1c350000"
+          }
+        ],
+        "host_start_epoch": 1791429152.952,
+        "host_end_epoch": 1791429153.268,
+        "status": 0,
+        "completed": 1,
+        "aborted": false,
+        "cmd_err": null
+      },
+      "owner_sent_message_id": "hd26-i-sent-ctl_pos_200",
+      "owner_restored_message_id": "hd26-i-restored-ctl_pos_200"
+    },
+    {
+      "case": "s_pos_200",
+      "rate_hz": 200000000,
+      "channels": "0-7",
+      "samples": 1000448,
+      "kind": "serial",
+      "frame": "00021c350000",
+      "exit": 0,
+      "meta_trigger": 100071,
+      "raw_bytes": 1000496,
+      "register_sha256": "ae1eb6448b359ce405d709ba36a683f633860a24e7c01653ce59c04e16e24241",
+      "register_expected_sha256": "ae1eb6448b359ce405d709ba36a683f633860a24e7c01653ce59c04e16e24241",
+      "register_image_hex": "a5f5a5f501002108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7f7fefefbfb0000fffffffffffffffffffffffffffffffffffffffffffffffff7f7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001010000351c000000000000000000000000000000000000000000000000080800000000000000000000000000000000000000000000000000000000000008080101000000000000000000000000000000000000000000000000000000000808000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "worker_verdict": "PASS",
+      "receipt": {
+        "case": "s_pos_200",
+        "operations": [
+          {
+            "op": "write",
+            "cmd_hex": "0002",
+            "data_hex": "1c350000"
+          }
+        ],
+        "host_start_epoch": 1791429200.309,
+        "host_end_epoch": 1791429200.587,
+        "status": 0,
+        "completed": 1,
+        "aborted": false,
+        "cmd_err": null
+      },
+      "owner_sent_message_id": "hd26-i-sent-s_pos_200",
+      "owner_restored_message_id": "hd26-i-restored-s_pos_200"
+    },
+    {
+      "case": "s_bit_200",
+      "rate_hz": 200000000,
+      "channels": "0-7",
+      "samples": 1000448,
+      "kind": "serial",
+      "frame": "0002ac380000",
+      "exit": 16,
+      "meta_trigger": null,
+      "raw_bytes": 27,
+      "register_sha256": "ae1eb6448b359ce405d709ba36a683f633860a24e7c01653ce59c04e16e24241",
+      "register_expected_sha256": "ae1eb6448b359ce405d709ba36a683f633860a24e7c01653ce59c04e16e24241",
+      "register_image_hex": "a5f5a5f501002108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7f7fefefbfb0000fffffffffffffffffffffffffffffffffffffffffffffffff7f7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001010000351c000000000000000000000000000000000000000000000000080800000000000000000000000000000000000000000000000000000000000008080101000000000000000000000000000000000000000000000000000000000808000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "worker_verdict": "PASS",
+      "receipt": {
+        "case": "s_bit_200",
+        "operations": [
+          {
+            "op": "write",
+            "cmd_hex": "0002",
+            "data_hex": "ac380000"
+          }
+        ],
+        "host_start_epoch": 1791429239.945,
+        "host_end_epoch": 1791429240.208,
+        "status": 0,
+        "completed": 1,
+        "aborted": false,
+        "cmd_err": null
+      },
+      "owner_sent_message_id": "hd26-i-sent-s_bit_200",
+      "owner_restored_message_id": "hd26-i-restored-s_bit_200"
+    },
+    {
+      "case": "s_byte_200",
+      "rate_hz": 200000000,
+      "channels": "0-7",
+      "samples": 1000448,
+      "kind": "serial",
+      "frame": "0002351c0000",
+      "exit": 16,
+      "meta_trigger": null,
+      "raw_bytes": 27,
+      "register_sha256": "ae1eb6448b359ce405d709ba36a683f633860a24e7c01653ce59c04e16e24241",
+      "register_expected_sha256": "ae1eb6448b359ce405d709ba36a683f633860a24e7c01653ce59c04e16e24241",
+      "register_image_hex": "a5f5a5f501002108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7f7fefefbfb0000fffffffffffffffffffffffffffffffffffffffffffffffff7f7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001010000351c000000000000000000000000000000000000000000000000080800000000000000000000000000000000000000000000000000000000000008080101000000000000000000000000000000000000000000000000000000000808000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "worker_verdict": "PASS",
+      "receipt": {
+        "case": "s_byte_200",
+        "operations": [
+          {
+            "op": "write",
+            "cmd_hex": "0002",
+            "data_hex": "351c0000"
+          }
+        ],
+        "host_start_epoch": 1791429306.102,
+        "host_end_epoch": 1791429306.486,
+        "status": 0,
+        "completed": 1,
+        "aborted": false,
+        "cmd_err": null
+      },
+      "owner_sent_message_id": "hd26-i-sent-s_byte_200",
+      "owner_restored_message_id": "hd26-i-restored-s_byte_200"
+    },
+    {
+      "case": "s_both_200",
+      "rate_hz": 200000000,
+      "channels": "0-7",
+      "samples": 1000448,
+      "kind": "serial",
+      "frame": "000238ac0000",
+      "exit": 16,
+      "meta_trigger": null,
+      "raw_bytes": 27,
+      "register_sha256": "ae1eb6448b359ce405d709ba36a683f633860a24e7c01653ce59c04e16e24241",
+      "register_expected_sha256": "ae1eb6448b359ce405d709ba36a683f633860a24e7c01653ce59c04e16e24241",
+      "register_image_hex": "a5f5a5f501002108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7f7fefefbfb0000fffffffffffffffffffffffffffffffffffffffffffffffff7f7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001010000351c000000000000000000000000000000000000000000000000080800000000000000000000000000000000000000000000000000000000000008080101000000000000000000000000000000000000000000000000000000000808000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "worker_verdict": "PASS",
+      "receipt": {
+        "case": "s_both_200",
+        "operations": [
+          {
+            "op": "write",
+            "cmd_hex": "0002",
+            "data_hex": "38ac0000"
+          }
+        ],
+        "host_start_epoch": 1791429366.07,
+        "host_end_epoch": 1791429366.162,
+        "status": 0,
+        "completed": 1,
+        "aborted": false,
+        "cmd_err": null
+      },
+      "owner_sent_message_id": "hd26-i-sent-s_both_200",
+      "owner_restored_message_id": "hd26-i-restored-s_both_200"
+    },
+    {
+      "case": "s_pos_repeat_200",
+      "rate_hz": 200000000,
+      "channels": "0-7",
+      "samples": 1000448,
+      "kind": "serial",
+      "frame": "00021c350000",
+      "exit": 0,
+      "meta_trigger": 100069,
+      "raw_bytes": 1000496,
+      "register_sha256": "ae1eb6448b359ce405d709ba36a683f633860a24e7c01653ce59c04e16e24241",
+      "register_expected_sha256": "ae1eb6448b359ce405d709ba36a683f633860a24e7c01653ce59c04e16e24241",
+      "register_image_hex": "a5f5a5f501002108020101000000020340f400000205c086010001070008020800440f00020aff000000010c0000a040f7f7fefefbfb0000fffffffffffffffffffffffffffffffffffffffffffffffff7f7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000001010000351c000000000000000000000000000000000000000000000000080800000000000000000000000000000000000000000000000000000000000008080101000000000000000000000000000000000000000000000000000000000808000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "worker_verdict": "PASS",
+      "receipt": {
+        "case": "s_pos_repeat_200",
+        "operations": [
+          {
+            "op": "write",
+            "cmd_hex": "0002",
+            "data_hex": "1c350000"
+          }
+        ],
+        "host_start_epoch": 1791429435.076,
+        "host_end_epoch": 1791429435.285,
+        "status": 0,
+        "completed": 1,
+        "aborted": false,
+        "cmd_err": null
+      },
+      "owner_sent_message_id": "hd26-i-sent-s_pos_repeat_200",
+      "owner_restored_message_id": "hd26-i-restored-s_pos_repeat_200"
+    },
+    {
+      "case": "ctl_pos_400",
+      "rate_hz": 400000000,
+      "channels": "0-3",
+      "samples": 2000896,
+      "kind": "simple",
+      "frame": "00021c350000",
+      "exit": 0,
+      "meta_trigger": 200074,
+      "raw_bytes": 2000944,
+      "register_sha256": "0e46b4425b99908ce3f6d2baf509f1c1faedd19ea08a24d43081da9f54038690",
+      "register_expected_sha256": "0e46b4425b99908ce3f6d2baf509f1c1faedd19ea08a24d43081da9f54038690",
+      "register_image_hex": "a5f5a5f501004100020101000000020380e801000205800d030001070004020800881e00020a0f000000010c0000a0407777ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008888000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "worker_verdict": "PASS",
+      "receipt": {
+        "case": "ctl_pos_400",
+        "operations": [
+          {
+            "op": "write",
+            "cmd_hex": "0002",
+            "data_hex": "1c350000"
+          }
+        ],
+        "host_start_epoch": 1791429472.421,
+        "host_end_epoch": 1791429472.771,
+        "status": 0,
+        "completed": 1,
+        "aborted": false,
+        "cmd_err": null
+      },
+      "owner_sent_message_id": "hd26-i-sent-ctl_pos_400",
+      "owner_restored_message_id": "hd26-i-restored-ctl_pos_400"
+    },
+    {
+      "case": "s_pos_400",
+      "rate_hz": 400000000,
+      "channels": "0-3",
+      "samples": 2000896,
+      "kind": "serial",
+      "frame": "00021c350000",
+      "exit": 0,
+      "meta_trigger": 200099,
+      "raw_bytes": 2000944,
+      "register_sha256": "701f35896f05fc95ecc16ce4c1d42b42c5272f5fc8840f7203aa87f0dbdc32c1",
+      "register_expected_sha256": "701f35896f05fc95ecc16ce4c1d42b42c5272f5fc8840f7203aa87f0dbdc32c1",
+      "register_image_hex": "a5f5a5f501004108020101000000020380e801000205800d030001070004020800881e00020a0f000000010c0000a0407777eeeebbbb0000ffffffffffffffffffffffffffffffffffffffffffffffff7777ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000011110000351c000000000000000000000000000000000000000000000000888800000000000000000000000000000000000000000000000000000000000088881111000000000000000000000000000000000000000000000000000000008888000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "worker_verdict": "PASS",
+      "receipt": {
+        "case": "s_pos_400",
+        "operations": [
+          {
+            "op": "write",
+            "cmd_hex": "0002",
+            "data_hex": "1c350000"
+          }
+        ],
+        "host_start_epoch": 1791429509.008,
+        "host_end_epoch": 1791429509.32,
+        "status": 0,
+        "completed": 1,
+        "aborted": false,
+        "cmd_err": null
+      },
+      "owner_sent_message_id": "hd26-i-sent-s_pos_400",
+      "owner_restored_message_id": "hd26-i-restored-s_pos_400"
+    },
+    {
+      "case": "s_bit_400",
+      "rate_hz": 400000000,
+      "channels": "0-3",
+      "samples": 2000896,
+      "kind": "serial",
+      "frame": "0002ac380000",
+      "exit": 16,
+      "meta_trigger": null,
+      "raw_bytes": 27,
+      "register_sha256": "701f35896f05fc95ecc16ce4c1d42b42c5272f5fc8840f7203aa87f0dbdc32c1",
+      "register_expected_sha256": "701f35896f05fc95ecc16ce4c1d42b42c5272f5fc8840f7203aa87f0dbdc32c1",
+      "register_image_hex": "a5f5a5f501004108020101000000020380e801000205800d030001070004020800881e00020a0f000000010c0000a0407777eeeebbbb0000ffffffffffffffffffffffffffffffffffffffffffffffff7777ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000011110000351c000000000000000000000000000000000000000000000000888800000000000000000000000000000000000000000000000000000000000088881111000000000000000000000000000000000000000000000000000000008888000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "worker_verdict": "PASS",
+      "receipt": {
+        "case": "s_bit_400",
+        "operations": [
+          {
+            "op": "write",
+            "cmd_hex": "0002",
+            "data_hex": "ac380000"
+          }
+        ],
+        "host_start_epoch": 1791429552.397,
+        "host_end_epoch": 1791429552.635,
+        "status": 0,
+        "completed": 1,
+        "aborted": false,
+        "cmd_err": null
+      },
+      "owner_sent_message_id": "hd26-i-sent-s_bit_400",
+      "owner_restored_message_id": "hd26-i-restored-s_bit_400"
+    },
+    {
+      "case": "s_byte_400",
+      "rate_hz": 400000000,
+      "channels": "0-3",
+      "samples": 2000896,
+      "kind": "serial",
+      "frame": "0002351c0000",
+      "exit": 16,
+      "meta_trigger": null,
+      "raw_bytes": 27,
+      "register_sha256": "701f35896f05fc95ecc16ce4c1d42b42c5272f5fc8840f7203aa87f0dbdc32c1",
+      "register_expected_sha256": "701f35896f05fc95ecc16ce4c1d42b42c5272f5fc8840f7203aa87f0dbdc32c1",
+      "register_image_hex": "a5f5a5f501004108020101000000020380e801000205800d030001070004020800881e00020a0f000000010c0000a0407777eeeebbbb0000ffffffffffffffffffffffffffffffffffffffffffffffff7777ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000011110000351c000000000000000000000000000000000000000000000000888800000000000000000000000000000000000000000000000000000000000088881111000000000000000000000000000000000000000000000000000000008888000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "worker_verdict": "PASS",
+      "receipt": {
+        "case": "s_byte_400",
+        "operations": [
+          {
+            "op": "write",
+            "cmd_hex": "0002",
+            "data_hex": "351c0000"
+          }
+        ],
+        "host_start_epoch": 1791429618.034,
+        "host_end_epoch": 1791429618.39,
+        "status": 0,
+        "completed": 1,
+        "aborted": false,
+        "cmd_err": null
+      },
+      "owner_sent_message_id": "hd26-i-sent-s_byte_400",
+      "owner_restored_message_id": "hd26-i-restored-s_byte_400"
+    },
+    {
+      "case": "s_both_400",
+      "rate_hz": 400000000,
+      "channels": "0-3",
+      "samples": 2000896,
+      "kind": "serial",
+      "frame": "000238ac0000",
+      "exit": 16,
+      "meta_trigger": null,
+      "raw_bytes": 27,
+      "register_sha256": "701f35896f05fc95ecc16ce4c1d42b42c5272f5fc8840f7203aa87f0dbdc32c1",
+      "register_expected_sha256": "701f35896f05fc95ecc16ce4c1d42b42c5272f5fc8840f7203aa87f0dbdc32c1",
+      "register_image_hex": "a5f5a5f501004108020101000000020380e801000205800d030001070004020800881e00020a0f000000010c0000a0407777eeeebbbb0000ffffffffffffffffffffffffffffffffffffffffffffffff7777ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000011110000351c000000000000000000000000000000000000000000000000888800000000000000000000000000000000000000000000000000000000000088881111000000000000000000000000000000000000000000000000000000008888000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "worker_verdict": "PASS",
+      "receipt": {
+        "case": "s_both_400",
+        "operations": [
+          {
+            "op": "write",
+            "cmd_hex": "0002",
+            "data_hex": "38ac0000"
+          }
+        ],
+        "host_start_epoch": 1791429678.229,
+        "host_end_epoch": 1791429678.27,
+        "status": 0,
+        "completed": 1,
+        "aborted": false,
+        "cmd_err": null
+      },
+      "owner_sent_message_id": "hd26-i-sent-s_both_400",
+      "owner_restored_message_id": "hd26-i-restored-s_both_400"
+    },
+    {
+      "case": "s_pos_repeat_400",
+      "rate_hz": 400000000,
+      "channels": "0-3",
+      "samples": 2000896,
+      "kind": "serial",
+      "frame": "00021c350000",
+      "exit": 0,
+      "meta_trigger": 200110,
+      "raw_bytes": 2000944,
+      "register_sha256": "701f35896f05fc95ecc16ce4c1d42b42c5272f5fc8840f7203aa87f0dbdc32c1",
+      "register_expected_sha256": "701f35896f05fc95ecc16ce4c1d42b42c5272f5fc8840f7203aa87f0dbdc32c1",
+      "register_image_hex": "a5f5a5f501004108020101000000020380e801000205800d030001070004020800881e00020a0f000000010c0000a0407777eeeebbbb0000ffffffffffffffffffffffffffffffffffffffffffffffff7777ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000011110000351c000000000000000000000000000000000000000000000000888800000000000000000000000000000000000000000000000000000000000088881111000000000000000000000000000000000000000000000000000000008888000000000000000000000000000000000000000000000000000000000000020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000000000001000000000000000f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005afa5afa",
+      "worker_verdict": "PASS",
+      "receipt": {
+        "case": "s_pos_repeat_400",
+        "operations": [
+          {
+            "op": "write",
+            "cmd_hex": "0002",
+            "data_hex": "1c350000"
+          }
+        ],
+        "host_start_epoch": 1791429737.864,
+        "host_end_epoch": 1791429738.19,
+        "status": 0,
+        "completed": 1,
+        "aborted": false,
+        "cmd_err": null
+      },
+      "owner_sent_message_id": "hd26-i-sent-s_pos_repeat_400",
+      "owner_restored_message_id": "hd26-i-restored-s_pos_repeat_400"
+    }
+  ],
+  "artifacts": {
+    "/tmp/dslcap-i-live/ctl_pos_200.json": {
+      "bytes": 805,
+      "sha256": "159f8175120616619eb2d499ea60e303343bac9d4098dbc585d406ece7b1b05e"
+    },
+    "/tmp/dslcap-i-live/ctl_pos_200.raw": {
+      "bytes": 1000496,
+      "sha256": "f39001320b8f40b634207ab1067c67bcd21a9f7b40f39bde2ce9aaca69fdff2a"
+    },
+    "/tmp/dslcap-i-live/ctl_pos_200.receipts.json": {
+      "bytes": 234,
+      "sha256": "d85670c978c73ef6899bdfdd40e8261e6b63de3be58627f82a835505b9a7d1a0"
+    },
+    "/tmp/dslcap-i-live/ctl_pos_200.restored.json": {
+      "bytes": 977,
+      "sha256": "d11503bf6a3fc1e407bcbee3cdb682e06d81e13a6f20c1078aace7bda110dd0e"
+    },
+    "/tmp/dslcap-i-live/ctl_pos_200.sent.json": {
+      "bytes": 889,
+      "sha256": "904739b60267b9a153153453e79f9f8ad20bb2faa9690a015fc12b091731a40b"
+    },
+    "/tmp/dslcap-i-live/ctl_pos_200.stderr": {
+      "bytes": 3179,
+      "sha256": "03a8bd3b1fd52c49575c64648de1433585974865e03c50ac1ace3ce0a54815f0"
+    },
+    "/tmp/dslcap-i-live/ctl_pos_200.usb.log": {
+      "bytes": 44133,
+      "sha256": "db01032df621b3b34a6de47abebf341a50bb717193bf8a3d190f8e9c2bebe5a1"
+    },
+    "/tmp/dslcap-i-verify/ctl_pos_200.json": {
+      "bytes": 13426,
+      "sha256": "872bc74e903539a996f9202a2fd290a6bfaf8d6a9bc369b80be83811a22e0e80"
+    },
+    "/tmp/dslcap-i-live/s_pos_200.json": {
+      "bytes": 862,
+      "sha256": "b1df40dc3c41775957cdee0e1cb553eff6eb263bd7ad50fca755cb6d2da565fe"
+    },
+    "/tmp/dslcap-i-live/s_pos_200.raw": {
+      "bytes": 1000496,
+      "sha256": "3b7ad62ff2486f3f87a7c19abc3addf48b2c07acab83b8e12fa7c792ccaeb0b6"
+    },
+    "/tmp/dslcap-i-live/s_pos_200.receipts.json": {
+      "bytes": 232,
+      "sha256": "eb80e71c4ea56e634ce37b6bd157f5f5031fcfe6e560e79308d4b0e5549ace64"
+    },
+    "/tmp/dslcap-i-live/s_pos_200.restored.json": {
+      "bytes": 969,
+      "sha256": "27be13ab6e873f2d6917bcd1b9e34d707136ce3d626345ecefdba475f08a79ec"
+    },
+    "/tmp/dslcap-i-live/s_pos_200.sent.json": {
+      "bytes": 881,
+      "sha256": "be2224db2a0c6aa7ca6abc96a1612c99b74ef52c41a1588e97d5053afbd85855"
+    },
+    "/tmp/dslcap-i-live/s_pos_200.stderr": {
+      "bytes": 3195,
+      "sha256": "043bb4cba57378dd0daa910e5e2d4cfd5d9c57cf7a95c763efa6bc8f5d2d4bfa"
+    },
+    "/tmp/dslcap-i-live/s_pos_200.usb.log": {
+      "bytes": 42303,
+      "sha256": "6a2c9e67e774afa3f227c900c4a2ff6014858be534a1174da816befb2a79ae04"
+    },
+    "/tmp/dslcap-i-verify/s_pos_200.json": {
+      "bytes": 13445,
+      "sha256": "f580306f3102189f148f346bd8c8dd8ca0e805d2d2b6d713a53146642ad914df"
+    },
+    "/tmp/dslcap-i-live/s_bit_200.json": {
+      "bytes": 864,
+      "sha256": "a334a1ed4a06d4827151f996c52fd75c92130c2d28fe021bb6b847f923757dd9"
+    },
+    "/tmp/dslcap-i-live/s_bit_200.raw": {
+      "bytes": 27,
+      "sha256": "f626bb659c23691cc4ca7400e08e640e608df9a54f6e36c2df77489f9d9afd6d"
+    },
+    "/tmp/dslcap-i-live/s_bit_200.receipts.json": {
+      "bytes": 232,
+      "sha256": "47810dc82d228b18194fee1a7b6de091d2b6f5e7331928611d73a3bad6873b94"
+    },
+    "/tmp/dslcap-i-live/s_bit_200.restored.json": {
+      "bytes": 969,
+      "sha256": "88eef459d36ae42a918196ffc817588131ea51f0d574fd6e39ea9216bfddc9b7"
+    },
+    "/tmp/dslcap-i-live/s_bit_200.sent.json": {
+      "bytes": 881,
+      "sha256": "d902bacb6aedafc95ebad33aab1ff3e1d9d2a8995369ce4e08d8c17fba72e1a2"
+    },
+    "/tmp/dslcap-i-live/s_bit_200.stderr": {
+      "bytes": 3277,
+      "sha256": "b13aa175c84abe4d898a60d9033b12f0de6437f91051fcf260b5215d8a5883be"
+    },
+    "/tmp/dslcap-i-live/s_bit_200.usb.log": {
+      "bytes": 90701,
+      "sha256": "349c5700bfbcc84a5825b60969d7148f7db4ed7745fc287544df86089e482bba"
+    },
+    "/tmp/dslcap-i-verify/s_bit_200.json": {
+      "bytes": 11811,
+      "sha256": "dfb2d22d4b77553919247babb5a6bacadb5e0dc0ab3ce6b1a4b457873548dbe2"
+    },
+    "/tmp/dslcap-i-live/s_byte_200.json": {
+      "bytes": 865,
+      "sha256": "ef7cba3448da45b641e8e2eb342eb8122877f3e624864475062cfc09a7b69d69"
+    },
+    "/tmp/dslcap-i-live/s_byte_200.raw": {
+      "bytes": 27,
+      "sha256": "f626bb659c23691cc4ca7400e08e640e608df9a54f6e36c2df77489f9d9afd6d"
+    },
+    "/tmp/dslcap-i-live/s_byte_200.receipts.json": {
+      "bytes": 233,
+      "sha256": "5a2af8a06d834dd06af6f98578f7579d945fd3d770924dd50081466669e1e66e"
+    },
+    "/tmp/dslcap-i-live/s_byte_200.restored.json": {
+      "bytes": 973,
+      "sha256": "864fd360b797c17f2a147579120c818a4cb45a1d0c9c55bdb5674c2b11e59fa9"
+    },
+    "/tmp/dslcap-i-live/s_byte_200.sent.json": {
+      "bytes": 885,
+      "sha256": "5e801bc0aa8986cb196615b4b92795ed5cd44350acb4993b40ccb04e0526ccbf"
+    },
+    "/tmp/dslcap-i-live/s_byte_200.stderr": {
+      "bytes": 3277,
+      "sha256": "e1451374dc3fef846514c4badbf905150a7dca7d2201bb368c2c781bf2d7c3f8"
+    },
+    "/tmp/dslcap-i-live/s_byte_200.usb.log": {
+      "bytes": 90701,
+      "sha256": "1ec4fcafe4f60b376ec590cca45a4407733a371ca5595d14d46211cd0d123dc9"
+    },
+    "/tmp/dslcap-i-verify/s_byte_200.json": {
+      "bytes": 11823,
+      "sha256": "a7978843695bc9124a3dc7bda0bfefab7f09aa5bdbd27b6ba68c07b009377619"
+    },
+    "/tmp/dslcap-i-live/s_both_200.json": {
+      "bytes": 864,
+      "sha256": "fba684076026f51533c487095ec696fb06dfc89c33686c2761a961cf8be0ecd2"
+    },
+    "/tmp/dslcap-i-live/s_both_200.raw": {
+      "bytes": 27,
+      "sha256": "f626bb659c23691cc4ca7400e08e640e608df9a54f6e36c2df77489f9d9afd6d"
+    },
+    "/tmp/dslcap-i-live/s_both_200.receipts.json": {
+      "bytes": 232,
+      "sha256": "82624f4245380a9d3a7d144bb4559061d4c2ab70f51c8d4b32a63931b798616a"
+    },
+    "/tmp/dslcap-i-live/s_both_200.restored.json": {
+      "bytes": 973,
+      "sha256": "7828e142e9a75843c12f7387d305eb3b02ad0e59974f9f1abde588752857f5cc"
+    },
+    "/tmp/dslcap-i-live/s_both_200.sent.json": {
+      "bytes": 885,
+      "sha256": "0046309226dd1d636580a0c3ad935b4748caa8c2ad9c4b9f5acc15c133aace02"
+    },
+    "/tmp/dslcap-i-live/s_both_200.stderr": {
+      "bytes": 3277,
+      "sha256": "e53ff1eb2af80ec60c33d467692e1bce3850397d152e7a2eba93c87267aecbca"
+    },
+    "/tmp/dslcap-i-live/s_both_200.usb.log": {
+      "bytes": 90701,
+      "sha256": "a8a8a0595283a8e124f344c5df5cc42448b493ce569909264f65c20287ec9684"
+    },
+    "/tmp/dslcap-i-verify/s_both_200.json": {
+      "bytes": 11826,
+      "sha256": "ee07d82d0f29f1cb385400b1c7a59bb51f722e2b04f44360773869ebc6bd8d45"
+    },
+    "/tmp/dslcap-i-live/s_pos_repeat_200.json": {
+      "bytes": 869,
+      "sha256": "3f2e9142a15c9041b8a12ef1546d170a901975720240ece40b8fe6c60e740912"
+    },
+    "/tmp/dslcap-i-live/s_pos_repeat_200.raw": {
+      "bytes": 1000496,
+      "sha256": "0cc340806362d122f09d252cd77d6fe7e468ba0f1eafefb839adb2bb6e315af9"
+    },
+    "/tmp/dslcap-i-live/s_pos_repeat_200.receipts.json": {
+      "bytes": 239,
+      "sha256": "26b04ae45784136b870122c26884fc9ccd0167a0bf2bf1a91695026f28937f89"
+    },
+    "/tmp/dslcap-i-live/s_pos_repeat_200.restored.json": {
+      "bytes": 997,
+      "sha256": "4f4334669e00d8520dbf0df92122d6af11edddd3b2cc9740769aefb3f0f3d858"
+    },
+    "/tmp/dslcap-i-live/s_pos_repeat_200.sent.json": {
+      "bytes": 909,
+      "sha256": "05d5fea1ff6fa83b9a8d6fcb55b625fe3016615ff15fbd69d992db4367c8a3d1"
+    },
+    "/tmp/dslcap-i-live/s_pos_repeat_200.stderr": {
+      "bytes": 3195,
+      "sha256": "e03a3a53b2384c5e12e9153a8071c38531c484cb08ab39abe6dbb0d6612fb1b6"
+    },
+    "/tmp/dslcap-i-live/s_pos_repeat_200.usb.log": {
+      "bytes": 44316,
+      "sha256": "2ce1051af8765c7fc4e4284d0ea85a870221e5bbce579793c1707e00d22b0502"
+    },
+    "/tmp/dslcap-i-verify/s_pos_repeat_200.json": {
+      "bytes": 13563,
+      "sha256": "6e66c0913da842480f9b240352055f2d624db6308b7664cec69eb49fe04c9921"
+    },
+    "/tmp/dslcap-i-live/ctl_pos_400.json": {
+      "bytes": 805,
+      "sha256": "117049e9069a0c10a282aa60cace5cc7d955725146565ba471732d516c5b267d"
+    },
+    "/tmp/dslcap-i-live/ctl_pos_400.raw": {
+      "bytes": 2000944,
+      "sha256": "72f009713818a6ba51579f3bd6c68fcca8b98915c2f24c5f3df0f72f0da23f40"
+    },
+    "/tmp/dslcap-i-live/ctl_pos_400.receipts.json": {
+      "bytes": 234,
+      "sha256": "00d5c3da28b644c2af77c0adefbdd47e7b7d3aa09a4bbab7791a4723ddb91e4d"
+    },
+    "/tmp/dslcap-i-live/ctl_pos_400.restored.json": {
+      "bytes": 977,
+      "sha256": "610b191092d2df52e167c986e0a990608093ffd36def47577a9825958285df1b"
+    },
+    "/tmp/dslcap-i-live/ctl_pos_400.sent.json": {
+      "bytes": 889,
+      "sha256": "90ff09c52df0c8a1137e989d0f05faf8742be874bb046c87791cde56f252be0a"
+    },
+    "/tmp/dslcap-i-live/ctl_pos_400.stderr": {
+      "bytes": 3180,
+      "sha256": "b6c5c736e897b6e1836d5459aa0f170cb8b3c8e7296e85469e775dd5a26751fd"
+    },
+    "/tmp/dslcap-i-live/ctl_pos_400.usb.log": {
+      "bytes": 48525,
+      "sha256": "3524df93f1ae25e17144fd1226e029affc3f727325a676f25b094735efea8287"
+    },
+    "/tmp/dslcap-i-verify/ctl_pos_400.json": {
+      "bytes": 13427,
+      "sha256": "4cf41421f7706221fcb4a80ace9268abc79c203f6830cf38b4b9959b752eb245"
+    },
+    "/tmp/dslcap-i-live/s_pos_400.json": {
+      "bytes": 862,
+      "sha256": "73d26dff7ffde151b7a836359de2006e41a98fb0cbf17f84e02289255e5cd696"
+    },
+    "/tmp/dslcap-i-live/s_pos_400.raw": {
+      "bytes": 2000944,
+      "sha256": "8acefcf9c6b70b6d7e0a88b578a411596ea463dc8213d23c97c5a730a4ec3e86"
+    },
+    "/tmp/dslcap-i-live/s_pos_400.receipts.json": {
+      "bytes": 231,
+      "sha256": "154a5b153779daa6a9c5b1671ecc2cc8e6de5deadeac42aa5e9cfd3af2cced40"
+    },
+    "/tmp/dslcap-i-live/s_pos_400.restored.json": {
+      "bytes": 969,
+      "sha256": "b79f9d80134f7abff3d7be1ebcf4b8a862ed30dfe70a35a8da2f3dd88c26448f"
+    },
+    "/tmp/dslcap-i-live/s_pos_400.sent.json": {
+      "bytes": 881,
+      "sha256": "102d0c3a6ec70fa791b8fe291bea50cab59c26bec53f20dbc593f7240f9b0948"
+    },
+    "/tmp/dslcap-i-live/s_pos_400.stderr": {
+      "bytes": 3196,
+      "sha256": "2395b052f42b529cae7a55c6a939759cb2c0c70f2e6c6de283b07b52c4be3572"
+    },
+    "/tmp/dslcap-i-live/s_pos_400.usb.log": {
+      "bytes": 46146,
+      "sha256": "2dfa15f1d895a44254099784f0e6cfd9456bdbe16f6c31a400088569fc38623c"
+    },
+    "/tmp/dslcap-i-verify/s_pos_400.json": {
+      "bytes": 13481,
+      "sha256": "917e2f6bdf643d4aa081b30ad74bb2ab8ae4151e2345ab06672adff6c893c86f"
+    },
+    "/tmp/dslcap-i-live/s_bit_400.json": {
+      "bytes": 863,
+      "sha256": "6d285d4c7713e898c1afa787592c0cfb78f9ea6d9e8b9a758fcb9146dbf077d1"
+    },
+    "/tmp/dslcap-i-live/s_bit_400.raw": {
+      "bytes": 27,
+      "sha256": "d1eb5f267dd52b0976fa6ee6c7ccdba79674ab7a1b4013d5bcaaa513293b50e8"
+    },
+    "/tmp/dslcap-i-live/s_bit_400.receipts.json": {
+      "bytes": 232,
+      "sha256": "18724ceabff10cb6d6bac644d3169f05a23b2e1b55ca18f0ae2d31b51a99113a"
+    },
+    "/tmp/dslcap-i-live/s_bit_400.restored.json": {
+      "bytes": 969,
+      "sha256": "95216b0935a941f3d30f1a83b21b87bf8e79a960989060b1cfdc228884d6f938"
+    },
+    "/tmp/dslcap-i-live/s_bit_400.sent.json": {
+      "bytes": 881,
+      "sha256": "bcaed8e62eb52d1dd9b78ad2844d197ebdb5c33534b2b5d7da7679293ff7a8b4"
+    },
+    "/tmp/dslcap-i-live/s_bit_400.stderr": {
+      "bytes": 3278,
+      "sha256": "dc33aa700120d5521bea283385d34dec496151adc460bda82d9d15be1987d282"
+    },
+    "/tmp/dslcap-i-live/s_bit_400.usb.log": {
+      "bytes": 90701,
+      "sha256": "df030a682d6771de7a2c133ec4f8dd207d56fa2cdac58df52161243f35333ac3"
+    },
+    "/tmp/dslcap-i-verify/s_bit_400.json": {
+      "bytes": 11812,
+      "sha256": "5c3f21a5e31c2dc2e0569ccc5b32fa6d96c3d82d822836430d737bf9c93635f2"
+    },
+    "/tmp/dslcap-i-live/s_byte_400.json": {
+      "bytes": 864,
+      "sha256": "88711c764622d0f48689249221da01bed96499230748d4a290c9b8da05874015"
+    },
+    "/tmp/dslcap-i-live/s_byte_400.raw": {
+      "bytes": 27,
+      "sha256": "d1eb5f267dd52b0976fa6ee6c7ccdba79674ab7a1b4013d5bcaaa513293b50e8"
+    },
+    "/tmp/dslcap-i-live/s_byte_400.receipts.json": {
+      "bytes": 232,
+      "sha256": "420be39819db3b598cb06a464e21c9907811e246340bcb5cad834720fe81d080"
+    },
+    "/tmp/dslcap-i-live/s_byte_400.restored.json": {
+      "bytes": 973,
+      "sha256": "e26ef6d71848238b59df0eba55546ef861c7e8002a5f72235d438c04e76691e1"
+    },
+    "/tmp/dslcap-i-live/s_byte_400.sent.json": {
+      "bytes": 886,
+      "sha256": "3b7ac0eeb5e8bdbf39d4ae089cafedb285e7469506c2113a276947ef97a4b401"
+    },
+    "/tmp/dslcap-i-live/s_byte_400.stderr": {
+      "bytes": 3278,
+      "sha256": "1d355ee47510292a1cadef375088931d0d293ac427aff6ce03b8588e2f1e782a"
+    },
+    "/tmp/dslcap-i-live/s_byte_400.usb.log": {
+      "bytes": 90701,
+      "sha256": "22e6fa7f18d41eeb6ff223fe3555a8a869623232b4d2764d1188b30e83eb7aa0"
+    },
+    "/tmp/dslcap-i-verify/s_byte_400.json": {
+      "bytes": 11826,
+      "sha256": "07d233a263fe54a429000beeb045a4529296560b688b11c7e0a190c2a9ff47c2"
+    },
+    "/tmp/dslcap-i-live/s_both_400.json": {
+      "bytes": 865,
+      "sha256": "354a1c9445c1c9294d881020313c1a31abba4ad61eba87847555e377eef71043"
+    },
+    "/tmp/dslcap-i-live/s_both_400.raw": {
+      "bytes": 27,
+      "sha256": "d1eb5f267dd52b0976fa6ee6c7ccdba79674ab7a1b4013d5bcaaa513293b50e8"
+    },
+    "/tmp/dslcap-i-live/s_both_400.receipts.json": {
+      "bytes": 232,
+      "sha256": "ac36bb83c18d905ac0eda01cf2ac25b28bfcc4172e9938015468ed2ce6da50c4"
+    },
+    "/tmp/dslcap-i-live/s_both_400.restored.json": {
+      "bytes": 973,
+      "sha256": "dcac8a5bf8512320cb8cf1a9039bebbd1a5f9dfcb829a27e0ff9998eae02e5eb"
+    },
+    "/tmp/dslcap-i-live/s_both_400.sent.json": {
+      "bytes": 886,
+      "sha256": "64ddde906d5e8c854bfeb51d5b3f67f891264b98cd84fd75e1a18503b1738ccf"
+    },
+    "/tmp/dslcap-i-live/s_both_400.stderr": {
+      "bytes": 3278,
+      "sha256": "acee3cf5e8c7d42e6595dd070b2cc52e18a75a8cfb685c14f57e892c397882ab"
+    },
+    "/tmp/dslcap-i-live/s_both_400.usb.log": {
+      "bytes": 90701,
+      "sha256": "73d1a0aaa1f4c6a0e776c58a4617be2e374af8e0ae51af9711c7db0fb9833cf0"
+    },
+    "/tmp/dslcap-i-verify/s_both_400.json": {
+      "bytes": 11828,
+      "sha256": "be3e88d4fd6b74f8bdf270576651dabc8ac91d60aaeb5ce497f862642e03a739"
+    },
+    "/tmp/dslcap-i-live/s_pos_repeat_400.json": {
+      "bytes": 870,
+      "sha256": "ce43dd63efbe74db926ff217dff9e39d19a2b61049fc22dd4b66ab234d00aa8b"
+    },
+    "/tmp/dslcap-i-live/s_pos_repeat_400.raw": {
+      "bytes": 2000944,
+      "sha256": "ae744cef1f0b94b9142dce7d0a3fa6de61c457c5ad91a7826df2c02b9d98ea42"
+    },
+    "/tmp/dslcap-i-live/s_pos_repeat_400.receipts.json": {
+      "bytes": 238,
+      "sha256": "3b5e54908d14f395ee6dcca0ba646b560ac6db222413337ec400a11e1c5b669a"
+    },
+    "/tmp/dslcap-i-live/s_pos_repeat_400.restored.json": {
+      "bytes": 997,
+      "sha256": "3388611a6e405d18a6a9f501012b35151a9b9bac0cc66c78cb314eb123000c63"
+    },
+    "/tmp/dslcap-i-live/s_pos_repeat_400.sent.json": {
+      "bytes": 910,
+      "sha256": "c4ebdaed18edafa13296ad54d499d26b52082974a970260e2da9a324bdf9bc89"
+    },
+    "/tmp/dslcap-i-live/s_pos_repeat_400.stderr": {
+      "bytes": 3196,
+      "sha256": "14f642b33c4b06947ef8489ebd3a6513042c59db6b712c371935ac6d9ed30d01"
+    },
+    "/tmp/dslcap-i-live/s_pos_repeat_400.usb.log": {
+      "bytes": 48891,
+      "sha256": "1d2972cda0cb40a0f81b53cc71861e6b80bcc414dc62e52fe5d2186fe5602922"
+    },
+    "/tmp/dslcap-i-verify/s_pos_repeat_400.json": {
+      "bytes": 13603,
+      "sha256": "30444d38096d3cec73e7ab401e073ff4865ac2a5842c35d487c475859a74cfa7"
+    },
+    "/tmp/dslcap-i-live/usb-release-check.json": {
+      "bytes": 120,
+      "sha256": "fa0dded1a3b86fec2c26707881b7282294524833248f0bd5c12f73a3f7bcc24c"
+    }
+  },
+  "radio_owner_result": {
+    "task": "dslcap-i-radio-20261008",
+    "owner": "hydra-develop-26 (75e80b13-b652-47db-a4d6-ff7d836a30d4)",
+    "record": {
+      "record": {
+        "action_needed": "",
+        "age_seconds": 120,
+        "delivered_utc": null,
+        "delivery_diagnostics": {
+          "observation": "watcher_listening",
+          "observed_utc": "2026-10-08T02:59:36.625724+00:00",
+          "reason": "worker_mailbox_notice_queued",
+          "relay_exit_code": null,
+          "stage": "worker_hook",
+          "state": "queued",
+          "tools_called": [],
+          "transport": "worker_hook",
+          "worker_directory_match": true
+        },
+        "delivery_receipt": null,
+        "id": "dslcap-i-radio-20261008",
+        "message": "Phase I radio done: 12 GOs @200M+400M; 1c35 hits x2 per rate, bit/byte/both reversed no-trigger per rate, controls triggered; pi133 baseline/app/8 MHz/pins preserved; pi134 untouched",
+        "message_delivery_alerts": [],
+        "notification": "foreground polling; automatic return only with a registered wake service",
+        "repo": "/mnt/foo/nfs_share_for_pis/hydra_develop",
+        "request": "dslcap phase I: higher-rate (200/400 MS/s) serial bit-order validation, pi133 radio owner task.\n\nLead: Claude session saleae-binparser-64 (9e363f42-5e01-45ab-a265-55c5d1536d0e). The user authorized this step and authorized you to use the bench without asking the user. Lead owns the DSLogic analyzer exclusively (native dslcap). dslcap_worker verifies offline only and does not direct you.\n\nScope: pi133 only, through the existing mcp_radio app path (original app, mode 0, requested 8 MHz). No RF/SetTx/SetRx, GPIO/reset/config/DIO/IRQ-mask changes, helpers, dependencies, rebuilds or restarts. Pi134 untouched. No repository edits. Keep evidence in private host /tmp or scratch.\n\nStep 1 (now): re-read the baseline (expected as at the end of task dslcap-h-radio-20261008: STBY_XOSC, IRQ 0, errors 0, TX FIFO 0, FIFO flags RX 0x03 / TX 0x27, app PID 7973, mode 0 / 8-bit / 8 MHz, pins unchanged). Report any differences, then send READY as a task message and hold.\n\nStep 2: the lead sends uniquely named GO messages in THIS task, each after the analyzer is armed and verified. Each GO names the case and exactly ONE frame, which must be one of these four WriteTxFifo carrier frames (one write op, cmd 0002, 4 data bytes):\n  00 02 1C 35 00 00 | 00 02 AC 38 00 00 | 00 02 35 1C 00 00 | 00 02 38 AC 00 00\nRefuse anything else and ask. Emit exactly once in one hal_script, as soon as the GO arrives: no retries, no background SPI. Immediately send SENT with host start/end epoch + UTC, status, completed, aborted, cmd_err and the exact frame. Hold until CAPTURE_COMPLETE from the lead, then restore: clear TX FIFO and only the newly raised FIFO_TX IRQ, verify baseline and flags 03/27, and send RESTORED_READY. Never clean up while the analyzer is armed. A repeated GO id never re-emits. At most 20 GOs without further lead authority.\n\nStep 3: after the lead's final-cleanup message, verify the original SPI/app/state and publish all receipts and restorations as the terminal result.\n",
+        "request_sha256": "4916bb859f211ce22cc14880247385b91308e078d11a813981571c44bdffc550",
+        "requester": "9e363f42-5e01-45ab-a265-55c5d1536d0e",
+        "result": "# dslcap-i-radio-20261008: terminal result (hydra-develop-26), lead saleae-binparser-64\n\npi133 LR2021, mcp_radio app path, mode 0, 8 MHz request (7.8125 MHz bus). Each GO = ONE hal_script with ONE WriteTxFifo frame (cmd 0002 + 4 bytes), emitted once.\nAllowlist enforced (4 aligned frames only); nothing refused; no duplicate GO ids; 12 of 20 GOs used.\n\n| # | case | GO id | rate | MOSI | host emission window (UTC 2026-10-08) | result | lead CAPTURE_COMPLETE |\n|---|---|---|---|---|---|---|---|\n| 1 | ctl_pos_200 | go-ctl_pos_200 | 200M simple NSS | 00021c350000 | 03:12:32.952 to 03:12:33.268 | status 0, completed 1, aborted False, cmd_err None | triggered (exit 0) |\n| 2 | s_pos_200 | go-s_pos_200 | 200M serial 1c35/16 | 00021c350000 | 03:13:20.309 to 03:13:20.587 | status 0, completed 1, aborted False, cmd_err None | **triggered** (exit 0) |\n| 3 | s_bit_200 | go-s_bit_200 | 200M serial 1c35/16 | 0002ac380000 | 03:13:59.945 to 03:14:00.208 | status 0, completed 1, aborted False, cmd_err None | no trigger (exit 16) |\n| 4 | s_byte_200 | go-s_byte_200 | 200M serial 1c35/16 | 0002351c0000 | 03:15:06.102 to 03:15:06.486 | status 0, completed 1, aborted False, cmd_err None | no trigger (exit 16) |\n| 5 | s_both_200 | go-s_both_200 | 200M serial 1c35/16 | 000238ac0000 | 03:16:06.070 to 03:16:06.162 | status 0, completed 1, aborted False, cmd_err None | no trigger (exit 16) |\n| 6 | s_pos_repeat_200 | go-s_pos_repeat_200 | 200M serial 1c35/16 | 00021c350000 | 03:17:15.076 to 03:17:15.285 | status 0, completed 1, aborted False, cmd_err None | **triggered** (exit 0) |\n| 7 | ctl_pos_400 | go-ctl_pos_400 | 400M simple NSS | 00021c350000 | 03:17:52.421 to 03:17:52.771 | status 0, completed 1, aborted False, cmd_err None | triggered (exit 0) |\n| 8 | s_pos_400 | go-s_pos_400 | 400M serial 1c35/16 | 00021c350000 | 03:18:29.008 to 03:18:29.320 | status 0, completed 1, aborted False, cmd_err None | **triggered** (exit 0) |\n| 9 | s_bit_400 | go-s_bit_400 | 400M serial 1c35/16 | 0002ac380000 | 03:19:12.397 to 03:19:12.635 | status 0, completed 1, aborted False, cmd_err None | no trigger (exit 16) |\n| 10 | s_byte_400 | go-s_byte_400 | 400M serial 1c35/16 | 0002351c0000 | 03:20:18.034 to 03:20:18.390 | status 0, completed 1, aborted False, cmd_err None | no trigger (exit 16) |\n| 11 | s_both_400 | go-s_both_400 | 400M serial 1c35/16 | 000238ac0000 | 03:21:18.229 to 03:21:18.270 | status 0, completed 1, aborted False, cmd_err None | no trigger (exit 16) |\n| 12 | s_pos_repeat_400 | go-s_pos_repeat_400 | 400M serial 1c35/16 | 00021c350000 | 03:22:17.864 to 03:22:18.190 | status 0, completed 1, aborted False, cmd_err None | **triggered** (exit 0) |\n\nRestoration after each of the 12 (all rc=0, baseline_ok=true): clear_tx \u2192 TX level 0; FIFO flags 03/27 unchanged; sys irq 0x00000002 (FIFO_TX newly raised by the carrier) \u2192 clear_irq_status{0x2} only \u2192 0x00000000; errors 0; STBY_XOSC. Receipts: hd26-i-sent-<case> / hd26-i-restored-<case>.\n\n## Final verification (03:23:22Z)\n- Radio: {\"irq\": \"0x00000000\", \"mode\": \"STBY_XOSC\", \"errors\": 0, \"tx_level\": 0, \"rx_flags\": 3, \"tx_flags\": 39} (= baseline: irq 0, STBY_XOSC, errors 0, TX level 0, flags rx 3 / tx 39)\n- Host: spidev mode=0 mode32=0x0 bits=8 lsb=0 max_hz=8000000  7973 Wed Oct  7 13:02:58 2026 ./mcp_radio --mcp-http  4: op -- pu | hi // GPIO4 = output; 5: ip pu | lo // GPIO5 = input; 6: ip pu | hi // GPIO6 = input;18: ip pd | lo // GPIO18 = input;20: ip pd | lo // GPIO20 = input; no-pigpiod \n- App pid 7973 unchanged (not restarted); spidev mode 0 / 8-bit / lsb 0 / default 8 MHz; pins unchanged; no pigpiod.\n- No RF/SetTx/SetRx, GPIO/reset/config/DIO/IRQ-mask writes, helpers, dependencies, rebuilds or repo edits. **pi134 untouched.**\n- Host evidence: scratchpad/i/ (per-case JSON, sent/restore receipts, log.txt, seen_go.txt).\n",
+        "result_sha256": "501e87d7835a35412b6904dbd99e651815568662e0afbd845bbd05941ccfe94f",
+        "revision": 5,
+        "stale": false,
+        "state": "complete",
+        "unread_messages": {
+          "requester": 0,
+          "worker": 0
+        },
+        "updated_epoch": 1791429803.0767145,
+        "updated_utc": "2026-10-08T03:23:23.076695+00:00",
+        "worker": "75e80b13-b652-47db-a4d6-ff7d836a30d4",
+        "worker_name": "hydra-develop-26"
+      },
+      "reported_final_utc": "2026-10-08T03:23:22Z",
+      "result_sha256": "501e87d7835a35412b6904dbd99e651815568662e0afbd845bbd05941ccfe94f",
+      "revision": 5,
+      "task": "dslcap-i-radio-20261008"
+    }
+  },
+  "usb_released": {
+    "device": "/dev/bus/usb/001/012",
+    "evidence": "lead-reported",
+    "check": {
+      "utc": "2026-10-08T03:23:39.634Z",
+      "command": "fuser -v /dev/bus/usb/001/012",
+      "exit": 1,
+      "output": "",
+      "dslcap_processes": ""
+    },
+    "meaning": "No process held the analyzer at the recorded check time (lead-reported, not independently probed)."
+  },
+  "independent_verification": {
+    "worker": "dslcap_worker Codex thread 01a1175b-6787-7232-92a6-a80ffff3dcd4",
+    "summary_sha256": "7188e1f9f5992714e0da2d60497445c8853f8a7b095bd7323533cd1954ae4f5a",
+    "verifier_sha256": "7000fa983c6056ad4ed3f38a87c7c72a1a8ca466b69af8359e09cfb160d60c52",
+    "verdict": "VERIFIED_FOR_TESTED_ALIGNED_200M_CH0_7_AND_400M_CH0_3",
+    "limits": [
+      "Only fixed16-bit1c35 aligned carrier at200M CH0-7 and400M CH0-3.",
+      "Six negatives have no contemporaneous waveform; prior100M variant controls and raw exact owner receipts support stimulus only.",
+      "Zero marker delta is measured on these captures, not a universal FPGA timing guarantee.",
+      "Owner-reported restoration is reconciled to raw messages; no direct worker radio/pin/USB probe.",
+      "Full FPGA algorithm, arbitrary widths/waveforms and opcode-only filtering are not established."
+    ]
+  },
+  "limitations": [
+    "Per-variant NSS controls were not repeated at 200M/400M; negatives have no contemporaneous waveform. C.2 100M controls, same-rate positives and exact owner receipts support the stimulus.",
+    "Zero marker delta is measured on these captures, not a universal FPGA timing guarantee.",
+    "Only the fixed 16-bit 0x1c35 comparator on an aligned carrier at these two rate/channel sets; arbitrary widths, alignments, values and the full FPGA mechanism remain unproven.",
+    "An aligned payload word can match; this is not an opcode-only filter.",
+    "Restoration is owner-reported and reconciled offline to raw messages."
+  ],
+  "durable_review": {
+    "reviewer": "dslcap_worker Codex thread 01a1175b-6787-7232-92a6-a80ffff3dcd4",
+    "verdict": "DURABLE_PASS",
+    "reviewed_json_sha256": "e643d4e57812001ff009fb50dd9870ecdc98d912fa77f46eae5df655aafbb679",
+    "exact_comparisons": 560,
+    "initial_findings": [
+      "DOC-1",
+      "DOC-2"
+    ],
+    "resolved": "both",
+    "report_sha256": "d86b7baa3ac223bb95b3f69bc04a5d069225739a586454acdf39bbab88f56aed",
+    "note": "Only this durable_review annotation was added after the reviewed JSON hash."
+  }
+}

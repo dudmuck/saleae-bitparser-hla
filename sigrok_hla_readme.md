@@ -143,8 +143,10 @@ so this is not an opcode-only filter. See
 Source-derived offline stage tests, including0x1c35, are not a real DSView
 register golden or proof of hardware bit/byte order. Subsequent actual register
 comparison passed at 100/200/400 MS/s; see [native aligned order results](dslcap/SERIAL_ALIGNED_VALIDATION.md)
-for the separate 100 MS/s hardware check. Opcode and higher-rate live order
-validation remain open. Serial requests use the same exact two-line
+for the separate 100 MS/s hardware check. Opcode validation then passed at
+100 MS/s ([opcode results](dslcap/OPCODE_VALIDATION.md)), and live bit order
+passed at 200 MS/s CH0–7 and 400 MS/s CH0–3
+([higher-rate results](dslcap/SERIAL_HIGHRATE_VALIDATION.md)). Serial requests use the same exact two-line
 META parsing and chronological trigger marker, keeping capture-start timestamps.
 
 ### Common prerequisites
