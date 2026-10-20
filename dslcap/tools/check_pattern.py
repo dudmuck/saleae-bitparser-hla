@@ -1,14 +1,26 @@
 #!/usr/bin/env python3
 """Check W1 raw captures/replays, or SPI --hex output against a JSONL manifest.
 
-State checks align anywhere in the walk/PRBS cycle and ignore repeated samples
-of a state. GPCLR0-before-GPSET0 permits exactly one extra A&B observation
-between A and B, only when distinct from both. The generator emits no
-consecutive equal states. Repeated/dropped
-USB blocks containing multiple transitions are detectable; an identical-state
-duplicate is indistinguishable from longer dwell, as is loss of an entire
-period of a periodic pattern. A capture must contain at least one full cycle
-of transitions to pass. Walk dwell deviations are warnings, not failures.
+Walk/PRBS checks project onto --lanes (default 0xff), collapse consecutive
+states cyclically, and anchor on the first complete on-cycle run longer than
+ceil(--skew-ns * META_rate / 1e9) samples (default 12 ns). The first run is
+clipped and excluded from anchoring. Every expected state must follow in order.
+Between A and B, at most popcount(A^B)+1 off-path runs are permitted: X must differ from
+A/B and satisfy (A&B) subset X subset (A|B). A&B gaps may have any dwell;
+other skew runs may not exceed the sample bound. Gap and skew counts are
+reported separately; there is no recovery or silent resynchronization after
+a fault. Gray-section A&B gaps remain invalid. The final run is checked with
+its observed (possibly clipped) dwell; a valid trailing transient is allowed
+but does not count as an expected-state transition.
+
+A full projected cycle is required after the anchor to pass. Identical-state
+duplication is indistinguishable from longer dwell, as is whole-period loss.
+Transitions entirely inside the skew envelope can be ambiguous, so this is a
+bounded waveform consistency check, not a proof against every possible fault.
+The expected-transition rate and full-cycle-normalized rate are informational
+CPU-generator timebase ratios, not absolute calibration. Walk dwell deviations
+are warnings, not failures. check_sequence without a META rate preserves its
+strict, sample-index-only interface for legacy callers (zero skew allowance).
 
 No hardware access. SPI raw input is replayed via sigrok_hla.py --dslogic -i;
 --decode instead checks saved --hex stdout. Supply one manifest per group, or
@@ -16,7 +28,9 @@ one shared manifest when both Pis generated the same frames.
 """
 import argparse
 import collections
+from fractions import Fraction
 import json
+import math
 from pathlib import Path
 import re
 import subprocess
@@ -40,7 +54,7 @@ def cycle_for(pattern, seed=1):
     return cycle
 
 
-def read_states(path, groups, unitsize=None):
+def read_states(path, groups, unitsize=None, lanes=0xff):
     side = Path(str(path) + '.json')
     if side.exists():
         record = json.loads(side.read_text())
@@ -73,7 +87,7 @@ def read_states(path, groups, unitsize=None):
             carry = data[end:]
             samples = np.frombuffer(data[:end], dtype='<u2' if unitsize == 2 else 'u1')
             for group in groups:
-                values = ((samples >> group) & 255).astype(np.uint8)
+                values = ((samples >> group) & lanes).astype(np.uint8)
                 if not len(values):
                     continue
                 change = np.empty(len(values), dtype=bool)
@@ -90,78 +104,145 @@ def read_states(path, groups, unitsize=None):
                   np.concatenate(indices[g]) if indices[g] else np.array([], dtype=np.uint64)) for g in groups}, rate, total)
 
 
-def alignment(values, cycle):
-    """Longest exact path, optionally seeing one A&B state on A→B.
+def skew_samples(skew_ns, rate):
+    # Decimal CLI input and integer META rate: avoid ceil(3.0000000000000004)
+    # accidentally granting an extra sample at an exact sample boundary.
+    samples = Fraction(str(skew_ns)) * Fraction(str(rate)) / 1_000_000_000
+    return (samples.numerator + samples.denominator - 1) // samples.denominator
 
-    Return observation index, next cycle position, logical-state count and
-    intermediate count. Initial capture may begin on the intermediate itself.
-    """
-    best = (0, 0, 0, 0)
-    length = len(cycle)
-    starts = [(offset, 1, 0) for offset, state in enumerate(cycle) if state == values[0]]
-    if len(values) > 1:
-        for offset, state in enumerate(cycle):
-            previous = cycle[(offset - 1) % length]
-            if previous & state not in (previous, state) and values[0] == previous & state and values[1] == state:
-                starts.append((offset, 2, 1))
-    for offset, observed, intermediate in starts:
-        position, logical = (offset + 1) % length, 1
-        while observed < len(values):
-            previous, wanted = cycle[(position - 1) % length], cycle[position]
-            got = int(values[observed])
-            if got == wanted:
-                observed += 1
-            elif (previous & wanted not in (previous, wanted) and got == previous & wanted and
-                  observed + 1 < len(values) and int(values[observed + 1]) == wanted):
-                intermediate += 1
-                observed += 2
-            else:
-                break
+
+def projected_cycle(pattern, seed=1, lanes=0xff):
+    """Cyclic repeat collapse, with original transition identity for Gray control."""
+    full = cycle_for(pattern, seed)
+    values = [v & lanes for v in full]
+    positions = [i for i, value in enumerate(values) if value != values[i - 1]]
+    return [values[i] for i in positions], [pattern == 'walk' and i >= 9 for i in positions]
+
+
+def _trace(values, dwells, cycle, gray, anchor, offset, skew_bound, collect=False):
+    position, logical, skew, gaps, gray_skew = offset, 1, 0, 0, 0
+    pending = max_pending = max_skew = 0
+    accepted = [anchor] if collect else None
+    for k in range(anchor + 1, len(values)):
+        a, b, value = cycle[position], cycle[(position + 1) % len(cycle)], int(values[k])
+        if value == b:
+            position = (position + 1) % len(cycle)
             logical += 1
-            position = (position + 1) % length
-        if observed > best[0]:
-            best = observed, position, logical, intermediate
-    return best
+            pending = 0
+            if collect:
+                accepted.append(k)
+            continue
+        lo, hi = a & b, a | b
+        if value == a:
+            reason = 'repeated expected state'
+        elif value & ~hi or lo & ~value:
+            reason = 'out-of-range transient or missing/reordered expected state'
+        elif value != lo and int(dwells[k]) > skew_bound:
+            reason = f'skew dwell {int(dwells[k])} exceeds bound {skew_bound}'
+        elif pending >= (a ^ b).bit_count() + 1:
+            reason = f'lost sync: more than {(a ^ b).bit_count() + 1} off-path runs before expected state'
+        else:
+            pending += 1
+            max_pending = max(max_pending, pending)
+            if value == lo:
+                gaps += 1
+            else:
+                skew += 1
+                max_skew = max(max_skew, int(dwells[k]))
+                gray_skew += bool(gray[(position + 1) % len(cycle)])
+            continue
+        return dict(prefix=k, position=(position + 1) % len(cycle), logical_states=logical,
+                    skew=skew, intermediates=gaps, gray_intermediates=0, gray_skew=gray_skew,
+                    reason=reason, accepted=accepted, anchor=anchor, max_pending=max_pending, max_skew=max_skew)
+    return dict(prefix=len(values), position=(position + 1) % len(cycle), logical_states=logical,
+                skew=skew, intermediates=gaps, gray_intermediates=0, gray_skew=gray_skew,
+                reason=None, accepted=accepted, anchor=anchor, max_pending=max_pending, max_skew=max_skew)
 
 
 def wiring_fault(values, cycle):
-    # A transformed cycle can collapse transitions. Test only its distinct
-    # states, and require a complete observed cycle to diagnose wiring.
+    # Exact state-only wiring diagnosis remains useful after a path failure.
+    # It never accepts the file or resynchronizes the primary checker.
     def matches(transformed):
-        distinct = [v for i, v in enumerate(transformed) if not i or v != transformed[i - 1]]
-        if len(distinct) > 1 and distinct[-1] == distinct[0]:
-            distinct.pop()
-        return (len(distinct) > 1 and len(values) >= len(distinct) and
-                alignment(values, distinct)[0] == len(values))
+        distinct = [v for i, v in enumerate(transformed) if v != transformed[i - 1]]
+        if len(distinct) < 2 or len(values) < len(distinct):
+            return False
+        for offset, state in enumerate(distinct):
+            if state == values[0]:
+                expected = np.resize(np.array(distinct[offset:] + distinct[:offset]), len(values))
+                if np.array_equal(values, expected):
+                    return True
+        return False
     for bit in range(8):
         for level in (0, 1):
             if matches([(v & ~(1 << bit)) | (level << bit) for v in cycle]):
                 return f'stuck lane {bit} at {level}'
     for first in range(8):
         for second in range(first + 1, 8):
-            transformed = [v ^ (((v >> first ^ v >> second) & 1) * ((1 << first) | (1 << second))) for v in cycle]
-            if matches(transformed):
+            if matches([v ^ (((v >> first ^ v >> second) & 1) * ((1 << first) | (1 << second))) for v in cycle]):
                 return f'swapped lanes {first}/{second}'
     return None
 
 
-def check_sequence(values, indices, pattern, seed=1, statistics=None):
-    cycle = cycle_for(pattern, seed)
+def check_sequence(values, indices, pattern, seed=1, statistics=None, *, rate=None,
+                   total_samples=None, skew_ns=12, lanes=0xff):
+    if not isinstance(lanes, int) or not 1 <= lanes <= 255:
+        raise ValueError('lanes must be a nonempty 8-bit mask (1..0xff)')
+    if not math.isfinite(skew_ns) or skew_ns < 0:
+        raise ValueError('skew-ns must be finite and nonnegative')
+    if rate is not None and (rate <= 0 or not math.isfinite(rate)):
+        raise ValueError('META samplerate must be finite and positive')
+    cycle, gray = projected_cycle(pattern, seed, lanes)
     if not len(values):
         return 'empty capture'
-    prefix, position, logical, intermediates = alignment(values, cycle)
+    if not cycle:
+        return 'lane projection has no transitions'
+    values = np.asarray(values) & lanes
+    indices = np.asarray(indices, dtype=np.uint64)
+    # Direct callers can supply unprojected runs; merge them before computing
+    # dwell, just as read_states does when extracting the raw samples.
+    change = np.r_[True, values[1:] != values[:-1]]
+    values, indices = values[change], indices[change]
+    if total_samples is None:
+        last_dwell = int(indices[-1] - indices[-2]) if len(indices) > 1 else 1
+        total_samples = int(indices[-1]) + last_dwell
+    dwells = np.diff(np.r_[indices, np.uint64(total_samples)])
+    skew_bound = skew_samples(skew_ns, rate) if rate is not None else 0
+    anchor = next((k for k in range(1 if rate is not None else 0, len(values))
+                   if int(values[k]) in cycle and int(dwells[k]) > skew_bound), None)
     if statistics is not None:
-        statistics.update(intermediates=intermediates, logical_states=logical, gray_intermediates=0)
+        statistics.update(skew_bound=skew_bound, projected_length=len(cycle), skew=0,
+                          intermediates=0, gray_intermediates=0, gray_skew=0, logical_states=0)
+    if anchor is None:
+        return 'no stable on-cycle anchor longer than the skew bound'
+    candidates = [offset for offset, state in enumerate(cycle) if state == int(values[anchor])]
+    # A projected value can occur at several phases. Pick the longest exact
+    # path from this single fixed anchor; no candidate can jump past a fault.
+    starts = [(anchor, offset) for offset in candidates]
+    if rate is None and len(values) > 1:
+        # Legacy state-only calls can begin with one observed CLR/SET gap.
+        starts.extend((1, offset) for offset, state in enumerate(cycle)
+                      if state == values[1] and cycle[offset - 1] & state == values[0]
+                      and values[0] not in (cycle[offset - 1], state))
+    best = max((_trace(values, dwells, cycle, gray, start, offset, skew_bound, collect=pattern == 'walk')
+                for start, offset in starts), key=lambda r: (r['prefix'], r['logical_states']))
+    anchor = best['anchor']
+    if statistics is not None:
+        statistics.update({key: value for key, value in best.items() if key not in ('reason', 'accepted')})
+        statistics['anchor_sample'] = int(indices[anchor])
+        statistics['transitions'] = best['logical_states'] - 1
+        statistics['complete_runs'] = [(int(values[k]), int(indices[k]), int(dwells[k]))
+                                       for k in best['accepted'] or [] if k not in (0, len(values) - 1)]
+    prefix = best['prefix']
     if prefix == len(values):
-        return None if logical >= len(cycle) else 'insufficient coverage: need a full state cycle'
-    wiring = wiring_fault(values[:min(len(values), len(cycle) * 3)], cycle)
+        return None if best['logical_states'] >= len(cycle) else 'insufficient coverage: need a full state cycle'
+    wiring = wiring_fault(values[anchor:min(len(values), anchor + len(cycle) * 3)], cycle)
     if wiring:
         return f'{wiring}; first mismatch at sample {int(indices[prefix])}'
+    position = best['position']
     got, want = int(values[prefix]), cycle[position]
-    if (prefix + 1 < len(values) and got == cycle[(position + 1) % len(cycle)] and
-            int(values[prefix + 1]) == want):
+    if prefix + 1 < len(values) and got == cycle[(position + 1) % len(cycle)] and int(values[prefix + 1]) == want:
         kind = 'reordered states'
-    elif prefix >= 2 and got == int(values[prefix - 2]):
+    elif 'repeated expected' in best['reason'] or (prefix >= 2 and got == int(values[prefix - 2])):
         kind = 'duplicated state block'
     elif got in [cycle[(position + skip) % len(cycle)] for skip in range(1, 17)]:
         kind = 'dropped states'
@@ -169,7 +250,7 @@ def check_sequence(values, indices, pattern, seed=1, statistics=None):
         kind = 'duplicated state block'
     else:
         kind = 'state mismatch (dropped, duplicated or reordered states)'
-    return f'{kind} at sample {int(indices[prefix])}: got 0x{got:02x}, expected 0x{want:02x}'
+    return f'{kind} at sample {int(indices[prefix])}: got 0x{got:02x}, expected 0x{want:02x}; {best["reason"]}'
 
 
 def check_spi(lines, manifest, bus='SPI'):
@@ -215,6 +296,10 @@ def main():
     p.add_argument('--pattern', choices=('walk', 'prbs', 'spi'), required=True)
     p.add_argument('--group', type=int, choices=(0, 8), action='append')
     p.add_argument('--unitsize', type=int, choices=(1, 2))
+    p.add_argument('--lanes', type=lambda text: int(text, 0), default=0xff,
+                   help='nonempty 8-bit mask within each group (default 0xff)')
+    p.add_argument('--skew-ns', type=float, default=12,
+                   help='maximum non-gap transient duration in ns (default 12)')
     p.add_argument('--seed', type=int, default=1)
     p.add_argument('--step-us', type=float, default=10)
     p.add_argument('--dwell-out', type=Path, help='write per-state walk dwell observations as JSONL')
@@ -249,25 +334,40 @@ def main():
         else:
             if not np.isfinite(a.step_us) or a.step_us < 10:
                 raise ValueError('step-us must be finite and at least 10')
-            states, rate, total = read_states(a.input, groups, a.unitsize)
+            if not 1 <= a.lanes <= 255:
+                raise ValueError('lanes must be a nonempty 8-bit mask (1..0xff)')
+            if not math.isfinite(a.skew_ns) or a.skew_ns < 0:
+                raise ValueError('skew-ns must be finite and nonnegative')
+            states, rate, total = read_states(a.input, groups, a.unitsize, a.lanes)
             dwell_records = []
             for group, (values, indices) in states.items():
                 statistics = {}
-                error = check_sequence(values, indices, a.pattern, a.seed, statistics)
+                error = check_sequence(values, indices, a.pattern, a.seed, statistics,
+                                       rate=rate, total_samples=total, skew_ns=a.skew_ns, lanes=a.lanes)
                 if error:
                     problems.append(f'group {group}: {error}')
-                print(f'group {group}: {len(values)} distinct states, {total} samples')
-                print(f'group {group}: {statistics.get("intermediates", 0)} GPIO clear/set intermediates')
+                print(f'group {group} lanes=0x{a.lanes:02x}: {len(values)} distinct states, {total} samples, '
+                      f'projected cycle {statistics["projected_length"]}, anchor sample {statistics.get("anchor_sample", "none")}')
+                print(f'group {group}: skew {statistics["skew"]} (<= {statistics["skew_bound"]} samples), '
+                      f'CLR/SET gaps {statistics["intermediates"]} (any dwell)')
+                print(f'group {group}: maximum accepted skew dwell {statistics.get("max_skew", 0)} samples; '
+                      f'maximum off-path runs per transition {statistics.get("max_pending", 0)}')
+                transitions_per_second = statistics.get('transitions', 0) / (total / rate) if total else 0
+                full_length = len(cycle_for(a.pattern, a.seed))
+                normalized = transitions_per_second * full_length / statistics['projected_length']
+                print(f'group {group}: expected transitions per nominal second: {transitions_per_second:.3f}; '
+                      f'full-cycle normalized: {normalized:.3f} (informational)')
                 if a.pattern == 'walk':
-                    print(f'group {group}: 0 Gray-section intermediates (single-bit transitions)')
-                if a.pattern == 'walk' and len(indices) > 2:
-                    dwell = np.diff(indices)[1:]  # first/last may be clipped by capture.
+                    print(f'group {group}: Gray-section CLR/SET gaps {statistics["gray_intermediates"]}; '
+                          f'skew {statistics["gray_skew"]}')
+                if a.pattern == 'walk' and statistics.get('complete_runs'):
+                    dwell = np.array([run[2] for run in statistics['complete_runs']])
                     nominal = rate * a.step_us / 1e6
                     outliers = int(np.count_nonzero((dwell < nominal * .5) | (dwell > nominal * 3)))
                     print(f'group {group}: dwell samples {dict(sorted(collections.Counter(map(int, dwell)).items()))}')
                     if a.dwell_out:
-                        for state, sample, count in zip(values[1:-1], indices[1:-1], dwell):
-                            dwell_records.append(dict(group=group, sample=int(sample), state=int(state), samples=int(count)))
+                        for state, sample, count in statistics['complete_runs']:
+                            dwell_records.append(dict(group=group, sample=sample, state=state, samples=count))
                     if outliers:
                         print(f'warning: {outliers} walk dwells outside 0.5x–3x nominal {nominal:g} samples')
             if a.dwell_out:

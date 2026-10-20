@@ -65,3 +65,144 @@ Non-blocking notes: GPFSEL/pull updates are read-modify-write on shared
 registers; `spi` is ~33 kbit/s at the 10 µs minimum step; the `validated`
 field means "frontend enabled", not live-validated. No live gate has run
 yet (U2–U5 pending).
+
+## Phase 2 live gates — 2026-10-20 16:05–16:35 PDT
+
+Built from `0536d78`: production `dslcap` SHA-256 `fd8252df…1160`;
+`pi_pattern.c` SHA-256 `f9a195f1…1ed1`, copied to `~/dslcap-w1/` on each Pi
+and built there with `gcc -O2 -Wall -Wextra -Werror` (hashes matched).
+Analyzer `2a0e:002a` at bus 2 address 6, SuperSpeed. W1 wiring as in the
+plan. Raw captures (3.7 GB) and logs are local under
+`dslcap/local-evidence/u3pro16-phase2-20261020/`, with SHA-256 lists
+`u3pro16-phase2-20261020{,.raw}.sha256`. The analysis scripts used
+(`gate.sh`, `skew_analyze.py`, `proj_analyze.py`) are saved there too.
+
+**Preflight.** Both Pis idle (load 0.00, no radio processes; pi133 had
+`lr20xx_module` loaded but unused, pi134 none). `hydra-develop-1a` had
+reported no use of either Pi; other sessions were not asked. All 16 W1 lines
+were `unused` inputs at default pulls. Full `pinctrl get 0-27` recorded as a
+baseline. Target disk sustained 1.6 GB/s (`dd`, 2 GiB, fdatasync).
+
+**Passive baseline.** 25M ×16 with no drive, 12.5 M samples: every sample
+`0x2020`, i.e. CH5 and CH13 high (GPIO6 pull-up on each Pi), the rest low.
+
+| Gate | Capture | Result |
+|---|---|---|
+| U2 walk | 25M ×16, 2 s | PASS both groups (29,094 / 29,038 states); 65 / 64 CLR/SET intermediates; 0 in the Gray section |
+| U2 walk | 125M ×16, 1 s | PASS both groups (14,712 / 14,643 states); 194 / 173 intermediates; 0 in Gray |
+| U3 prbs | 125M ×16, 2 s, 500 MB | Transport clean (analysis); `check_pattern.py` FAIL (see below) |
+| U3 prbs | 250M ×12 CH0–11, 1 s, 500 MB | Transport clean, pi133 |
+| U3 prbs | 250M ×12 CH4–15, 1 s, 500 MB | Transport clean, pi134 |
+| U4 substitute | 500M ×6 CH0–5, 1 s, 500 MB | Transport clean, pi133 |
+| U4 substitute | 1G ×3 CH0–2, 1 s, 1 GB | Transport clean, pi133 |
+| U4 substitute | 500M ×6 CH8–13, 0.5 s, 1 GB/s output | Transport clean, pi134 |
+| U5 spi | live `sigrok_hla.py`, 25M, both buses | PASS: 100/100 frames per bus byte-exact (`[SPI]` = pi133, `[SPI_B]` = pi134) |
+
+No capture reported overflow; every finite capture returned its exact
+sample count. After every run both Pis' generators restored their lines,
+and the final `pinctrl get 0-27` was identical to the baseline on both.
+
+**Why `check_pattern.py` fails U3, and why the transport is still clean.**
+At ≥125 MS/s, multi-pin transitions are visible part-way: lines set in one
+`GPSET0` write don't switch at exactly the same instant, so the analyzer
+catches short states between the old and new values. The production
+checker later showed these never exceed one sample, even at 1 GS/s, so the
+pin-to-pin skew is about 1 ns or less. The CLR/SET gap
+(`prev & next`) can also last longer when the CPU is interrupted between its
+two writes (seen up to 4.2 µs). The checker accepts only a single
+`prev & next` per step, so it fails at the first skew sample. Independent
+analysis (`proj_analyze.py`) walks every run against the PRBS8 cycle. It
+accepts `prev & next` of any length, plus states bitwise between the old and
+new values lasting ≤ 12 ns. It requires every expected state in order, and
+fails on anything else or a lost sync. Result: **0 faults** in all seven
+prbs captures. For example, at 125M ×16 pi133 had 1,737,166 expected
+states in order, 230,487 skew samples and 547,232 CLR/SET gaps. Every
+skew state fell within the scratch analysis's 12 ns bound. That bound was
+computed in floating point and came out at 2, 4, 7 and 13 samples at 125M,
+250M, 500M and 1G; the exact bound is 2, 3, 6 and 12 (found by ds-worker).
+The production checker uses the exact bound, and its rerun (below) is the
+record.
+
+**Relative timebase (U4 substitute).** GPCLK clocks (P3) are not available
+without root, an overlay or PWM, so absolute frequency was not measured.
+Instead, the PRBS generator's CPU-bound rate gives a ratiometric check. In
+expected states per nominal second, normalized to the full cycle, pi133 gave
+868,583 at 125M, 872,310 at 250M, 856,672 at 500M and 868,476 at 1G. pi134
+gave 862,084 at 125M, 834,642 at 250M and 830,976 at 500M. A wrong ×2 in the
+new 500M/1G factor would show as ~1.7 M or ~430 k. The spread (≤ 4%) is
+generator variation, so this proves the factor but not calibration.
+
+**Walk timing.** `--step-us 10` actually produced ~69 µs steps (~1,720
+samples at 25M): Linux `nanosleep` overhead. Every walk dwell therefore
+raised the warning-only 0.5×–3× band warning; that is expected.
+
+### Checker follow-up `dslcap-u3pro16-p2c-20261020` — PASS
+
+ds-worker updated `check_pattern.py` (request SHA-256 `8bf10f2f…6403`):
+- **Skew:** states bitwise between A&B and A|B are accepted up to an exact
+  integer bound, `ceil(skew_ns × rate)` with a 12 ns default: 2/3/6/12
+  samples at 125M/250M/500M/1G.
+- **CLR/SET gap:** `A&B` is accepted at any dwell.
+- **Cap:** at most popcount(A^B)+1 off-path runs per transition.
+- **Anchoring and lane subsets:** it anchors on the first stable run, and
+  `--lanes` projects onto a subset of lanes.
+- **Timebase:** it reports transitions per nominal second.
+
+`pi_pattern` now waits 1 ms after restoring the lines before its readback.
+The lead reran the Python suite (91 OK, 8 skipped) and the checker on six
+saved captures with identical results; ds-worker ran all eight:
+
+| Capture | Args | Result | Max skew dwell | Max off-path / step |
+|---|---|---|---|---|
+| u2-25m, u2-125m | walk, groups 0 and 8 | PASS | 0 | 1 |
+| u3-125m | prbs, groups 0 and 8 | PASS | 1 | 2 |
+| u3-250m-lo / -hi | prbs, group 0 / 8 | PASS | 1 | 2 / 3 |
+| u4-500m-pi133 | prbs, `--unitsize 1 --lanes 0x3f` | PASS | 1 | 3 |
+| u4-1g-pi133 | prbs, `--unitsize 1 --lanes 0x07` | PASS | 1 | 2 |
+| u4-500m-pi134 | prbs, `--lanes 0x3f`, group 8 | PASS | 1 | 3 |
+
+Live settle check: `pi_pattern.c` SHA-256 `1c5900bb…7e01`, rebuilt on both
+Pis, `walk --duration 0.2`. Both reported `levels=0x00000040` (GPIO6 high
+only), and `pinctrl get 0-27` matched the baseline on both.
+
+### U4: absolute frequency against GPCLK0 — PASS
+
+The user approved bounded `sudo` writes to GPCLK0 only (2026-10-20 16:29
+PDT). `pi_gpclk.c` (task `dslcap-u3pro16-p2d-20261020`, ds-worker; lead
+review PASS; SHA-256 `084c1194…738d`) was built on each Pi. GPCLK0 was idle
+on both beforehand (kernel `gp0` enable count 0) and GPIO20 an input with
+pull-down. Each run: `sudo -n timeout 60 ./pi_gpclk --source osc --divi 2`,
+i.e. the 54 MHz crystal ÷ 2 = 27 MHz on GPIO20, for 45 s (pi133) / 35 s
+(pi134), with 1 s single-channel captures taken during it. Checked with
+`check_clock.py --expect-hz 27000000`.
+
+| Pi (channel) | Rate | Measured | Error | 1 ms windows min/max | Duty | Glitches / missing |
+|---|---|---|---|---|---|---|
+| pi133 (CH2) | 125M | 27 000 637.728 Hz | +23.620 ppm | +16 / +27 ppm | 53.19% | 0 / 0 |
+| pi133 (CH2) | 250M | 27 000 637.756 Hz | +23.621 ppm | +20 / +27 ppm | 53.22% | 0 / 0 |
+| pi133 (CH2) | 500M | 27 000 637.972 Hz | +23.629 ppm | +22 / +25 ppm | 52.99% | 0 / 0 |
+| pi133 (CH2) | 1G | 27 000 638.270 Hz | +23.640 ppm | +23 / +24 ppm | 53.00% | 0 / 0 |
+| pi134 (CH10) | 125M | 27 000 384.296 Hz | +14.233 ppm | +8 / +19 ppm | 53.53% | 0 / 0 |
+| pi134 (CH10) | 250M | 27 000 383.648 Hz | +14.209 ppm | +11 / +16 ppm | 53.56% | 0 / 0 |
+| pi134 (CH10) | 500M | 27 000 382.972 Hz | +14.184 ppm | +13 / +16 ppm | 53.34% | 0 / 0 |
+
+- **Rate agreement:** each Pi's clock agrees across all sample rates to
+  within 0.05 ppm. That proves the 500M (×1) and 1G (×2, QUAR) stream
+  timebases are exactly consistent with 125M/250M, far tighter than the
+  ratiometric check.
+- **Absolute error:** the analyzer reads the two independent Pi crystals
+  +23.6 and +14.2 ppm fast. Their 9.4 ppm difference is Pi-to-Pi. The
+  analyzer's own error relative to true time can't be separated from the
+  crystals' without a calibrated reference, but it's bounded at tens of ppm.
+- **Duty:** ~53% is the clock as seen through the analyzer's input
+  threshold, consistent at every rate.
+- **Restore:** both runs exited 0 with a matching readback: GPIO20 input,
+  pull-down, low; GP0CTL restored to its original `0x200` (MASH field) with
+  ENAB clear; DIV 0. `pinctrl get 0-27` was identical before and after, and
+  the kernel still showed `gp0` unused.
+
+Raw captures and checker JSON are in the evidence directory, with SHA-256
+lists `u3pro16-phase2-20261020.u4c{,.raw}.sha256`.
+
+**Still open:** the Plus regression scan, W2 real radio traffic, and
+Phase 3 (buffer and triggers on the U3Pro16).

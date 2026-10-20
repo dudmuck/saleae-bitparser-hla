@@ -57,7 +57,7 @@ class PatternTests(unittest.TestCase):
                 with tempfile.TemporaryDirectory() as tmp:
                     raw = self.write_raw(tmp, values, 1)
                     run = subprocess.run([sys.executable, str(TOOLS / 'check_pattern.py'), str(raw),
-                                          '--pattern', pattern], capture_output=True, text=True, timeout=5)
+                                          '--pattern', pattern, '--skew-ns', '0'], capture_output=True, text=True, timeout=5)
                     self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
                     self.assertIn('warning:', run.stdout)
                     self.assertIn('dwell samples', run.stdout)
@@ -135,6 +135,101 @@ class PatternTests(unittest.TestCase):
             raw.write_bytes(raw.read_bytes() + b'\x01')
             with self.assertRaisesRegex(ValueError, 'truncated'):
                 checker.read_states(raw, [0, 8])
+
+    def synthetic_runs(self, folder, runs, rate=125_000_000):
+        raw = Path(folder) / 'skew.raw'
+        raw.write_bytes(f'META samplerate: {rate}\n'.encode() +
+                        b''.join(bytes([value]) * dwell for value, dwell in runs))
+        states, meta_rate, total = checker.read_states(raw, [0], 1)
+        stats = {}
+        error = checker.check_sequence(*states[0], 'prbs', rate=meta_rate,
+                                       total_samples=total, statistics=stats)
+        return raw, error, stats
+
+    def test_bounded_skew_and_long_repeated_gaps(self):
+        cycle = checker.cycle_for('prbs') * 3
+        target = next(i for i in range(20, 200) if (cycle[i - 1] ^ cycle[i]).bit_count() >= 4
+                      and cycle[i - 1] & cycle[i] not in (cycle[i - 1], cycle[i]))
+        a, b = cycle[target - 1:target + 1]
+        lo, hi = a & b, a | b
+        skew = [v for v in range(256) if not v & ~hi and not lo & ~v and v not in (a, b, lo)]
+        base = [(value, 20) for value in cycle]
+        for off_path, expected_skew, expected_gap in [([(skew[0], 2), (skew[1], 2)], 2, 0),
+                ([(lo, 600)], 0, 1),
+                ([(lo, 600), (skew[0], 2), (lo, 600), (skew[1], 1)], 2, 2)]:
+            with tempfile.TemporaryDirectory() as tmp:
+                raw, error, stats = self.synthetic_runs(tmp, base[:target] + off_path + base[target:])
+                self.assertIsNone(error)
+                self.assertEqual(stats['skew'], expected_skew)
+                self.assertEqual(stats['intermediates'], expected_gap)
+                if len(off_path) > 3:
+                    self.assertEqual(stats['max_pending'], len(off_path))
+        # Exact integer boundaries, without the reference script's float ceil artifact.
+        for rate, expected in [(125_000_000, 2), (250_000_000, 3), (500_000_000, 6), (1_000_000_000, 12)]:
+            self.assertEqual(checker.skew_samples(12, rate), expected)
+            for dwell in (expected, expected + 1):
+                with tempfile.TemporaryDirectory() as tmp:
+                    _, error, _ = self.synthetic_runs(tmp, base[:target] + [(skew[0], dwell)] + base[target:], rate)
+                    self.assertEqual(error is None, dwell == expected)
+        outside = next(v for v in range(256) if v & ~hi or lo & ~v)
+        for off_path, diagnosis in [([(outside, 1)], 'range'),
+                                    ([(skew[0], 3)], 'exceeds bound'),
+                                    ([(skew[0], 2), (a, 20)], 'repeated expected'),
+                                    ([(lo, 2), (skew[0], 1)] * 6, 'lost sync')]:
+            with self.subTest(diagnosis=diagnosis), tempfile.TemporaryDirectory() as tmp:
+                _, error, _ = self.synthetic_runs(tmp, base[:target] + off_path + base[target:])
+                self.assertIsNotNone(error)
+                self.assertIn(diagnosis, error)
+        with tempfile.TemporaryDirectory() as tmp:
+            _, error, _ = self.synthetic_runs(tmp, base[:target] + [(skew[0], 2)] + base[target + 1:])
+            self.assertIsNotNone(error, 'missing expected B must not be hidden by skew')
+
+    def test_stable_anchor_after_initial_transient(self):
+        cycle = checker.cycle_for('prbs') * 3
+        with tempfile.TemporaryDirectory() as tmp:
+            _, error, stats = self.synthetic_runs(tmp, [(255, 2)] + [(v, 20) for v in cycle])
+            self.assertIsNone(error)
+            self.assertEqual(stats['anchor_sample'], 2)
+            _, error, _ = self.synthetic_runs(tmp, [(v, 2) for v in cycle])
+            self.assertIn('no stable', error)
+
+    def test_lane_projection_cli_and_dropped_projected_state(self):
+        projected, _ = checker.projected_cycle('prbs', lanes=7)
+        self.assertLess(len(projected), 255)
+        values = projected * 3
+        self.assertTrue(all(a != b for a, b in zip(values, values[1:])))
+        for dropped in (False, True):
+            samples = values[:100] + values[101:] if dropped else values
+            # Unselected lines can contain arbitrary noise without adding runs.
+            runs = [(v | ((i * 17) & 0xf8), 20) for i, v in enumerate(samples)]
+            with tempfile.TemporaryDirectory() as tmp:
+                raw, _, _ = self.synthetic_runs(tmp, runs, rate=1_000_000_000)
+                r = subprocess.run([sys.executable, str(TOOLS / 'check_pattern.py'), str(raw),
+                                    '--pattern', 'prbs', '--lanes', '0x07', '--unitsize', '1'],
+                                   capture_output=True, text=True, timeout=5)
+                self.assertEqual(r.returncode, int(dropped), r.stdout + r.stderr)
+                self.assertIn('full-cycle normalized:', r.stdout)
+                self.assertIn(f'projected cycle {len(projected)}', r.stdout)
+        self.assertEqual(checker.projected_cycle('prbs', lanes=0x3f)[0][-1] !=
+                         checker.projected_cycle('prbs', lanes=0x3f)[0][0], True)
+
+    def test_gray_gap_control_and_skew_limits(self):
+        cycle = checker.cycle_for('walk') * 3
+        # Gray steps change one bit: A&B is an endpoint, never a distinct gap.
+        a, b = cycle[10:12]
+        self.assertIn(a & b, (a, b))
+        runs = [(v, 20) for v in cycle]
+        indices = np.arange(len(cycle)) * 20
+        stats = {}
+        self.assertIsNone(checker.check_sequence(np.array(cycle), indices, 'walk', rate=125_000_000,
+                                                total_samples=len(cycle) * 20, statistics=stats))
+        self.assertEqual(stats['gray_intermediates'], 0)
+        # Clearing to zero between 3→2 is a false gap outside A&B=2, and fails.
+        bad = runs[:11] + [(0, 600)] + runs[11:]
+        values = np.array([v for v, d in bad])
+        starts = np.cumsum([0] + [d for v, d in bad[:-1]])
+        self.assertIsNotNone(checker.check_sequence(values, starts, 'walk', rate=125_000_000,
+                                                    total_samples=sum(d for v, d in bad)))
 
     def test_spi_manifest_and_raw_replay(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -59,6 +59,10 @@ static void restore(void)
             set_function(pins[i], 0);
             set_pull(pins[i], pins[i] == 6 ? 1 : 2); // BCM2711 up=1, down=2.
         }
+        // Let the input levels settle under the restored pulls before reading
+        // back configuration and GPLEV0, including on signal cleanup paths.
+        struct timespec settle = {.tv_sec = 0, .tv_nsec = 1000000};
+        while (nanosleep(&settle, &settle) && errno == EINTR) {}
         for (unsigned i = 0; i < 8; i++) {
             unsigned pin = pins[i], pull = (gpio[0xe4 / 4 + pin / 16] >> (2 * (pin % 16))) & 3;
             if (function(pin) || pull != (pin == 6 ? 1u : 2u)) {
