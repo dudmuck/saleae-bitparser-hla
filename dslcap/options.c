@@ -201,7 +201,7 @@ uint64_t dsl_trigger_position(unsigned percent, uint64_t arm_limit, uint64_t cha
 
 void dsl_usage(void)
 {
-    puts("Usage: dslcap [--scan] [--fw-dir DIR] [-v|-vv]\n"
+    puts("Usage: dslcap [--scan] [--model plus|u3pro16] [--fw-dir DIR] [-v|-vv]\n"
          "       dslcap --samplerate R --channels LIST (--samples N|--time T|--continuous)\n"
          "              [--mode stream|buffer] [--vth V]\n"
          "              [--trigger CH:COND,...] [--trigger-pos 0..90]\n"
@@ -219,10 +219,11 @@ void dsl_usage(void)
 
 int dsl_parse_options(int argc, char **argv, struct dsl_options *o)
 {
-    *o = (struct dsl_options){.fw_dir = "/usr/local/share/DSView/res",
+    *o = (struct dsl_options){.fw_dir = "/usr/local/share/DSView/res", .model = -1,
         .rate = 25000000, .channels = 0xff, .vth = 1.6, .stream = 1, .trigger_pos = 10, .drain_timeout = 30};
-    enum { RATE = 256, CHANNELS, SAMPLES, TIME, CONTINUOUS, MODE, VTH, PATTERN, TRIGGER, POS, TIMEOUT, ON_TIMEOUT, DRAIN, SERIAL };
+    enum { RATE = 256, CHANNELS, SAMPLES, TIME, CONTINUOUS, MODE, VTH, PATTERN, TRIGGER, POS, TIMEOUT, ON_TIMEOUT, DRAIN, SERIAL, MODEL };
     static const struct option options[] = {
+        {"model", required_argument, NULL, MODEL},
         {"scan", no_argument, NULL, 's'}, {"fw-dir", required_argument, NULL, 'f'},
         {"help", no_argument, NULL, 'h'}, {"samplerate", required_argument, NULL, RATE},
         {"channels", required_argument, NULL, CHANNELS}, {"samples", required_argument, NULL, SAMPLES},
@@ -238,6 +239,11 @@ int dsl_parse_options(int argc, char **argv, struct dsl_options *o)
     while ((option = getopt_long(argc, argv, "vh", options, NULL)) != -1) {
         char *end;
         switch (option) {
+        case MODEL:
+            if (!strcmp(optarg, "plus")) o->model = 0;
+            else if (!strcmp(optarg, "u3pro16")) o->model = 1;
+            else goto invalid;
+            break;
         case 's': o->scan = 1; break;
         case 'f': o->fw_dir = optarg; break;
         case 'v': if (o->verbosity < 2) o->verbosity++; break;

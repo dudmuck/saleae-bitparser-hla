@@ -165,6 +165,16 @@ Ground: one analyzer ground per Pi, header pin 39 (or 34). The `--spi 0,1,2,3
 connection on the radio adapter, as was done for GPIO20 in B.5. "Unused"
 in software does not prove the copper is free.
 
+**User decisions, 2026-10-20 15:18–15:20 PDT.** W1 wiring is complete on
+both Pis, exactly as in the table, ground on pin 39. On isolation, the user
+said: "the lr2021 radio boards are connected, but should only be driving its
+DIO8 pin and BUSY pin". DIO8 (GPIO5) and BUSY (GPIO18) are not W1 lines, so
+no W1 drive contends with a radio output. Read-only check after wiring: all
+16 W1 lines still `unused` inputs at default pulls (GPIO6 pull-up/high, the
+rest pull-down/low); pi133 has `lr20xx_module` loaded, pi134 none.
+Scope: **Phases 1–2 only**; Phase 3 is deferred. **P5 rejected**: SPI tests
+use bit-banged P4 only, with no `config.txt` change or reboot.
+
 **Generator.** A small C tool, `dslcap/tools/pi_pattern.c`, built on each
 Pi with its own gcc. It writes BCM2711 `GPSET0`/`GPCLR0` through
 `/dev/gpiomem`, so all eight lines change in one register write. It only
@@ -229,7 +239,7 @@ channel ≥ 8 is enabled.
   consistent across rates. pi134 clocks (CH8+) repeat at ≤250M only.
 - U5 decode: P4 on both buses at 25M live through `sigrok_hla.py`,
   byte-exact on both.
-- U6 (optional): P5 at 10 MHz SCLK, or W2 real radio traffic.
+- U6 (optional): W2 real radio traffic. P5 was rejected on 2026-10-20.
 
 **Phase 3: buffer mode and triggers.** Item 3 and the depth limit at 2 Gibit.
 Derive the ADF4360 500M/1G divider and packing from `dsl_fpga_arm` and the
@@ -261,8 +271,5 @@ the user reconnects it.
 
 ## Open questions for the user
 
-1. Is the W1 map acceptable, and can you confirm the eight lines per Pi
-   have no other connection on the radio adapters?
-2. Is Phase 3 (buffer/trigger at 500M/1G) in scope now, or Phases 1–2 only?
-3. Is P5 (SPI1 overlay plus reboot on both Pis) acceptable, or should SPI
-   decode use bit-banged P4 only?
+None open. The answers to the three original questions are recorded under
+"User decisions" in the W1 section.

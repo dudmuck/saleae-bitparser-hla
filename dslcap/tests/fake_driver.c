@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Fake only the hardware-facing calls; use DSView's actual xlog/log.c.
 #include <libsigrok.h>
+#include "driver_config.h"
 #include <libusb.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,6 +37,16 @@ static dslib_event_callback_t event_callback;
 static int is(const char *value)
 {
     return scenario && strcmp(scenario, value) == 0;
+}
+
+static int u3_only(void)
+{
+    return scenario && !strncmp(scenario, "u3-", 3);
+}
+
+static const struct dsl_model *fake_model(uintptr_t handle)
+{
+    return dsl_model_at(u3_only() || (is("both-models") && handle == 3) ? 1 : 0);
 }
 
 void ds_set_firmware_resource_dir(const char *directory)
@@ -78,17 +89,17 @@ int ds_get_device_list(struct ds_device_base_info **list, int *count)
         *count = 0;
         return SR_OK;
     }
-    *count = is("multiple") ? 3 : 2;
+    *count = is("multiple") || is("both-models") ? 3 : 2;
     *list = calloc((size_t)*count, sizeof(**list));
     if (!*list)
         return SR_ERR;
     (*list)[0].handle = 1;
     strcpy((*list)[0].name, "Demo Device");
     (*list)[1].handle = 2;
-    strcpy((*list)[1].name, "DSLogic PLus");
+    strcpy((*list)[1].name, fake_model(2)->name);
     if (*count == 3) {
         (*list)[2].handle = 3;
-        strcpy((*list)[2].name, "DSLogic PLus");
+        strcpy((*list)[2].name, fake_model(3)->name);
     }
     return SR_OK;
 }
@@ -100,8 +111,14 @@ int LIBUSB_CALL libusb_get_device_descriptor(libusb_device *device,
         abort(); // The demo handle must never be treated as a USB pointer.
     memset(descriptor, 0, sizeof(*descriptor));
     descriptor->idVendor = 0x2a0e;
-    descriptor->idProduct = is("wrong-pid") ? 0x0020 : 0x0034;
+    descriptor->idProduct = is("wrong-pid") ? 0x0020 : fake_model((uintptr_t)device)->pid;
     return 0;
+}
+
+int LIBUSB_CALL libusb_get_device_speed(libusb_device *device)
+{
+    return fake_model((uintptr_t)device) == dsl_model_at(1) && !is("u3-high") ?
+        LIBUSB_SPEED_SUPER : LIBUSB_SPEED_HIGH;
 }
 
 uint8_t LIBUSB_CALL libusb_get_bus_number(libusb_device *device)
@@ -132,12 +149,12 @@ int ds_active_device(ds_device_handle handle)
         last_error = SR_ERR;
     if (is("hdl-fail") && activation_count == 2)
         return SR_ERR;
-    if (is("security-fail"))
+    if (is("security-fail") || is("u3-security-fail"))
         xlog_err(sr_log, "Security check failed!");
     else if (is("both-security")) {
         xlog_err(sr_log, "Security check failed!");
         xlog_err(sr_log, "Security check pass!");
-    } else if (!is("no-security") &&
+    } else if (fake_model((uintptr_t)handle)->needs_security && !is("no-security") &&
                !(is("no-security-reopen") && activation_count == 2))
         xlog_err(sr_log, "Security check pass!");
     return SR_OK;
@@ -161,7 +178,7 @@ int ds_get_actived_device_info(struct ds_device_full_info *info)
 
 int dsl_hdl_version(const struct sr_dev_inst *device, uint8_t *value)
 {
-    if ((uintptr_t)device != 2 || activation_count != 2)
+    if ((uintptr_t)device != (uintptr_t)active || activation_count != 2)
         abort();
     *value = is("hdl-mismatch") ? 0x0d : 0x0e;
     return is("hdl-read-fail") ? SR_ERR : SR_OK;

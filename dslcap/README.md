@@ -1,8 +1,9 @@
 # dslcap
 
 Standalone GPLv3-or-later frontend for a DSLogic Plus PGL12 analyzer
-(`2a0e:0034`). Supports standalone finite/continuous logic capture and
-bring-up verification. Python integration and remaining signal comparisons
+(`2a0e:0034`), with Phase 1 bring-up support for the U3Pro16 (`2a0e:002a`).
+Supports standalone finite/continuous Plus logic capture and bring-up
+verification. Python integration and remaining signal comparisons
 are tracked separately in [PLAN.md](PLAN.md) and [TASKS.md](TASKS.md).
 
 ## Build and offline tests
@@ -254,18 +255,38 @@ diagnostics go to stderr. With `--scan`, stdout contains one verified-device
 line after successful activation and cleanup:
 
 ```text
-2a0e:0034 DSLogic PLus bus=1 address=6 activated security=pass hdl=checked
+2a0e:0034 DSLogic PLus bus=1 address=6 speed=high activated security=pass hdl=checked
 ```
 
 Bus/address vary. The model spelling matches DSView's profile. Without
 `--scan`, bring-up emits only stderr diagnostics. `--help` prints usage.
 Default driver verbosity is errors only; `-v` enables information and `-vv`
 debug messages. `--scan` actively opens the device and verifies it, rather
-than merely enumerating it. Zero or multiple matching units fail; device
-selection for multiple analyzers is not implemented.
+than merely enumerating it. Use `--model plus|u3pro16` to restrict selection. With no model option,
+Plus is preferred when both models are attached, with a stderr note naming
+the ignored analyzer; a lone U3Pro16 is selected automatically. Zero matches
+or multiple units of the chosen model fail with exit 4 and a device listing.
+Firmware validation checks only the selected model's bitstream after enumeration
+and before activation; invalid firmware directories fail before initialization.
+
+The U3Pro16 (`2a0e:002a`) is **bring-up only** until the Phase 2 streaming
+and Phase 3 buffer/trigger gates pass. Its profile follows negotiated USB
+speed (`super` or `high`), and its scan line is, for example:
+
+```text
+2a0e:002a DSLogic U3Pro16 bus=2 address=4 speed=super activated security=n/a hdl=checked
+```
+
+The Plus requires explicit security-pass evidence on both opens. The U3Pro16
+has no profile security feature and reports `security=n/a`; an explicit security
+failure still rejects either model. Both must report HDL version 0x0e.
+The selected bitstream is `DSLogicPlus-pgl12-2.bin` or `DSLogicU3Pro16.bin`.
+An FX3 device that has lost its flashed firmware may fail to open; dslcap does
+not add a recovery path for missing `.fw` files.
 
 `--fw-dir DIR` defaults to `/usr/local/share/DSView/res` and must contain a
-nonempty readable regular file named `DSLogicPlus-pgl12-2.bin`. Directory
+nonempty readable regular file named after the selected model's bitstream
+(`DSLogicPlus-pgl12-2.bin` or `DSLogicU3Pro16.bin`). Directory
 names must contain 1–499 bytes because DSView copies them into a fixed
 500-byte buffer. Validate this file even if the FPGA is already configured,
 so an invalid explicit directory always fails. Set the resource directory
@@ -296,6 +317,10 @@ cmake -S dslcap -B /tmp/dslcap-build -DDSLCAP_BUILD_USB_TESTS=ON
 cmake --build /tmp/dslcap-build --target dslcap_reload_fpga
 timeout 30s /tmp/dslcap-build/dslcap_reload_fpga --scan -v
 ```
+
+**Plus only.** On the U3Pro16 this forced reload stalled and left the
+analyzer unable to configure until a USB replug (2026-10-20, see
+[U3PRO16_VALIDATION.md](U3PRO16_VALIDATION.md)). Don't run it there.
 
 `DSLCAP_BUILD_USB_TESTS` defaults to `OFF`. This binary reuses the same
 guarded frontend, with the reload helper enabled only for that target;

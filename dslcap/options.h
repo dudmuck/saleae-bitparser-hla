@@ -9,7 +9,10 @@ struct dsl_serial_trigger {
     uint16_t value;
     unsigned bits;
 };
+struct DSL_profile;
 struct dsl_options {
+    int model; // -1 automatic, 0 plus, 1 u3pro16.
+    const struct DSL_profile *profile; // Selected by PID and negotiated USB speed.
     const char *fw_dir;
     uint64_t rate, samples;
     uint16_t channels;

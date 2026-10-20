@@ -2,7 +2,7 @@
 function(check_case scenario expected_code expected_error)
     execute_process(COMMAND "${CMAKE_COMMAND}" -E env
         "DSLCAP_TEST_SCENARIO=${scenario}" "${PROGRAM}"
-        --scan --fw-dir "${FIRMWARE}"
+        --scan --fw-dir "${FIRMWARE}" ${ARGN}
         RESULT_VARIABLE code OUTPUT_VARIABLE out ERROR_VARIABLE err TIMEOUT 10)
     if(NOT "${code}" STREQUAL "${expected_code}")
         message(FATAL_ERROR "${scenario}: expected ${expected_code}, got ${code}\n${out}\n${err}")
@@ -18,7 +18,15 @@ function(check_case scenario expected_code expected_error)
         message(FATAL_ERROR "${scenario}: missing driver cleanup\n${err}")
     endif()
     if(expected_code EQUAL 0)
-        if(NOT out MATCHES "^2a0e:0034 DSLogic PLus bus=1 address=6 activated security=pass hdl=checked\n$")
+        set(expected "2a0e:0034 DSLogic PLus bus=1 address=6 speed=high activated security=pass hdl=checked\n")
+        if(scenario MATCHES "^u3-" OR "${ARGN}" MATCHES "u3pro16")
+            set(speed super)
+            if(scenario STREQUAL "u3-high")
+                set(speed high)
+            endif()
+            set(expected "2a0e:002a DSLogic U3Pro16 bus=1 address=6 speed=${speed} activated security=n/a hdl=checked\n")
+        endif()
+        if(NOT out STREQUAL expected)
             message(FATAL_ERROR "${scenario}: bad scan stdout: ${out}")
         endif()
         if(NOT err MATCHES "FAKE activation=2")
@@ -60,3 +68,32 @@ foreach(directory IN ITEMS "${FIRMWARE}/nonexistent" "${long_path}" "")
     endif()
 endforeach()
 message(STATUS "invalid, empty and 500-byte firmware paths rejected before driver init")
+
+check_case(u3-super 0 "security=n/a")
+check_case(u3-high 0 "security=n/a")
+check_case(u3-no-security 0 "security=n/a")
+check_case(u3-security-fail 6 "security check failed")
+check_case(both-models 0 "ignoring 1 DSLogic U3Pro16")
+check_case(both-models 0 "security=n/a" --model u3pro16)
+check_case(both-models 0 "security=pass" --model plus)
+check_case(success 4 "found 0" --model u3pro16)
+check_case(u3-super 4 "found 0" --model plus)
+check_case(multiple 4 "found 2" --model plus)
+
+file(MAKE_DIRECTORY "${FIRMWARE}/plus-only")
+file(WRITE "${FIRMWARE}/plus-only/DSLogicPlus-pgl12-2.bin" "fake\n")
+execute_process(COMMAND "${CMAKE_COMMAND}" -E env DSLCAP_TEST_SCENARIO=u3-super
+    "${PROGRAM}" --scan --fw-dir "${FIRMWARE}/plus-only"
+    RESULT_VARIABLE code OUTPUT_VARIABLE out ERROR_VARIABLE err TIMEOUT 10)
+if(NOT code EQUAL 3 OR NOT out STREQUAL "" OR NOT err MATCHES "DSLogicU3Pro16.bin" OR err MATCHES "FAKE activation")
+    message(FATAL_ERROR "missing selected bitstream was not rejected before activation: ${code} ${err}")
+endif()
+# An explicit selection must not require the other model's bitstream.
+file(MAKE_DIRECTORY "${FIRMWARE}/u3-only")
+file(WRITE "${FIRMWARE}/u3-only/DSLogicU3Pro16.bin" "fake\n")
+execute_process(COMMAND "${CMAKE_COMMAND}" -E env DSLCAP_TEST_SCENARIO=both-models
+    "${PROGRAM}" --scan --model u3pro16 --fw-dir "${FIRMWARE}/u3-only"
+    RESULT_VARIABLE code OUTPUT_VARIABLE out ERROR_VARIABLE err TIMEOUT 10)
+if(NOT code EQUAL 0 OR NOT out MATCHES "security=n/a")
+    message(FATAL_ERROR "selected-only firmware failed: ${code} ${err}")
+endif()

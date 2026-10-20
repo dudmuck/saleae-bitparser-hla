@@ -3,17 +3,33 @@
 #include "status.h"
 #include <hardware/DSL/dsl.h>
 
-static const struct DSL_profile *profile(void)
+static const struct dsl_model models[] = {
+    {0x0034, "DSLogic PLus", "DSLogicPlus-pgl12-2.bin", 1},
+    {0x002a, "DSLogic U3Pro16", "DSLogicU3Pro16.bin", 0},
+};
+
+const struct dsl_model *dsl_model_at(unsigned index)
+{
+    return index < ARRAY_SIZE(models) ? &models[index] : NULL;
+}
+
+const struct DSL_profile *dsl_profile(uint16_t pid, int usb_speed)
 {
     for (size_t i = 0; supported_DSLogic[i].vid; i++)
-        if (supported_DSLogic[i].vid == 0x2a0e && supported_DSLogic[i].pid == 0x0034)
+        if (supported_DSLogic[i].vid == DS_VENDOR_ID &&
+            supported_DSLogic[i].pid == pid &&
+            (int)supported_DSLogic[i].usb_speed == usb_speed)
             return &supported_DSLogic[i];
     return NULL;
 }
 
-int dsl_choose_mode(int stream, uint64_t rate, uint16_t mask)
+int dsl_profile_needs_security(const struct DSL_profile *p)
 {
-    const struct DSL_profile *p = profile();
+    return p && (p->dev_caps.feature_caps & CAPS_FEATURE_SECURITY) != 0;
+}
+
+int dsl_choose_mode(const struct DSL_profile *p, int stream, uint64_t rate, uint16_t mask)
+{
     unsigned enabled = 0;
     for (unsigned i = 0; i < 16; i++) if (mask & (1u << i)) enabled++;
     int chosen = -1;
@@ -97,8 +113,10 @@ static int configure_serial(const struct dsl_serial_trigger *serial)
 
 int dsl_configure(struct dsl_options *o)
 {
-    int mode = o->pattern ? profile()->dev_caps.intest_channel :
-               dsl_choose_mode(o->stream, o->rate, o->channels);
+    const struct DSL_profile *p = o->profile;
+    if (!p) return DSL_CONFIG_ERROR;
+    int mode = o->pattern ? p->dev_caps.intest_channel :
+               dsl_choose_mode(p, o->stream, o->rate, o->channels);
     if (mode < 0) {
         fprintf(stderr, "dslcap: impossible samplerate/channel combination\n");
         return DSL_CONFIG_ERROR;
@@ -107,7 +125,7 @@ int dsl_configure(struct dsl_options *o)
         unsigned count = 0;
         for (unsigned i = 0; i < 16; i++) if (o->channels & (1u << i)) count++;
         uint64_t aligned = (o->samples + SAMPLES_ALIGN) & ~SAMPLES_ALIGN;
-        if (aligned > profile()->dev_caps.hw_depth / count) {
+        if (aligned > p->dev_caps.hw_depth / count) {
             fprintf(stderr, "dslcap: finite buffer limit exceeds channel hardware depth\n");
             return DSL_CONFIG_ERROR;
         }
@@ -130,7 +148,7 @@ int dsl_configure(struct dsl_options *o)
         o->rate = g_variant_get_uint64(value); g_variant_unref(value);
         if (get(SR_CONF_LIMIT_SAMPLES, G_VARIANT_TYPE_UINT64, &value)) return DSL_CONFIG_ERROR;
         o->samples = g_variant_get_uint64(value); g_variant_unref(value);
-        if (o->rate != 100000000 || o->samples != profile()->dev_caps.hw_depth / 16) {
+        if (o->rate != 100000000 || o->samples != p->dev_caps.hw_depth / 16) {
             fprintf(stderr, "dslcap: unexpected internal-pattern forced configuration\n");
             return DSL_CONFIG_ERROR;
         }
@@ -171,7 +189,7 @@ int dsl_configure(struct dsl_options *o)
         return DSL_CONFIG_ERROR;
     if (o->trigger) {
         o->trigger_effective = dsl_trigger_position(o->trigger_pos, o->arm_limit,
-                (profile()->dev_caps.hw_depth / (unsigned)enabled) & ~SAMPLES_ALIGN);
+                (p->dev_caps.hw_depth / (unsigned)enabled) & ~SAMPLES_ALIGN);
         if (ds_trigger_set_pos((uint16_t)o->trigger_pos) != SR_OK ||
             ds_trigger_set_mode(o->serial ? SERIAL_TRIGGER : SIMPLE_TRIGGER) != SR_OK) return DSL_CONFIG_ERROR;
         if (o->serial && configure_serial(&o->serial_trigger)) return DSL_CONFIG_ERROR;
