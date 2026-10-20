@@ -109,6 +109,7 @@ int main(int argc, char **argv)
     struct dsl_options options;
     int parse_result = dsl_parse_options(argc, argv, &options);
     if (parse_result) return parse_result == 1 ? 0 : parse_result;
+    if (options.list_modes) return dsl_list_modes(options.model, options.speed);
     const char *fw_dir = options.fw_dir;
     int scan = options.scan, verbosity = options.verbosity;
     // Reject combinations impossible for every eligible static profile before
@@ -217,6 +218,23 @@ int main(int argc, char **argv)
     if (needs_security != selected->needs_security) {
         fprintf(stderr, "dslcap: profile security mismatch for %s\n", selected->name);
         rc = EXIT_DEVICE;
+        goto cleanup;
+    }
+    if (options.capture)
+        fprintf(stderr, "dslcap: selected %04x:%04x %s speed=%s\n",
+                TARGET_VID, selected->pid, selected->name,
+                speed == LIBUSB_SPEED_SUPER ? "super" : "high");
+#ifdef DSLCAP_TEST_RELOAD_FPGA
+    if (selected != dsl_model_at(0)) {
+        fprintf(stderr, "dslcap: forced FPGA reload is supported only on the Plus; refusing %s\n", selected->name);
+        rc = DSL_CONFIG_ERROR;
+        goto cleanup;
+    }
+#endif
+    if (selected != dsl_model_at(0) && options.capture &&
+        (!options.stream || options.trigger || options.serial || options.pattern)) {
+        fprintf(stderr, "dslcap: buffer/trigger/test-pattern not validated on U3Pro16 (Phase 3)\n");
+        rc = DSL_CONFIG_ERROR;
         goto cleanup;
     }
     rc = validate_firmware(fw_dir, selected->bitstream);

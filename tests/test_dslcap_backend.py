@@ -1,3 +1,4 @@
+import json
 import contextlib
 import io
 import os
@@ -14,13 +15,14 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 import sigrok_hla as hla
+from test_dslcap_models import RECORDED
 
 FIXTURE = Path(__file__).parent / 'dslcap'
 CMD = [sys.executable, str(FIXTURE / 'fake_producer.py')]
 
 
 def arguments(**changes):
-    values = dict(dslogic=True, saleae=False, driver=None, input_file=None,
+    values = dict(_dsl_mode_profiles=RECORDED['profiles'], dsl_model='auto', dslogic=True, saleae=False, driver=None, input_file=None,
         input_format=None, transform=None, engine='numpy', channels=None,
         samplerate='1M', samples='76', time=None, continuous=False,
         int_pin=None, extra_pin=[], dslcap='dslcap', vth=None, dslcap_verbose=0,
@@ -217,7 +219,8 @@ class BackendTests(unittest.TestCase):
     def test_cli_success_and_producer_failure(self):
         with tempfile.TemporaryDirectory(prefix='dslcap-python-') as folder:
             wrapper = Path(folder) / 'fake dslcap'
-            wrapper.write_text('#!/usr/bin/env python3\nimport runpy\n'
+            wrapper.write_text('#!/usr/bin/env python3\nimport runpy, sys\n'
+                f'if "--list-modes" in sys.argv: print({json.dumps(RECORDED)!r}); sys.exit(0)\n'
                 f'runpy.run_path({str(FIXTURE / "fake_producer.py")!r}, run_name="__main__")\n')
             wrapper.chmod(0o755)
             command = [sys.executable, str(ROOT / 'sigrok_hla.py'), '--dslogic',

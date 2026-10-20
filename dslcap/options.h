@@ -11,6 +11,7 @@ struct dsl_serial_trigger {
 };
 struct DSL_profile;
 struct dsl_options {
+    int list_modes, speed; // Static profile listing; speed 0 means all.
     int model; // -1 automatic, 0 plus, 1 u3pro16.
     const struct DSL_profile *profile; // Selected by PID and negotiated USB speed.
     const char *fw_dir;
@@ -24,7 +25,7 @@ struct dsl_options {
     struct dsl_serial_trigger serial_trigger;
     int scan, verbosity, stream, continuous, pattern, capture;
 };
-// 0 success, 1 help printed, 2 invalid usage (diagnostic on stderr).
+// 0 success, 1 help printed, 2 invalid usage, 8 explicit Phase 3 fence.
 int dsl_parse_options(int argc, char **argv, struct dsl_options *options);
 int dsl_parse_channels(const char *text, uint16_t *mask);
 int dsl_parse_quantity(const char *text, uint64_t *value);

@@ -1,8 +1,8 @@
 # dslcap
 
 Standalone GPLv3-or-later frontend for a DSLogic Plus PGL12 analyzer
-(`2a0e:0034`), with Phase 1 bring-up support for the U3Pro16 (`2a0e:002a`).
-Supports standalone finite/continuous Plus logic capture and bring-up
+(`2a0e:0034`), with streaming support for the U3Pro16 (`2a0e:002a`).
+Supports standalone finite/continuous logic capture and bring-up
 verification. Python integration and remaining signal comparisons
 are tracked separately in [PLAN.md](PLAN.md) and [TASKS.md](TASKS.md).
 
@@ -79,7 +79,7 @@ Bring-up without capture arguments keeps stdout empty; `--scan` is a
 separate verified-device text mode and cannot be combined with capture flags.
 
 Among supported modes, choose the largest valid-channel count that carries
-the requested rate and physical channels: stream limits are 20M×16,
+the requested rate and physical channels. Plus stream limits are 20M×16,
 25M×12, 50M×6 and 100M×3. All stream modes expose the 16 physical inputs.
 Buffer modes expose 16, 8 or 4 physical inputs at 100M, 200M or 400M.
 Rates must appear in the pinned profile's supported list and have an exact
@@ -131,6 +131,111 @@ with a clear error so the OS releases USB handles; reopen must then be
 verified. Continuous collection has no overall duration deadline. An
 external `timeout` remains useful for hardware test bounds. The application
 draining dslcap must continuously drain stderr too.
+
+## Static mode API and U3Pro16 streaming
+
+`dslcap --list-modes [--model plus|u3pro16] [--speed super|high]`
+prints one JSON document without USB access, driver initialization, or firmware
+validation. It lists all three available profiles by default: Plus/high,
+U3Pro16/high and U3Pro16/super. An unsupported explicit pair (Plus/super)
+exits 2 with an empty stdout and a diagnostic.
+
+Schema version 1 is `{ "schema": 1, "profiles": [...] }`. Each profile has:
+
+- `model`: `plus` or `u3pro16`; `pid`: integer USB product ID;
+  `usb_speed`: `high` or `super`.
+- `rates`: DSView's full integer Hz rate list. A rate must also fit a mode.
+- `modes`: objects with DSView mode `id` and descriptive `name`, boolean
+  `stream`, integer `min_rate`/`max_rate` (Hz), `vld_num` (usable channel
+  count), `num` (physical lane range 0 through num−1), boolean `validated`,
+  and `rates` (the exact representable rates for that mode).
+
+`validated` marks enabled frontend paths; U3Pro16 buffer modes are false.
+It does not claim that pending hardware gates have passed. Rates use the same
+HALF/QUAR and divider rules as capture. Plus uses ×2/×4 packing; the U3Pro16's
+fixed 500 MHz ADF4360 clock uses ×1/×2. USB high U3Pro16 stream modes have a
+100 kHz minimum and the same count limits as Plus. At SuperSpeed its limits
+are 125M×16, 250M×12, 500M×6 and 1G×3; 1G only exposes CH0–7. Minimum rate
+is 1 MHz. Counts and physical lanes both constrain a request.
+
+Capture stderr includes exactly one selection line before activation:
+`dslcap: selected 2a0e:002a DSLogic U3Pro16 speed=super` (model/speed vary).
+Python queries `--list-modes` once per run and accepts a request if any
+eligible profile supports it; dslcap checks the actual selected profile.
+Python's `--dsl-model auto|plus|u3pro16` defaults to `auto`, preserving the
+Plus preference when both models are attached.
+
+Live Python decoding sustains about 100–130 MB/s in the measured workload.
+Above that use `--raw-out FILE` and offline replay. 250M×12 carries about
+500 MB/s; 125M×16 carries 250 MB/s, and 1G×3 below CH8 carries 1 GB/s.
+The producer's ring is 256 MiB; sustained disk throughput and capture duration
+must fit the requested rate. Raw sidecars include `model` (DSView name) and
+`usb_speed` from the actual selection line; old sidecars remain replayable.
+
+## Offline W1 tools
+
+`tools/pi_pattern.c` is a standalone BCM2711 generator for the W1 lines in
+[U3PRO16_PLAN.md](U3PRO16_PLAN.md). Build with
+`gcc -O2 -Wall -Wextra -Werror dslcap/tools/pi_pattern.c -o /tmp/pi_pattern`.
+On this host use only `--dry-run`. For example:
+
+```sh
+/tmp/pi_pattern walk --duration 0.02 --step-us 10 --dry-run
+/tmp/pi_pattern prbs --duration 1 --states 1000 --seed 1 --dry-run
+/tmp/pi_pattern spi --duration 1 --states 804 --dry-run --manifest /tmp/spi-manifest.jsonl
+python3 -m unittest discover -s tests -p test_pi_pattern.py
+```
+
+Real use belongs to the lead on the Pi after ownership/wiring checks. The
+only mapping is `/dev/gpiomem`; all eight lines must start as inputs. Pin
+order is GPIO21,19,20,16,13,6,22,25. `--mask` must be exactly that allowed
+set. Every run requires `--duration` (0 < seconds ≤ 3600). Exit, SIGINT,
+SIGTERM and handled errors restore inputs and BCM2711 default pulls (GPIO6
+up, the others down) and read them back. `--step-us` is at least 10 for walk
+and SPI; real PRBS runs at CPU/MMIO speed. Dry runs use simulated step time,
+optionally capped by `--states`; they do not estimate the real PRBS rate.
+Walk cycles through eight walking-one states then 256 Gray-code states.
+PRBS uses x^8+x^6+x^5+x^4+1, seed 1..255, never equal consecutive states.
+SPI is mode 0, MSB-first, 16-byte frames with PRBS9 seeds 1/341 on MOSI/MISO,
+x^9+x^5+1, and a fixed 16-step NSS-high gap. `--manifest` is mandatory for
+real SPI; it creates a new JSONL file, with frame index and MOSI/MISO hex for
+each fully sent frame. An interrupted frame is excluded. Output paths are
+never overwritten. Dry-run stdout contains a JSON header and indexed state
+records; SPI frame records go to the manifest, or stdout if none was given.
+
+`tools/check_pattern.py RAW --pattern walk|prbs --group 0 [--group 8]`
+reads META + 1/2-byte samples in chunks. `--unitsize 2` handles wide files
+without sidecars; otherwise width comes from the sidecar or highest group.
+Each group aligns independently anywhere in its cycle; at least one cycle
+is required. It diagnoses the first mismatch with sample index, including
+dropped/duplicated/reordered state blocks and stuck/swapped lanes. Walk
+`--step-us N` reports dwell histograms and warns, without failing, outside
+0.5×–3× nominal. `--dwell-out FILE` writes each complete state's group,
+sample index, value and dwell samples as JSONL. For SPI use
+`--pattern spi --manifest FILE --hla-path HLA_DIR` to replay raw through
+`sigrok_hla.py --dslogic -i --hex`, or `--decode` to check saved hex output
+(`--bus SPI_B` selects a labeled bus). Byte order, frame order and count must
+match the manifest exactly; arm capture before starting the generator.
+
+Distinct-state checks cannot distinguish same-state duplication from longer
+dwell, or loss of an entire repeating cycle. Repeated USB blocks containing
+transitions are detectable. GPCLR0 and GPSET0 are separate writes, so
+multi-bit walk/PRBS transitions can expose an intermediate state at high
+sample rates. The generator always clears first, sets second, and skips empty
+writes. The sole allowed intermediate on A→B is A&B, once, when it differs
+from both endpoints; the checker counts those per group and rejects every
+other extra transition. Gray-code transitions have zero intermediates.
+SPI changes SCLK in separate states from data setup. Identical adjacent
+intermediate samples are dwell, subject to the same observability limit
+above; repeated transitions through an intermediate are rejected.
+
+P3 clock generation is deferred: `/dev/gpiomem` exposes no clock-manager
+registers. Root `/dev/mem` would grant broad privileged register access and
+could disturb shared clocks. A clock overlay changes boot configuration,
+claims pins/clocks and generally requires a reboot. Kernel PWM would claim
+pinmux/PWM resources (including W1-capable GPIO13/19) and may require an
+overlay; available frequencies differ from GPCLK. All require separate
+system/ownership approval and are outside this implementation.
 
 ## Simple buffer triggers
 
@@ -269,8 +374,9 @@ or multiple units of the chosen model fail with exit 4 and a device listing.
 Firmware validation checks only the selected model's bitstream after enumeration
 and before activation; invalid firmware directories fail before initialization.
 
-The U3Pro16 (`2a0e:002a`) is **bring-up only** until the Phase 2 streaming
-and Phase 3 buffer/trigger gates pass. Its profile follows negotiated USB
+The U3Pro16 (`2a0e:002a`) supports streaming in Phase 2, pending live U2–U5
+gates. Buffer, simple/serial trigger and internal-pattern capture are rejected
+with exit 8 (`not validated on U3Pro16 (Phase 3)`). Its profile follows negotiated USB
 speed (`super` or `high`), and its scan line is, for example:
 
 ```text
@@ -294,14 +400,14 @@ before library initialization, which itself scans attached devices.
 
 Activation checks the actual active USB handle and driver last-error status;
 DSView can otherwise return success after falling back to its demo device.
-The stderr receiver must observe `Security check pass!` and no
+On the Plus, the stderr receiver must observe `Security check pass!` and no
 `Security check failed!` for each activation. Success is logged at the
 driver's error level, so the default verbosity retains this evidence.
 
 An unconfigured FPGA loads the bitstream; an already configured FPGA is
 reused. After initial activation, dslcap releases and reopens the analyzer
 to exercise the driver's configured-FPGA HDL check, then explicitly reads
-the HDL version and requires `0x0e`. Security must pass again on reopen.
+the HDL version and requires `0x0e`. The Plus security check must pass again on reopen.
 `-v` shows `Configure FPGA using ...` / `FPGA configure done ...` only when
 a load occurs. A warm reopen does not prove a fresh bitstream upload.
 

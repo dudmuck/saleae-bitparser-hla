@@ -10,7 +10,7 @@ Three capture backends are supported:
 |---------|------|----------|--------------|
 | **Saleae** | `--saleae` | Saleae Logic 8, Pro 8, Pro 16 | Connects to Logic 2 app via automation API (gRPC on port 10430) |
 | **sigrok** | `-d DRIVER` | sigrok-supported analyzers | Runs sigrok-cli with the shared NumPy decoder, or the optional srd SPI decoder |
-| **DSLogic** | `--dslogic` | DSLogic Plus PGL12 (`2a0e:0034`) | Runs dslcap with the shared NumPy decoder |
+| **DSLogic** | `--dslogic` | DSLogic Plus PGL12 / U3Pro16 | Runs dslcap with the shared NumPy decoder |
 
 Both backends work with the Saleae Logic 8 (21a9:1004). The **sigrok backend** uses the `saleae-logic-pro` driver (requires libsigrok built from source with Logic 8 support). The **Saleae backend** uses the Logic 2 app's automation API.
 
@@ -69,6 +69,25 @@ capture, select exactly one of `--samples`, `--time`, or
 `--continuous`. The default rate is 25M, threshold 1.6 V; `--vth V` accepts
 0–2.5 V. Unsupported rates/channel counts are rejected before the producer
 is launched, and dslcap verifies its own configuration and readback.
+
+`--dsl-model auto|plus|u3pro16` selects the analyzer family (default `auto`,
+Plus preferred if both are attached). Python makes one static
+`dslcap --list-modes` query per live run using `--dslcap PATH`; rates, channel
+counts and physical lane limits come from that JSON API. A request must fit
+at least one eligible model/speed profile; the selected device is the final
+authority. Replay needs no dslcap executable or mode query.
+
+U3Pro16 SuperSpeed streaming supports up to 125M×16, 250M×12, 500M×6 and
+1G×3 (CH0–7 only at 1G), with a 1 MHz minimum. USB high has a 100 kHz minimum
+and the Plus-style 20M×16 / 25M×12 / 50M×6 / 100M×3 modes. The U3Pro16's
+buffer, simple trigger, serial trigger and internal-pattern paths are fenced
+until Phase 3; the producer rejects them before activation. Plus buffer and
+trigger behavior is unchanged. Live U3Pro16 gates are tracked separately.
+
+Live decoding sustains about 100–130 MB/s in the measured workload. Use
+`--raw-out` and replay above that rate: 125M×16 is 250 MB/s and 250M×12 is
+about 500 MB/s. Sustained disk bandwidth and the producer's 256 MiB ring
+must accommodate the capture.
 
 ### DSLogic buffer triggers
 
@@ -284,7 +303,9 @@ For long or busy runs, record dslcap's raw output to a local file and decode it
 afterwards. `--raw-out FILE` runs the same derived dslcap command with stdout
 going straight to FILE, so no Python sits in the sample path, and it writes a
 `FILE.json` record (command, captured channels, sample width, META line count,
-exit status, byte count). It refuses to start if either FILE or `FILE.json`
+exit status, byte count, selected DSView `model` name and `usb_speed`).
+The last two fields come from dslcap's selected-device stderr line; old
+records without them still replay. It refuses to start if either FILE or `FILE.json`
 already exists, and exits with dslcap's status (128 + signal if dslcap was
 killed). Ctrl-C or SIGTERM to sigrok_hla.py is forwarded to dslcap, which then
 drains and stops; it is escalated to TERM and KILL if dslcap is still running

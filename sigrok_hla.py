@@ -5,9 +5,13 @@ Live SPI capture with HLA decoding via sigrok-cli, dslcap or Saleae Logic 2.
 Three backends:
   sigrok:  Uses sigrok-cli SPI protocol decoder (for sigrok-supported hardware)
   saleae:  Uses Saleae Logic 2 automation API (requires Logic 2 app with automation enabled)
-  dslogic: Uses dslcap for DSLogic Plus PGL12, with the shared NumPy decoder
+  dslogic: Uses dslcap for DSLogic Plus PGL12 or U3Pro16 streaming, with the shared NumPy decoder
 
 Examples:
+  # --dsl-model auto|plus|u3pro16 selects the family; auto prefers Plus.
+  # U3Pro16/super streams 125M x16, 250M x12, 500M x6, 1G x3 (CH0-7).
+  # Above ~100-130 MB/s use --raw-out then replay; 250M x12 is ~500 MB/s.
+  # U3Pro16 buffer/trigger/internal-pattern capture is fenced until Phase 3.
   # DSLogic Plus PGL12 - pi133/pi134 dual SPI, streaming at 25M
   ./sigrok_hla.py --hla-path ~/HLA/saleae_lr2021 --dslogic \\
       --dslcap /tmp/dslcap-build/dslcap --spi 0,1,2,3 --spi 8,9,10,11 \\
@@ -623,6 +627,7 @@ def validate_backend_args(args, spi_ports):
     if not getattr(args, 'dslogic', False):
         if (getattr(args, 'dslcap_verbose', 0) or getattr(args, 'vth', None) is not None or
                 getattr(args, 'dsl_mode', 'stream') != 'stream' or
+                getattr(args, 'dsl_model', 'auto') != 'auto' or
                 any(getattr(args, key, None) is not None for key in
                     ('trigger', 'serial_trigger', 'trigger_pos', 'trigger_timeout', 'on_timeout', 'drain_timeout'))):
             raise SystemExit('DSLogic capture options require --dslogic.')
@@ -708,15 +713,59 @@ def validate_backend_args(args, spi_ports):
     if rate != int(rate) or rate > 2**64 - 1:
         raise SystemExit('--samplerate must be an integer rate within the producer limit.')
     bits = _used_channel_bits(ports, pins, triggers)
-    allowed = {50000, 100000, 200000, 400000, 500000, 1000000, 2000000, 4000000,
-               5000000, 10000000, 20000000, 25000000, 50000000, 100000000, 200000000, 400000000}
-    if rate not in allowed or (mode == 'stream' and
-            (rate > 100000000 or len(bits) > (16 if rate <= 20000000 else
-                                            12 if rate == 25000000 else 6 if rate == 50000000 else 3))):
-        raise SystemExit('Unsupported DSLogic samplerate/channel combination.')
-    if mode == 'buffer' and ((rate == 200000000 and max(bits) >= 8) or
-                             (rate == 400000000 and max(bits) >= 4)):
+    model = getattr(args, 'dsl_model', 'auto')
+    if model not in ('auto', 'plus', 'u3pro16'):
+        raise SystemExit('--dsl-model must be plus, u3pro16 or auto.')
+    if model == 'u3pro16' and mode == 'buffer':
+        raise SystemExit('Buffer/trigger capture not validated on U3Pro16 (Phase 3).')
+    profiles = dslcap_mode_profiles(args)
+    eligible = [p for p in profiles if model == 'auto' or p['model'] == model]
+    candidates = [m for p in eligible for m in p['modes']
+                  if rate in p['rates'] and m['stream'] == (mode == 'stream') and
+                  m['validated'] and m['min_rate'] <= rate <= m['max_rate'] and
+                  rate in m['rates'] and len(bits) <= m['vld_num']]
+    if any(max(bits) < m['num'] for m in candidates):
+        return
+    if candidates and mode == 'buffer':
         raise SystemExit('Fast DSLogic buffer mode exceeds physical lane limits.')
+    raise SystemExit('Unsupported DSLogic samplerate/channel combination.')
+
+
+def dslcap_mode_profiles(args):
+    """Read the static mode API once per run; replay never calls this."""
+    cached = getattr(args, '_dsl_mode_profiles', None)
+    if cached is not None:
+        return cached
+    try:
+        result = subprocess.run([args.dslcap, '--list-modes'], capture_output=True,
+                                text=True, timeout=10, check=True)
+        document = json.loads(result.stdout)
+        if document.get('schema') != 1 or not isinstance(document.get('profiles'), list):
+            raise ValueError('expected schema 1 and profiles array')
+        profiles = document['profiles']
+        if not profiles:
+            raise ValueError('empty profile list')
+        for p in profiles:
+            if p['model'] not in ('plus', 'u3pro16') or p['usb_speed'] not in ('high', 'super'):
+                raise ValueError('unknown model/speed')
+            if not isinstance(p['rates'], list) or any(type(r) is not int or r <= 0 for r in p['rates']):
+                raise ValueError('invalid profile rates')
+            if not isinstance(p['modes'], list):
+                raise ValueError('invalid modes')
+            for m in p['modes']:
+                if (type(m['stream']) is not bool or type(m['validated']) is not bool or
+                    any(type(m[k]) is not int for k in ('id', 'num', 'vld_num', 'min_rate', 'max_rate')) or
+                    not 1 <= m['vld_num'] <= m['num'] <= 16 or
+                    not 0 < m['min_rate'] <= m['max_rate'] or
+                    not isinstance(m['rates'], list) or
+                    any(type(r) is not int or r not in p['rates'] or
+                        not m['min_rate'] <= r <= m['max_rate'] for r in m['rates'])):
+                    raise ValueError('invalid mode fields')
+    except (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError, AttributeError) as error:
+        raise SystemExit(f'Cannot read dslcap --list-modes: {error}') from error
+    args._dsl_mode_profiles = profiles
+    return profiles
+
 
 
 def _validate_dslogic_names(args):
@@ -824,6 +873,9 @@ def build_dslcap_cmd(args, spi_ports):
     cmd = [args.dslcap, '--samplerate', str(int(rate)), '--channels',
            ','.join(str(bit) for bit in bits), '--vth',
            str(args.vth if args.vth is not None else 1.6), '--mode', getattr(args, 'dsl_mode', 'stream')]
+    model = getattr(args, 'dsl_model', 'auto')
+    if model != 'auto':
+        cmd += ['--model', model]
     if args.samples:
         cmd += ['--samples', str(int(parse_samplerate(args.samples)))]
     elif args.time:
@@ -1163,7 +1215,7 @@ def run_dslcap_raw_out(args, spi_ports):
     ports, pins, triggers = resolve_channel_indices(args, spi_ports, include_triggers=True)
     bits = _used_channel_bits(ports, pins, triggers)
     triggered = bool(getattr(args, 'trigger', None) or getattr(args, 'serial_trigger', None))
-    record = dict(format='dslcap-raw-v1', command=cmd, channels=bits,
+    record = dict(format='dslcap-raw-v1', command=cmd, channels=bits, model=None, usb_speed=None,
                   unitsize=2 if any(bit >= 8 for bit in bits) else 1,
                   meta_lines=2 if triggered else 1,
                   start_utc=datetime.datetime.now(datetime.timezone.utc).isoformat())
@@ -1185,10 +1237,25 @@ def run_dslcap_raw_out(args, spi_ports):
     with out:
         print(f"Running: {' '.join(cmd)} > {args.raw_out}", file=sys.stderr)
         try:
-            proc = subprocess.Popen(cmd, stdout=out)
+            proc = subprocess.Popen(cmd, stdout=out, stderr=subprocess.PIPE)
         except OSError as error:
             raise CaptureError(f'dslcap could not start: {error}') from error
-        returncode = _wait_raw_producer(proc)
+        def forward_stderr():
+            with proc.stderr:
+                for line in iter(proc.stderr.readline, b''):
+                    text = line.decode(errors='replace')
+                    match = re.fullmatch(r'dslcap: selected [0-9a-f]{4}:[0-9a-f]{4} (.+) speed=(super|high)\n?', text)
+                    if match:
+                        record.update(model=match[1], usb_speed=match[2])
+                    print(text, end='', file=sys.stderr, flush=True)
+        reader = threading.Thread(target=forward_stderr, daemon=True)
+        reader.start()
+        try:
+            returncode = _wait_raw_producer(proc)
+        finally:
+            reader.join(timeout=5)
+        if reader.is_alive():
+            raise CaptureError('dslcap stderr did not close after producer exit')
     # Like the live path: a signal death is reported as 128 + signal.
     code = 128 - returncode if returncode < 0 else returncode
     record.update(exit=code, bytes=os.path.getsize(args.raw_out),
@@ -1636,7 +1703,9 @@ def main():
     backend.add_argument('--saleae', action='store_true',
                         help='Use Saleae Logic 2 automation API (requires Logic 2 with automation enabled)')
     backend.add_argument('--dslogic', action='store_true',
-                        help='Use dslcap for DSLogic Plus PGL12 (NumPy, physical channels 0..15)')
+                        help='Use dslcap for DSLogic Plus or U3Pro16 (NumPy, physical channels 0..15)')
+    parser.add_argument('--dsl-model', choices=('auto', 'plus', 'u3pro16'), default='auto',
+                        help='[dslogic] Analyzer model (default: auto, Plus preferred)')
     parser.add_argument('--dslcap', default='dslcap', metavar='PATH',
                         help='[dslogic] dslcap executable (default: dslcap on PATH)')
     parser.add_argument('--vth', type=float, default=None,
@@ -1736,7 +1805,7 @@ def main():
     else:
         if not args.dslogic and not args.driver and not args.input_file:
             parser.error('sigrok backend requires -d (driver) or -i (input file). '
-                         'Use --saleae for Logic 2 or --dslogic for DSLogic Plus.')
+                         'Use --saleae for Logic 2 or --dslogic for DSLogic Plus or U3Pro16.')
         run_sigrok_backend(args, spi_ports, port_name_list)
 
 

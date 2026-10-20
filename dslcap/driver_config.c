@@ -28,6 +28,79 @@ int dsl_profile_needs_security(const struct DSL_profile *p)
     return p && (p->dev_caps.feature_caps & CAPS_FEATURE_SECURITY) != 0;
 }
 
+unsigned dsl_rate_factor(const struct DSL_profile *p, uint64_t rate)
+{
+    int adf = (p->dev_caps.feature_caps & CAPS_FEATURE_ADF4360) != 0;
+    if (rate == p->dev_caps.quarter_samplerate) return adf ? 2 : 4;
+    if (rate == p->dev_caps.half_samplerate) return adf ? 1 : 2;
+    return 1;
+}
+
+static int exact_mode_rate(const struct DSL_profile *p, const struct DSL_channels *mode, uint64_t rate)
+{
+    if (rate < mode->min_samplerate || rate > mode->max_samplerate) return 0;
+    // dsl.c:1065-1066 applies HALF/QUAR in stream and buffer modes.
+    // The fixed 500M ADF4360 PLL uses x1/x2, versus the Plus's x2/x4.
+    uint64_t divider_rate = rate / dsl_rate_factor(p, rate);
+    if (!divider_rate || mode->hw_max_samplerate % divider_rate) return 0;
+    uint64_t divisor = mode->hw_max_samplerate / divider_rate;
+    return divisor < mode->pre_div || divisor % mode->pre_div == 0;
+}
+
+int dsl_list_modes(int model, int speed)
+{
+    if (model >= 0 && speed && !dsl_profile(models[model].pid, speed)) {
+        fprintf(stderr, "dslcap: unsupported model/speed pair: %s/%s\n",
+                model == 0 ? "plus" : "u3pro16", speed == LIBUSB_SPEED_SUPER ? "super" : "high");
+        return 2;
+    }
+    int first_profile = 1;
+    printf("{\"schema\":1,\"profiles\":[");
+    for (unsigned m = 0; dsl_model_at(m); m++) {
+        if (model >= 0 && model != (int)m) continue;
+        const int speeds[] = {LIBUSB_SPEED_HIGH, LIBUSB_SPEED_SUPER};
+        for (unsigned j = 0; j < ARRAY_SIZE(speeds); j++) {
+            if (speed && speed != speeds[j]) continue;
+            const struct DSL_profile *p = dsl_profile(models[m].pid, speeds[j]);
+            if (!p) continue;
+            printf("%s{\"model\":\"%s\",\"pid\":%u,\"usb_speed\":\"%s\",\"rates\":[",
+                    first_profile ? "" : ",", m == 0 ? "plus" : "u3pro16",
+                    models[m].pid, speeds[j] == LIBUSB_SPEED_HIGH ? "high" : "super");
+            first_profile = 0;
+            for (const uint64_t *r = p->dev_caps.samplerates; *r; r++)
+                printf("%s%" PRIu64, r == p->dev_caps.samplerates ? "" : ",", *r);
+            printf("],\"modes\":[");
+            int first_mode = 1;
+            for (unsigned i = 0; i < ARRAY_SIZE(channel_modes); i++) {
+                const struct DSL_channels *mode = &channel_modes[i];
+                if (!(p->dev_caps.channels & (UINT64_C(1) << i)) || mode->mode != LOGIC) continue;
+                char *name = g_strescape(mode->descr, NULL);
+                printf("%s{\"id\":%u,\"name\":\"%s\",\"stream\":%s,"
+                       "\"min_rate\":%" PRIu64 ",\"max_rate\":%" PRIu64 ","
+                       "\"vld_num\":%u,\"num\":%u,\"validated\":%s,"
+                       "\"rates\":[", first_mode ? "" : ",", i, name,
+                       mode->stream ? "true" : "false", mode->min_samplerate,
+                       mode->max_samplerate, mode->vld_num, mode->num,
+                       m == 0 || mode->stream ? "true" : "false");
+                g_free(name);
+                first_mode = 0;
+                // Per-mode exact rates keep callers independent of divider and
+                // HALF/QUAR rules while preserving the full profile rate list.
+                int first_rate = 1;
+                for (const uint64_t *r = p->dev_caps.samplerates; *r; r++) {
+                    if (!exact_mode_rate(p, mode, *r)) continue;
+                    printf("%s%" PRIu64, first_rate ? "" : ",", *r);
+                    first_rate = 0;
+                }
+                printf("]}");
+            }
+            printf("]}");
+        }
+    }
+    printf("]}\n");
+    return fflush(stdout) == EOF ? 7 : 0;
+}
+
 int dsl_choose_mode(const struct DSL_profile *p, int stream, uint64_t rate, uint16_t mask)
 {
     unsigned enabled = 0;
@@ -44,16 +117,9 @@ int dsl_choose_mode(const struct DSL_profile *p, int stream, uint64_t rate, uint
             mode->vld_num < enabled || rate < mode->min_samplerate || rate > mode->max_samplerate)
             continue;
         if (mode->num < 16 && (mask >> mode->num)) continue;
-        // FPGA arm rounds the hardware clock divider up; cached rate
-        // readback alone does not prove the advertised timebase is real.
-        uint64_t divider_rate = rate;
-        // DSLogic's 200M/400M buffer packing uses the half/quarter flags
-        // at a 100M hardware clock, as in dsl_fpga_arm's mode bits.
-        if (!stream && rate == p->dev_caps.half_samplerate) divider_rate /= 2;
-        if (!stream && rate == p->dev_caps.quarter_samplerate) divider_rate /= 4;
-        if (mode->hw_max_samplerate % divider_rate) continue;
-        uint64_t divisor = mode->hw_max_samplerate / divider_rate;
-        if (divisor >= mode->pre_div && divisor % mode->pre_div) continue;
+        // FPGA arm rounds dividers up, so cached readback alone cannot
+        // establish the advertised timebase.
+        if (!exact_mode_rate(p, mode, rate)) continue;
         if (chosen < 0 || mode->vld_num > channel_modes[chosen].vld_num) chosen = (int)i;
     }
     return chosen;

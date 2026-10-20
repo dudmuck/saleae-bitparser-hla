@@ -176,8 +176,11 @@ Scope: **Phases 1–2 only**; Phase 3 is deferred. **P5 rejected**: SPI tests
 use bit-banged P4 only, with no `config.txt` change or reboot.
 
 **Generator.** A small C tool, `dslcap/tools/pi_pattern.c`, built on each
-Pi with its own gcc. It writes BCM2711 `GPSET0`/`GPCLR0` through
-`/dev/gpiomem`, so all eight lines change in one register write. It only
+Pi with its own gcc. It writes BCM2711 `GPCLR0` then `GPSET0` through
+`/dev/gpiomem`. These are separate writes, so a step that both clears and
+sets lines passes through exactly one intermediate state, `prev & next`,
+which fast captures can see. The checker accepts only that state between
+two expected states (correction from ds-worker review, 2026-10-20). It only
 touches the eight W1 lines, refuses any other mask, and on exit or signal
 restores them to input with their default pull-down/pull-up. No new
 dependency. Patterns:

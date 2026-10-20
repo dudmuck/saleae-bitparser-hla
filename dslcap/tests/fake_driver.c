@@ -418,3 +418,11 @@ int ds_stop_collect(void)
     pthread_join(collect_thread, NULL); thread_started = 0;
     return SR_OK;
 }
+
+#ifdef DSLCAP_TEST_RELOAD_FPGA
+int dslcap_test_reload_fpga(const struct sr_dev_inst *device, const char *fw_dir, const char *bitstream)
+{
+    (void)device; (void)fw_dir; (void)bitstream;
+    abort(); // The non-Plus helper guard must reject before reaching here.
+}
+#endif

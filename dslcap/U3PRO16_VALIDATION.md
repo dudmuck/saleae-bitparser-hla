@@ -43,3 +43,25 @@ cold and warm open via the production binary are the validated paths. The
 helper should refuse non-Plus models (Phase 2 follow-up).
 
 The Plus was not attached; its regression scan is still owed before merge.
+
+## Phase 2 implementation review — PASS (offline)
+
+Task `dslcap-u3pro16-p2-20261020` (request SHA-256 `375057fa…2837`),
+implemented offline by ds-worker on `c223b79`. The lead rebuilt
+independently: ctest 8/8 (adds `model_contract`), `python3 -m unittest
+discover -s tests` 87 OK with 8 skipped. The half/quarter factor (Plus ×2/×4,
+ADF4360 ×1/×2, stream and buffer) was verified by both against
+`dsl.c:1065–1085`, `:1132`, `:1181` and `dslogic.c:1289–1290`. The test
+enumerates every 16-bit mask for all three profiles. `--list-modes`
+(schema 1) for U3Pro16/super lists 125M×16, 250M×12, 500M×6 and 1G×3
+(`num` 8) streams, and buffer 500M×16 / 1G×8 with `validated=false`.
+`plus/super` exits 2. U3Pro16 buffer, trigger, serial and pattern paths are
+fenced (exit 8) before activation; the reload helper refuses non-Plus models.
+
+`pi_pattern.c` was reviewed in full for Pi safety: W1-only mask, input
+precheck, CLR-then-SET order with a single `prev & next` intermediate,
+SCLK-only writes, bounded duration, restore and readback on exit and signals.
+Non-blocking notes: GPFSEL/pull updates are read-modify-write on shared
+registers; `spi` is ~33 kbit/s at the 10 µs minimum step; the `validated`
+field means "frontend enabled", not live-validated. No live gate has run
+yet (U2–U5 pending).

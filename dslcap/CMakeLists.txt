@@ -91,6 +91,17 @@ if(BUILD_TESTING)
         "-DFIRMWARE=${CMAKE_CURRENT_BINARY_DIR}/test-firmware"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/bringup.cmake")
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    add_executable(dslcap_fake_reload main.c tests/fake_driver.c ${frontend_sources} driver_config.c
+        "${DSVIEW_SRC}/common/log/xlog.c" "${DSVIEW_SRC}/libsigrok4DSL/log.c")
+    target_include_directories(dslcap_fake_reload PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${DSVIEW_SRC}/libsigrok4DSL" "${DSVIEW_SRC}/common")
+    target_compile_definitions(dslcap_fake_reload PRIVATE DSLCAP_TEST_RELOAD_FPGA=1 DSLCAP_TEST_TIME_SCALE=0.02)
+    target_compile_options(dslcap_fake_reload PRIVATE -UNDEBUG -Wno-variadic-macros -Wall -Wextra -Werror -Wpedantic)
+    target_link_libraries(dslcap_fake_reload PRIVATE PkgConfig::GLIB PkgConfig::USB Threads::Threads m)
+    add_test(NAME model_contract COMMAND "${Python3_EXECUTABLE}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_models.py" "$<TARGET_FILE:dslcap_fake>"
+        "${CMAKE_CURRENT_BINARY_DIR}/test-firmware" "$<TARGET_FILE:dslcap_fake_reload>")
+
     add_test(NAME serial_contract COMMAND "${Python3_EXECUTABLE}"
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_serial.py" "$<TARGET_FILE:dslcap_fake>"
         "${CMAKE_CURRENT_BINARY_DIR}/test-firmware")

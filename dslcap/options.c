@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "options.h"
+#include "status.h"
 #include <ctype.h>
 #include <errno.h>
 #include <getopt.h>
+#include <libusb.h>
 #include <math.h>
 #include <inttypes.h>
 #include <stdio.h>
@@ -208,6 +210,7 @@ void dsl_usage(void)
          "              [--trigger-timeout T] [--on-timeout fail|upload] [--drain-timeout S]\n"
          "              [--serial-trigger start=CH:C,stop=CH:C,clock=CH:r|f,data=CH,value=0xV|0bV,bits=1..16]\n"
          "       dslcap --test-pattern\n"
+         "       dslcap --list-modes [--model plus|u3pro16] [--speed super|high]\n"
          "Rates/sample counts accept K/M/G suffixes; time accepts s/ms/us.\n"
          "Defaults: 25M, channels 0-7, stream, VTH 1.6V. No options: bring-up only.\n"
          "Output: META samplerate: N, then physical channel bits in 1-byte samples\n"
@@ -221,15 +224,17 @@ int dsl_parse_options(int argc, char **argv, struct dsl_options *o)
 {
     *o = (struct dsl_options){.fw_dir = "/usr/local/share/DSView/res", .model = -1,
         .rate = 25000000, .channels = 0xff, .vth = 1.6, .stream = 1, .trigger_pos = 10, .drain_timeout = 30};
-    enum { RATE = 256, CHANNELS, SAMPLES, TIME, CONTINUOUS, MODE, VTH, PATTERN, TRIGGER, POS, TIMEOUT, ON_TIMEOUT, DRAIN, SERIAL, MODEL };
+    enum { RATE = 256, CHANNELS, SAMPLES, TIME, CONTINUOUS, MODE, VTH, PATTERN, TRIGGER, POS, TIMEOUT, ON_TIMEOUT, DRAIN, SERIAL, MODEL, LIST_MODES, SPEED };
     static const struct option options[] = {
+        {"list-modes", no_argument, NULL, LIST_MODES},
+        {"speed", required_argument, NULL, SPEED},
         {"model", required_argument, NULL, MODEL},
         {"scan", no_argument, NULL, 's'}, {"fw-dir", required_argument, NULL, 'f'},
         {"help", no_argument, NULL, 'h'}, {"samplerate", required_argument, NULL, RATE},
         {"channels", required_argument, NULL, CHANNELS}, {"samples", required_argument, NULL, SAMPLES},
         {"time", required_argument, NULL, TIME}, {"continuous", no_argument, NULL, CONTINUOUS},
         {"mode", required_argument, NULL, MODE}, {"vth", required_argument, NULL, VTH},
-        {"test-pattern", no_argument, NULL, PATTERN},
+        {"test-pattern", no_argument, NULL, PATTERN}, {"pattern", no_argument, NULL, PATTERN},
         {"trigger", required_argument, NULL, TRIGGER}, {"serial-trigger", required_argument, NULL, SERIAL}, {"trigger-pos", required_argument, NULL, POS},
         {"trigger-timeout", required_argument, NULL, TIMEOUT}, {"on-timeout", required_argument, NULL, ON_TIMEOUT},
         {"drain-timeout", required_argument, NULL, DRAIN}, {NULL, 0, NULL, 0}};
@@ -239,6 +244,12 @@ int dsl_parse_options(int argc, char **argv, struct dsl_options *o)
     while ((option = getopt_long(argc, argv, "vh", options, NULL)) != -1) {
         char *end;
         switch (option) {
+        case LIST_MODES: o->list_modes = 1; break;
+        case SPEED:
+            if (!strcmp(optarg, "super")) o->speed = LIBUSB_SPEED_SUPER;
+            else if (!strcmp(optarg, "high")) o->speed = LIBUSB_SPEED_HIGH;
+            else goto invalid;
+            break;
         case MODEL:
             if (!strcmp(optarg, "plus")) o->model = 0;
             else if (!strcmp(optarg, "u3pro16")) o->model = 1;
@@ -297,7 +308,13 @@ int dsl_parse_options(int argc, char **argv, struct dsl_options *o)
         default: goto invalid;
         }
     }
-    if (optind != argc || (o->scan && o->capture) || (trigger_modifiers && !o->trigger) ||
+    if (optind == argc && !o->scan && !o->list_modes && o->model == 1 && o->capture &&
+        (!o->stream || o->trigger || o->serial || o->pattern)) {
+        fprintf(stderr, "dslcap: buffer/trigger/test-pattern not validated on U3Pro16 (Phase 3)\n");
+        return DSL_CONFIG_ERROR;
+    }
+    if ((o->speed && !o->list_modes) || (o->list_modes && (o->scan || o->capture)) ||
+        optind != argc || (o->scan && o->capture) || (trigger_modifiers && !o->trigger) ||
         (drain_seen && o->stream) || (o->trigger && (o->stream || o->continuous || o->pattern))) goto invalid;
     for (unsigned ch = 0; ch < 16; ch++)
         if (o->trigger_conditions[ch] && !(o->channels & (1u << ch))) goto invalid;
