@@ -36,7 +36,8 @@ static dslib_event_callback_t event_callback;
 
 static int is(const char *value)
 {
-    return scenario && strcmp(scenario, value) == 0;
+    return scenario && (!strcmp(scenario, value) ||
+        (!strncmp(scenario, "u3-trigger-", 11) && !strcmp(scenario + 3, value)));
 }
 
 static int u3_only(void)

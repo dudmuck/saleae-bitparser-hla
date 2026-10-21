@@ -309,8 +309,8 @@ int dsl_parse_options(int argc, char **argv, struct dsl_options *o)
         }
     }
     if (optind == argc && !o->scan && !o->list_modes && o->model == 1 && o->capture &&
-        (o->trigger || o->serial || o->pattern)) {
-        fprintf(stderr, "dslcap: trigger/serial/test-pattern not validated on U3Pro16 (Phase 3b/3c)\n");
+        (o->serial || o->pattern)) {
+        fprintf(stderr, "dslcap: serial/test-pattern not validated on U3Pro16 (Phase 3c)\n");
         return DSL_CONFIG_ERROR;
     }
     if ((o->speed && !o->list_modes) || (o->list_modes && (o->scan || o->capture)) ||

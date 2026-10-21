@@ -717,8 +717,8 @@ def validate_backend_args(args, spi_ports):
     model = getattr(args, 'dsl_model', 'auto')
     if model not in ('auto', 'plus', 'u3pro16'):
         raise SystemExit('--dsl-model must be plus, u3pro16 or auto.')
-    if model == 'u3pro16' and trigger:
-        raise SystemExit('Trigger/serial capture not validated on U3Pro16 (Phase 3b/3c).')
+    if model == 'u3pro16' and getattr(args, 'serial_trigger', None):
+        raise SystemExit('Serial capture not validated on U3Pro16 (Phase 3c).')
     profiles = dslcap_mode_profiles(args)
     eligible = [p for p in profiles if model == 'auto' or p['model'] == model]
     candidates = [m for p in eligible for m in p['modes']

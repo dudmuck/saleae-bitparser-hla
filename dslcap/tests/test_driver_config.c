@@ -3,6 +3,67 @@
 #include <hardware/DSL/dsl.h>
 #include <assert.h>
 
+// These strong test-only USB symbols terminate real dsl_fpga_arm I/O in
+// memory. No USB handle is opened; unexpected calls fail assertions.
+static int image_mode, image_written;
+int LIBUSB_CALL libusb_control_transfer(libusb_device_handle *handle,
+        uint8_t type, uint8_t request, uint16_t value, uint16_t index,
+        unsigned char *data, uint16_t length, unsigned int timeout)
+{
+    assert(image_mode && handle == (void *)1 && !value && !index && timeout == 3000);
+    if (type & LIBUSB_ENDPOINT_IN) {
+        assert(request == CMD_CTL_RD && length == 1);
+        data[0] = bmSYS_CLR | bmGPIF_DONE;
+    } else {
+        assert(request == CMD_CTL_WR || request == CMD_CTL_RD_PRE);
+    }
+    return length;
+}
+int LIBUSB_CALL libusb_bulk_transfer(libusb_device_handle *handle,
+        unsigned char endpoint, unsigned char *data, int length,
+        int *transferred, unsigned int timeout)
+{
+    assert(image_mode && handle == (void *)1 && endpoint == 2 && timeout == 1000);
+    assert(!image_written && length == 372 && length == sizeof(struct DSL_setting));
+    assert(fwrite(data, 1, (size_t)length, stdout) == (size_t)length);
+    image_written = 1;
+    *transferred = length;
+    return 0;
+}
+
+static int arm_image(int argc, char **argv)
+{
+    struct dsl_options o;
+    assert(!dsl_parse_options(argc, argv, &o));
+    assert(o.trigger && !o.stream && !o.pattern);
+    o.profile = dsl_profile(dsl_model_at(o.model == 1 ? 1 : 0)->pid,
+                            o.model == 1 ? LIBUSB_SPEED_SUPER : LIBUSB_SPEED_HIGH);
+    int mode = dsl_choose_mode(o.profile, 0, o.rate, o.channels);
+    assert(mode >= 0 && dsl_buffer_fits(o.profile, o.channels, o.samples));
+    uint64_t aligned = (o.samples + SAMPLES_ALIGN) & ~SAMPLES_ALIGN;
+    struct sr_usb_dev_inst usb = {.devhdl = (void *)1};
+    struct DSL_context context = {.profile = o.profile, .ch_mode = mode,
+        .cur_samplerate = o.rate, .limit_samples = aligned, .actual_samples = aligned};
+    struct sr_dev_inst device = {.mode = LOGIC, .priv = &context, .conn = &usb};
+    context.cb_data = &device;
+    struct sr_channel channels[16] = {{0}};
+    for (unsigned i = 0; i < 16; i++) {
+        channels[i].index = i;
+        channels[i].enabled = !!(o.channels & (1u << i));
+        device.channels = g_slist_append(device.channels, &channels[i]);
+    }
+    // Same trigger API path as dsl_configure; use the real
+    // trigger implementation and the real FPGA arm function, not a port.
+    assert(ds_trigger_reset() == SR_OK);
+    assert(!dsl_program_trigger(&o));
+    assert(ds_trigger_set_en(1) == SR_OK);
+    image_mode = 1;
+    assert(dsl_fpga_arm(&device) == SR_OK && image_written);
+    g_slist_free(device.channels);
+    assert(ds_trigger_destroy() == SR_OK);
+    return 0;
+}
+
 static void exact_rates(const struct DSL_profile *p)
 {
     // Port of DSView dsl.c:1078-1085 for LOGIC. Decode the actual divider
@@ -71,6 +132,18 @@ static void u3_buffer(const struct DSL_profile *p, const struct DSL_profile *plu
         assert(capacity > depth * (count > 8 ? 2u : 1u));
     }
     assert(dsl_buffer_depth(p, 0xffff) == 134217728);
+    // Trigger positions at the real 2-Gibit limits, including sparse
+    // high-lane host expansion. Same 32-bit cast as dsl_fpga_arm.
+    for (unsigned count = 1; count <= 16; count++) {
+        uint64_t depth = (UINT64_C(2147483648) / count) & ~UINT64_C(1023);
+        for (unsigned percent = 0; percent <= 90; percent++) {
+            uint64_t pos = dsl_trigger_position(percent, depth, depth);
+            assert(pos >= 64 && !(pos & 63));
+            assert(pos <= depth * 90 / 100 && pos < depth);
+        }
+    }
+    assert(dsl_trigger_position(90, 134217728, 134217728) == 120795904);
+    assert(dsl_trigger_position(90, 268435456, 268435456) == 241591872);
     assert(dsl_buffer_depth(p, 0xff) == 268435456);
     assert(dsl_buffer_depth(plus, 0xffff) == 16777216);
     assert(!dsl_buffer_fits(p, 0xffff, UINT64_MAX));
@@ -85,8 +158,9 @@ static void u3_buffer(const struct DSL_profile *p, const struct DSL_profile *plu
     assert(dsl_capture_budget(&o) == 0);
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
+    if (argc > 1) return arm_image(argc, argv);
     const struct DSL_profile *plus = dsl_profile(dsl_model_at(0)->pid, LIBUSB_SPEED_HIGH);
     const struct DSL_profile *super = dsl_profile(dsl_model_at(1)->pid, LIBUSB_SPEED_SUPER);
     const struct DSL_profile *high = dsl_profile(dsl_model_at(1)->pid, LIBUSB_SPEED_HIGH);

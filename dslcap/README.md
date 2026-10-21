@@ -152,8 +152,8 @@ Schema version 1 is `{ "schema": 1, "profiles": [...] }`. Each profile has:
 
 U3Pro16 SuperSpeed buffer entries are `validated=true` after the
 2026-10-21 Phase 3a live gates (untriggered only); its USB high buffer entries
-stay `false`. The flag does not enable trigger/serial/test-pattern paths,
-which dslcap still refuses on the U3Pro16. Rates use the same
+stay `false`. Simple buffer triggers are implemented in Phase 3b; serial
+triggers and internal patterns remain fenced for Phase 3c. Rates use the same
 HALF/QUAR and divider rules as capture. Plus uses ×2/×4 packing; the U3Pro16's
 fixed 500 MHz ADF4360 clock uses ×1/×2. USB high U3Pro16 stream modes have a
 100 kHz minimum and the same count limits as Plus. At SuperSpeed its limits
@@ -287,12 +287,14 @@ subject to live measurement. Driver buffer transfers are 1 MiB with timeout 0
 and a 20 ms event poll (`dsl.c:2099–2155,2510–2540`). Output drain still
 allows 30 s without progress by default and refreshes while writes progress;
 `--drain-timeout` changes the stall limit, not the total upload time. The Plus
-watchdog policy is unchanged. Phase 3a live gates remain pending; simple and
-serial triggers and internal-pattern mode remain fenced for Phase 3b/3c.
+watchdog policy is unchanged. Phase 3a live gates passed; simple buffer
+triggers are implemented in Phase 3b, with live trigger gates tracked separately.
+Serial triggers and internal-pattern mode remain fenced for Phase 3c.
 
 ## Simple buffer triggers
 
-Simple AND triggers are supported in buffer mode. This syntax is implemented
+Simple AND triggers are supported in buffer mode on the Plus and U3Pro16.
+This syntax is implemented
 and covered by offline contracts; live validation is tracked by the lead in
 [TRIGGER_PLAN.md](TRIGGER_PLAN.md) and [TRIGGER_TASKS.md](TRIGGER_TASKS.md).
 
@@ -306,8 +308,10 @@ and covered by offline contracts; live validation is tracked by the lead in
 are `r`/`R` (rising), `f`/`F` (falling), `1`/`h` (high), `0`/`l` (low), and
 `e` (either edge). Multiple terms must hold at the same sample. Duplicate
 channels, stream or continuous triggers, and triggers with `--test-pattern`
-are rejected. Trigger channels obey the fast buffer lane limits: 0..15 at
-100M, 0..7 at 200M, and 0..3 at 400M.
+are rejected. Plus trigger channels obey its fast buffer lane limits: 0..15 at
+100M, 0..7 at 200M, and 0..3 at 400M. U3Pro16 simple triggers use CH0..15 at
+up to 500M, or CH0..7 at 1G; add `--model u3pro16` to select it explicitly.
+Serial triggers and internal patterns on U3Pro16 still return exit 8 (Phase 3c).
 
 `--trigger-pos` is an integer percent from 0 to 90, default 10. The driver
 arms N rounded up to 1024 samples. The effective pre-trigger position uses
@@ -323,6 +327,17 @@ and the longest interval without an observed count/hit change appear in the
 summary; uncertain decisions say `freshness unknown`. A hit near the deadline
 may win or lose. Once a fail timeout commits, later packets cannot recover
 discarded data. It returns 16 with only the samplerate header.
+
+For U3Pro16, the post-hit/header wait adds Phase 3a's
+`ceil(host_output_bytes / 4 MB/s) + 10 s` allowance to the remaining sampling
+duration plus 340 ms and 5 s. Forced upload/header wait gets 10 s plus that
+allowance. At full ×16/×8 depth these bounds are remaining sampling time +
+83.340 s and 88 s respectively. If the force control reports natural completion,
+the header reconciliation wait is 340 ms plus the same allowance (78.340 s
+at full depth). After a header, upload allows actual emitted
+host bytes / 4 MB/s + 10 s (77.109 s for 256 MiB). Each phase's watchdog has
+another 10 s grace. The 340 ms timeout observation grace, fail/upload behavior,
+Ctrl-C, output drain and Plus timing remain unchanged.
 
 `--on-timeout upload` requests a forced upload through DSView's existing
 `WAIT_UPLOAD` control. Captures can be shorter than N in 1024-sample steps.
@@ -428,9 +443,9 @@ Firmware validation checks only the selected model's bitstream after enumeration
 and before activation; invalid firmware directories fail before initialization.
 
 The U3Pro16 (`2a0e:002a`) supports streaming in Phase 2, pending live U2–U5
-gates. Phase 3a adds finite untriggered buffer capture; simple/serial triggers
-and internal-pattern capture remain rejected with exit 8
-(`not validated on U3Pro16 (Phase 3b/3c)`). Its profile follows negotiated USB
+gates. Phase 3a adds finite untriggered buffer capture; Phase 3b adds simple
+buffer triggers. Serial triggers and internal-pattern capture remain rejected
+with exit 8 (`not validated on U3Pro16 (Phase 3c)`). Its profile follows negotiated USB
 speed (`super` or `high`), and its scan line is, for example:
 
 ```text

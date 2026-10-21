@@ -37,8 +37,7 @@ class ModelTests(unittest.TestCase):
         hla.build_dslcap_cmd(self.args(samplerate='1G', dsl_model='u3pro16'), three)
         for args, ports in [(self.args(samplerate='1G'), four),
                             (self.args(samplerate='1G'), [hla.parse_spi_port('0,2,2,8')]),
-                            (self.args(samplerate='125M', dsl_model='plus'), four),
-                            (self.args(dsl_model='u3pro16', dsl_mode='buffer', trigger='3:f'), four)]:
+                            (self.args(samplerate='125M', dsl_model='plus'), four)]:
             with self.subTest(args=args), self.assertRaises(SystemExit):
                 hla.build_dslcap_cmd(args, ports)
         # USB high U3 accepts 500k, super alone does not; auto is a union.
@@ -64,10 +63,25 @@ class ModelTests(unittest.TestCase):
         for rate, mapping in [('1G', ports), ('500K', low), ('200M', low), ('400M', low)]:
             with self.subTest(rate=rate), self.assertRaises(SystemExit):
                 hla.build_dslcap_cmd(self.args(dsl_model='u3pro16', dsl_mode='buffer', samplerate=rate), mapping)
-        for extra in (dict(trigger='3:f'),
-                      dict(serial_trigger='start=3:f,stop=3:r,clock=0:r,data=2,value=0x55,bits=8')):
-            with self.assertRaisesRegex(SystemExit, 'Phase 3b/3c'):
+        hla.build_dslcap_cmd(self.args(dsl_model='u3pro16', dsl_mode='buffer', trigger='3:f'), low)
+        for extra in (dict(serial_trigger='start=3:f,stop=3:r,clock=0:r,data=2,value=0x55,bits=8'),):
+            with self.assertRaisesRegex(SystemExit, 'Phase 3c'):
                 hla.build_dslcap_cmd(self.args(dsl_model='u3pro16', dsl_mode='buffer', **extra), low)
+
+    def test_u3_simple_trigger_forwarding_and_rate_lanes(self):
+        ports = [hla.parse_spi_port('0,1,2,3')]
+        for rate, trigger in [('100M', '11:r'), ('500M', '0:1,11:r'), ('1G', '3:f')]:
+            args = self.args(dsl_model='u3pro16', dsl_mode='buffer', samplerate=rate,
+                             trigger=trigger, trigger_pos=90)
+            cmd = hla.build_dslcap_cmd(args, ports)
+            self.assertIn('--trigger', cmd)
+            self.assertEqual(cmd[cmd.index('--trigger-pos') + 1], '90')
+        for lane in range(8, 16):
+            with self.subTest(lane=lane), self.assertRaises(SystemExit):
+                hla.build_dslcap_cmd(self.args(dsl_model='u3pro16', dsl_mode='buffer',
+                    samplerate='1G', trigger=f'{lane}:r'), ports)
+        with self.assertRaisesRegex(SystemExit, 'buffer'):
+            hla.build_dslcap_cmd(self.args(dsl_model='u3pro16', trigger='3:f'), ports)
 
     def test_query_failure_and_bad_schema(self):
         from test_dslcap_backend import PORTS

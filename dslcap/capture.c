@@ -151,6 +151,10 @@ static int wait_trigger(struct capture_state *s)
     const struct dsl_options *o = s->options;
     uint64_t start = 0, deadline = 0, phase_start = 0, last_poll = 0;
     uint64_t grace = span(.340), unchanged_since = 0, longest = 0;
+    // Phase 3a's profile-based upload allowance is zero for the Plus.
+    // A hit can precede the upload header, so cover a whole U3 buffer in
+    // both the post-hit and forced-upload/header-wait phases as well.
+    uint64_t upload_extra = dsl_capture_budget(o) - (o->samples / o->rate + 30);
     uint32_t previous_count = 0;
     int previous_hit = 0, have_status = 0, phase = 0, forced = 0, rc = 0;
     unsigned status_failures = 0;
@@ -198,7 +202,7 @@ static int wait_trigger(struct capture_state *s)
         }
         if (phase == 1 && hit) {
             phase = 2; phase_start = now;
-            deadline = now + span((1 - o->trigger_pos / 100.0) * o->samples / o->rate + .340 + 5);
+            deadline = now + span((1 - o->trigger_pos / 100.0) * o->samples / o->rate + .340 + 5 + upload_extra);
             dsl_control_deadline(add_ns(deadline, span(10)));
         }
         if (phase == 1 && deadline && now >= deadline) {
@@ -210,7 +214,7 @@ static int wait_trigger(struct capture_state *s)
             if (s->header) { pthread_mutex_unlock(&s->packet_mutex); continue; }
             if (ok && (status.trig_hit & 1)) {
                 pthread_mutex_unlock(&s->packet_mutex);
-                phase = 2; deadline = now + span((1 - o->trigger_pos / 100.0) * o->samples / o->rate + .340 + 5);
+                phase = 2; deadline = now + span((1 - o->trigger_pos / 100.0) * o->samples / o->rate + .340 + 5 + upload_extra);
                 dsl_control_deadline(add_ns(deadline, span(10))); continue;
             }
             fprintf(stderr, "dslcap: timeout decision after nominal grace; %s; status-read failures=%u\n",
@@ -235,7 +239,7 @@ static int wait_trigger(struct capture_state *s)
             if (!forced && s->header && s->actual < o->samples) error(s, DSL_DATA_ERROR);
             pthread_mutex_unlock(&s->packet_mutex);
             phase = 3; phase_start = now;
-            deadline = now + (forced ? span(10) : grace);
+            deadline = now + (forced ? span(10 + upload_extra) : add_ns(grace, span(upload_extra)));
             dsl_control_deadline(add_ns(deadline, span(10)));
         } else if (phase > 1 && deadline && now >= deadline) {
             rc = phase == 3 && !forced ? DSL_DEVICE_ERROR : DSL_DATA_ERROR;

@@ -378,3 +378,73 @@ hashed in `u3pro16-phase3-20261021.sha256` and `.raw.sha256`.
 **Still open:** 3b simple triggers (needs DSView reference register images
 for the U3Pro16), 3c serial triggers, and a Plus buffer regression on this
 build before merge.
+
+## Phase 3b/3c references: DSView U3Pro16 trigger register images (2026-10-21)
+
+Real DSView 1.3.2, driven in the GUI by the user, logged through an
+`LD_PRELOAD` libusb OUT logger (`usbshim.c`, kept in evidence). Buffer mode,
+1.6 V, filter none, stop immediately. Signal: `pi_pattern spi` on pi133 (CH0
+SCLK, CH1 MISO, CH2 MOSI, CH3 NSS), pi134 idle; pins matched the baseline
+before and after. Images and decoded fields: `U3PRO16_TRIGGER_GOLDEN.json`.
+Evidence: `local-evidence/u3pro16-phase3b-golden-20261021/` (`SHA256SUMS`).
+
+| # | Kind | Rate | Ch | Trigger | Pos | mode | count | Fired |
+|---|---|---|---|---|---|---|---|---|
+| 1 | simple | 100M | 0–15 | CH3 falling | 10% | 0x0001 | 62528 | yes |
+| 2 | simple | 500M | 0–15 | CH3 falling | 10% | 0x0021 | 62528 | yes |
+| 3 | simple | 1G | 0–7 | CH3 falling | 10% | 0x0041 | 62528 | yes |
+| 4 | simple | 500M | 0–15 | CH0=1 AND CH11 rising | 50% | 0x0021 | 62528 | no (CH11 undriven) |
+| 5 | serial | 100M | 0–15 | start 3:f, stop 3:r, clock 0:r, data 2, 0x1c35/16 | 10% | 0x0801 | 12544 | no (value absent) |
+| 6 | serial | 1G | 0–7 | same | 10% | 0x0841 | 125056 | no (value absent) |
+
+Findings for 3b/3c:
+- At 1G×8, DSView replicates every trigger stage into the upper byte
+  (case 3 mask0 `0xf7f7`, edge0 `0x0808`; case 6 likewise for all four
+  serial stages), and `trig_glb` is `0x0800` instead of `0x1000`.
+- Serial stage layout matches the Plus serial golden (start, clock, data,
+  value stage with count 15).
+- Case 5 used 2 ms (200,704 samples) and case 6 2M samples, not ~1M; the
+  exact counts are in the images.
+- A first attempt with CH3 on either edge by mistake is kept as
+  `dsview.attempt1.log` and is not a reference.
+
+DSView config and session files were restored from backups afterwards.
+
+## Phase 3b: simple buffer triggers on the U3Pro16 — PASS (2026-10-21)
+
+ds-worker task `dslcap-u3pro16-p3b-20261021` (report `codex-p3b-report-01`):
+the fence now admits U3Pro16 simple finite buffer triggers; serial and test
+pattern stay exit 8 (Phase 3c). No U3-specific register code was needed:
+libsigrok4DSL `dsl_fpga_arm` does the 1G half-mode stage replication and
+`trig_glb`. U3 post-hit, forced-upload and natural-completion header waits
+add the Phase 3a upload allowance (Plus: +0 s). Lead build of the working
+tree: warning-free, ctest 8/8 (offline real-`dsl_fpga_arm` image test
+matches all four U3 simple goldens and the six Plus images), Python 101 OK,
+8 skipped.
+
+Live, SuperSpeed, W1 `pi_pattern walk` on both Pis unless noted. Pins and
+pull states matched the baseline before and after every run. Evidence:
+`local-evidence/u3pro16-phase3b-live-20261021/` (`summary.txt`, hashed in
+`u3pro16-phase3b-live-20261021.sha256`); register comparison logs in
+`local-evidence/u3pro16-phase3b-golden-20261021/live?.log`.
+
+| Gate | Result |
+|---|---|
+| Register images, cases 1–4 through the shim | all four 372-byte EP2 images identical to DSView (sha256 `71262b22…`, `f801aeeb…`, `66ee0bee…`, `ea948380…`) |
+| Control writes around the arm | same sequence as DSView; VTH 0x78=`0x4a` (1.6 V), same ADF4360 I2C values; only the never-initialised `offset` of START/STOP/BULK_WR/INTRDY headers differs |
+| Placement, N=65536, 3:f, 0/10/50/90% at 100M×16, 500M×16, 1G×8, 3 each | 35/36 inside the 64-sample block at the effective position; 1 early (100M 90%); condition exact at META index in all 36 |
+| N=1000448 matrix (positions, 5 repeats at 10%, AND `0:1,11:r`, `r`/`e` conditions, sparse `3,15`→15:r and `12`→12:f) | condition exact at META index in all 28; 20 in-block, 8 early (pre-trigger window longer than the walk's edge spacing) |
+| Full depth 500M×16 (134,217,728) and 1G×8 (268,435,456), pos 50% | exit 0, full sample count, condition exact at META index (both early: 925,302 and 39,388); 1.6–1.7 s wall |
+| Timeout fail at 500M and 1G, no edge | exit 16 at 2.6 s |
+| Timeout upload, no edge | exit 0, `META trigger: none`, 99,328 samples |
+| Ctrl-C while waiting | exit 130 at 3.1 s, immediate reopen and capture OK |
+| Ctrl-C during full-depth upload (`5:1`, after 7/82/155 MB output) | exit 130 each time, immediate reopen and triggered capture OK |
+| Refusals | 1G with CH8 (trigger CH8 or CH0) exit 8; stream trigger exit 2; serial and test pattern exit 8 (Phase 3c); over-depth exit 8 |
+
+Early triggers behave as on the Plus (TRIGGER_VALIDATION B.3): if a match
+arrives before the pre-trigger region fills, the hardware triggers there
+and META reports that real, smaller index. A level condition already true
+at arm (`5:1`) reports 0.
+
+**Still open:** 3c serial triggers (references: golden cases 5–6), and a
+Plus buffer/trigger regression on this build before merge.

@@ -205,6 +205,17 @@ static int configure_serial(const struct dsl_serial_trigger *serial)
     return 0;
 }
 
+int dsl_program_trigger(const struct dsl_options *o)
+{
+    if (ds_trigger_set_pos((uint16_t)o->trigger_pos) != SR_OK ||
+        ds_trigger_set_mode(o->serial ? SERIAL_TRIGGER : SIMPLE_TRIGGER) != SR_OK) return DSL_CONFIG_ERROR;
+    if (o->serial && configure_serial(&o->serial_trigger)) return DSL_CONFIG_ERROR;
+    for (unsigned ch = 0; ch < 16; ch++)
+        if (o->trigger_conditions[ch] && ds_trigger_probe_set((uint16_t)ch,
+                (unsigned char)o->trigger_conditions[ch], 'X') != SR_OK) return DSL_CONFIG_ERROR;
+    return 0;
+}
+
 int dsl_configure(struct dsl_options *o)
 {
     const struct DSL_profile *p = o->profile;
@@ -281,12 +292,7 @@ int dsl_configure(struct dsl_options *o)
     if (o->trigger) {
         o->trigger_effective = dsl_trigger_position(o->trigger_pos, o->arm_limit,
                 (p->dev_caps.hw_depth / (unsigned)enabled) & ~SAMPLES_ALIGN);
-        if (ds_trigger_set_pos((uint16_t)o->trigger_pos) != SR_OK ||
-            ds_trigger_set_mode(o->serial ? SERIAL_TRIGGER : SIMPLE_TRIGGER) != SR_OK) return DSL_CONFIG_ERROR;
-        if (o->serial && configure_serial(&o->serial_trigger)) return DSL_CONFIG_ERROR;
-        for (unsigned ch = 0; ch < 16; ch++)
-            if (o->trigger_conditions[ch] && ds_trigger_probe_set((uint16_t)ch,
-                    (unsigned char)o->trigger_conditions[ch], 'X') != SR_OK) return DSL_CONFIG_ERROR;
+        if (dsl_program_trigger(o)) return DSL_CONFIG_ERROR;
         if (o->timeout_upload && set(SR_CONF_BUFFER_OPTIONS, g_variant_new_int16(1) /* DSView dslogic.c private SR_BUF_UPLOAD */))
             return DSL_CONFIG_ERROR;
         if (ds_trigger_set_en(1) != SR_OK) return DSL_CONFIG_ERROR;

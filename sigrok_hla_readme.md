@@ -86,10 +86,11 @@ from `--list-modes`. SuperSpeed buffer entries are `validated=true` after the
 2026-10-21 live gates; USB high U3Pro16 buffer entries stay `false` and are
 rejected. Depth is 2 Gibit / enabled lanes, aligned to 1024
 samples (134,217,728 at ×16; 268,435,456 at ×8); dslcap rejects excess depth.
-Continuous buffer mode is unsupported. Simple trigger, serial trigger and
-internal-pattern paths remain fenced until Phase 3b/3c; the producer rejects
-them before activation. Plus buffer and
-trigger behavior is unchanged. Live U3Pro16 gates are tracked separately.
+Continuous buffer mode is unsupported. Simple AND buffer triggers are supported
+on U3Pro16: trigger lanes CH0–15 at up to 500M, or CH0–7 at 1G. Trigger lanes
+join the captured channel union and obey the same profile limits. Serial
+triggers and internal patterns remain fenced for Phase 3c (producer exit 8
+before activation). Plus buffer and trigger behavior is unchanged. Live U3Pro16 gates are tracked separately.
 
 Live decoding sustains about 100–130 MB/s in the measured workload. Use
 `--raw-out` and replay above that rate: 125M×16 is 250 MB/s and 250M×12 is
