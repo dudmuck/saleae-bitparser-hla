@@ -288,8 +288,11 @@ one line per transfer, and it reported every server result matching
   at 25M with all 16 channels, plus a scratch HLA that prints each
   transaction's MOSI and MISO (the LR2021 HLA is no longer on this host).
   pi133 used L=250/64 and pi134 L=200/100.
-- **Window B, raw.** `--raw-out` at 125M (`mask=0x0f0f`; raw mode captures
-  the SPI channels only), 60 s, 15 GB, then offline replay. pi133 used
+- **Window B, raw.** `--raw-out` at 125M (`mask=0x0f0f`: SPI channels only,
+  because this run named the BUSY/DIO lines with `-C` but omitted
+  `--int-pin`/`--extra-pin`; raw mode records those pins when they are
+  given, see "Raw capture of BUSY/DIO pins" below), 60 s, 15 GB, then
+  offline replay. pi133 used
   L=180 and pi134 L=240. The ring high-water was 25.8 MB.
 
 | Window | Pi | Transfers decoded / logged | MOSI bytes | MISO read-data fields | Mismatches |
@@ -522,3 +525,21 @@ Pins matched the baseline before and after. Evidence:
 | Ctrl-C while waiting, then reopen | 130, then exit 0 with a full capture |
 
 **Phase 3 complete.** No Plus behavior changed on this build.
+
+## Raw capture of BUSY/DIO pins — PASS (2026-10-21)
+
+`sigrok_hla.py --raw-out` records BUSY/DIO/IRQ pins when they are named with
+`--int-pin`/`--extra-pin` (the W2 Window B run omitted those flags, so only
+SPI channels were captured; there is no code defect). Same W1 wiring,
+`pi_pattern walk` on both Pis, labels as in W2 (CH4–7 pi133 and CH12–15
+pi134 busy/dio8/dio11/dio7; `--int-pin pi133_dio8`, the other seven as
+`--extra-pin`). Build `096e1d1`. Pins matched the baseline afterwards.
+Evidence: `local-evidence/u3pro16-rawpins-20261021/` (hashed in
+`u3pro16-rawpins-20261021.sha256`).
+
+- **U3Pro16, 125M×16, 3 s, `--raw-out`:** dslcap `--channels 0-15`, 750 MB,
+  exit 0. Replay with `--dslogic -i` and the same options: every pin's
+  replay event count equals its edge count in the raw file (CH4 1495, CH5
+  897, CH6 598, CH7 599, CH12 1649, CH13 990, CH14 660, CH15 660).
+- **Plus, 25M×8 (pi133 only), 0.5 s:** raw file has CH0–7; replay printed
+  the pin events interleaved with transactions.

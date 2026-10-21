@@ -323,7 +323,10 @@ records without them still replay. It refuses to start if either FILE or `FILE.j
 already exists, and exits with dslcap's status (128 + signal if dslcap was
 killed). Ctrl-C or SIGTERM to sigrok_hla.py is forwarded to dslcap, which then
 drains and stops; it is escalated to TERM and KILL if dslcap is still running
-after 20 s. Decode with `--dslogic -i FILE` and the same `-C`/`--spi`/pin options:
+after 20 s. Decode with `--dslogic -i FILE` and the same `-C`/`--spi`/pin options.
+`-C` only names channels: a channel is captured only if it is an `--spi` line,
+`--int-pin`, `--extra-pin` or a trigger channel, so name each BUSY/DIO/IRQ
+line you want in the file with `--int-pin` or `--extra-pin`:
 
 ```bash
 ./sigrok_hla.py --dslogic --dslcap /tmp/dslcap-build/dslcap \
