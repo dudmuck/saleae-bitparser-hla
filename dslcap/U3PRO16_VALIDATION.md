@@ -543,3 +543,32 @@ Evidence: `local-evidence/u3pro16-rawpins-20261021/` (hashed in
   897, CH6 598, CH7 599, CH12 1649, CH13 990, CH14 660, CH15 660).
 - **Plus, 25M×8 (pi133 only), 0.5 s:** raw file has CH0–7; replay printed
   the pin events interleaved with transactions.
+
+## W2 window C: real radio traffic through the LR2021 HLA, with BUSY/DIO — PASS (2026-10-21)
+
+The user restored `~/HLA/saleae_lr2021` (GitLab
+`Apps-customers/saleae/saleae_lr2021`, commit `2701262`). First, yesterday's
+window B raw file replayed through it with `--hex`: 179/179 transfers per Pi,
+0 mismatches against the peer logs (outputs in
+`local-evidence/u3pro16-w2-20261020/lr2021-hla-20261021/`).
+
+Then a new window on W2 (rewired by the user; radio boards fitted;
+`mcp_radio` running on both Pis; traffic by `xiao_phy_throughput`). Idle
+capture: all samples `0x2828`. The peer started bursts at an agreed
+18:14:30Z; recording ran 18:14:27Z–18:14:57Z with `sigrok_hla.py --raw-out`
+at 125M×16, `--int-pin pi133_dio8` and the other seven BUSY/DIO lines as
+`--extra-pin` (7.5 GB, exit 0, ring high-water 4.2 MB). Replay with
+`--dslogic -i` and `--hla-path ~/HLA/saleae_lr2021 --hex`: 27 s, no HLA
+exceptions. Decoded commands: GetVersion (v1.24), ClearTxFifo,
+GetTxFifoLevel, WriteRadioTxFifo, GetErrors, with interrupt/mode/status.
+
+| Pi | Burst | Transfers decoded / logged | MOSI bytes | MISO read-data fields | Mismatches |
+|---|---|---|---|---|---|
+| pi133 | L=200 from 0x07, +7.59–17.71 s | 179 / 179 | 5462 | 52 | 0 |
+| pi134 | L=120 from 0x63, +18.03–28.15 s | 179 / 179 | 3462 | 52 | 0 |
+
+Pins: BUSY had 358 edges per Pi in the raw file and 358 replay events each;
+DIO8/DIO11/DIO7 stayed static on both Pis (no IRQ-raising operations, no
+RF), with 0 edges and 0 events. Read-only `pinctrl` on the W2 GPIOs was
+unchanged before and after. Evidence: `local-evidence/u3pro16-w2b-20261021/`
+(hashed in `u3pro16-w2b-20261021.sha256` and `.raw.sha256`).
