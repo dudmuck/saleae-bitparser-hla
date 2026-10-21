@@ -232,8 +232,8 @@ int main(int argc, char **argv)
     }
 #endif
     if (selected != dsl_model_at(0) && options.capture &&
-        (!options.stream || options.trigger || options.serial || options.pattern)) {
-        fprintf(stderr, "dslcap: buffer/trigger/test-pattern not validated on U3Pro16 (Phase 3)\n");
+        (options.trigger || options.serial || options.pattern)) {
+        fprintf(stderr, "dslcap: trigger/serial/test-pattern not validated on U3Pro16 (Phase 3b/3c)\n");
         rc = DSL_CONFIG_ERROR;
         goto cleanup;
     }

@@ -38,7 +38,7 @@ class ModelTests(unittest.TestCase):
         for args, ports in [(self.args(samplerate='1G'), four),
                             (self.args(samplerate='1G'), [hla.parse_spi_port('0,2,2,8')]),
                             (self.args(samplerate='125M', dsl_model='plus'), four),
-                            (self.args(dsl_model='u3pro16', dsl_mode='buffer'), four)]:
+                            (self.args(dsl_model='u3pro16', dsl_mode='buffer', trigger='3:f'), four)]:
             with self.subTest(args=args), self.assertRaises(SystemExit):
                 hla.build_dslcap_cmd(args, ports)
         # USB high U3 accepts 500k, super alone does not; auto is a union.
@@ -47,6 +47,27 @@ class ModelTests(unittest.TestCase):
             hla.build_dslcap_cmd(self.args(samplerate='500K', dsl_model='u3pro16',
                                          _dsl_mode_profiles=RECORDED['profiles'][-1:]), four)
         hla.build_dslcap_cmd(self.args(samplerate='250M'), four)
+
+    def test_u3_untriggered_buffer_uses_validated_super_profile_limits(self):
+        ports = [hla.parse_spi_port('0,1,2,3'), hla.parse_spi_port('8,9,10,11')]
+        args = self.args(dsl_model='u3pro16', dsl_mode='buffer', samplerate='500M')
+        cmd = hla.build_dslcap_cmd(args, ports)
+        self.assertEqual(cmd[cmd.index('--mode') + 1], 'buffer')
+        self.assertEqual(cmd[cmd.index('--model') + 1], 'u3pro16')
+        low = [hla.parse_spi_port('0,1,2,3')]
+        hla.build_dslcap_cmd(self.args(dsl_model='u3pro16', dsl_mode='buffer', samplerate='1G'), low)
+        for p in RECORDED['profiles']:
+            if p['model'] == 'u3pro16':
+                for m in p['modes']:
+                    if not m['stream']:
+                        self.assertEqual(m['validated'], p['usb_speed'] == 'super')
+        for rate, mapping in [('1G', ports), ('500K', low), ('200M', low), ('400M', low)]:
+            with self.subTest(rate=rate), self.assertRaises(SystemExit):
+                hla.build_dslcap_cmd(self.args(dsl_model='u3pro16', dsl_mode='buffer', samplerate=rate), mapping)
+        for extra in (dict(trigger='3:f'),
+                      dict(serial_trigger='start=3:f,stop=3:r,clock=0:r,data=2,value=0x55,bits=8')):
+            with self.assertRaisesRegex(SystemExit, 'Phase 3b/3c'):
+                hla.build_dslcap_cmd(self.args(dsl_model='u3pro16', dsl_mode='buffer', **extra), low)
 
     def test_query_failure_and_bad_schema(self):
         from test_dslcap_backend import PORTS
@@ -537,7 +558,7 @@ RECORDED = {'schema': 1,
                           'max_rate': 500000000,
                           'vld_num': 16,
                           'num': 16,
-                          'validated': False,
+                          'validated': True,
                           'rates': [1000000,
                                     2000000,
                                     4000000,
@@ -557,7 +578,7 @@ RECORDED = {'schema': 1,
                           'max_rate': 1000000000,
                           'vld_num': 8,
                           'num': 8,
-                          'validated': False,
+                          'validated': True,
                           'rates': [1000000,
                                     2000000,
                                     4000000,

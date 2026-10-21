@@ -288,7 +288,7 @@ int dsl_capture(struct dsl_options *options)
             rc = atomic_load(&state.error);
             if (!running && atomic_load(&state.running)) {
                 running = 1;
-                dsl_control_bound(options->continuous ? 0 : options->samples / options->rate + 30);
+                dsl_control_bound(dsl_capture_budget(options));
             }
             g_usleep(10000);
         }

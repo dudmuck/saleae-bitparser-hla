@@ -14,6 +14,10 @@ const struct DSL_profile *dsl_profile(uint16_t pid, int usb_speed);
 unsigned dsl_rate_factor(const struct DSL_profile *profile, uint64_t rate);
 int dsl_list_modes(int model, int speed);
 int dsl_profile_needs_security(const struct DSL_profile *profile);
+// Pure profile-based depth/budget helpers, also usable in offline tests.
+uint64_t dsl_buffer_depth(const struct DSL_profile *profile, uint16_t mask);
+int dsl_buffer_fits(const struct DSL_profile *profile, uint16_t mask, uint64_t samples);
+uint64_t dsl_capture_budget(const struct dsl_options *options);
 // Updates options to the driver's effective forced internal-pattern values.
 int dsl_configure(struct dsl_options *options);
 // Pure mode chooser against an explicit static profile; no USB access.

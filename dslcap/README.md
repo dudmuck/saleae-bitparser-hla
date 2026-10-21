@@ -150,8 +150,10 @@ Schema version 1 is `{ "schema": 1, "profiles": [...] }`. Each profile has:
   count), `num` (physical lane range 0 through num−1), boolean `validated`,
   and `rates` (the exact representable rates for that mode).
 
-`validated` marks enabled frontend paths; U3Pro16 buffer modes are false.
-It does not claim that pending hardware gates have passed. Rates use the same
+U3Pro16 SuperSpeed buffer entries are `validated=true` after the
+2026-10-21 Phase 3a live gates (untriggered only); its USB high buffer entries
+stay `false`. The flag does not enable trigger/serial/test-pattern paths,
+which dslcap still refuses on the U3Pro16. Rates use the same
 HALF/QUAR and divider rules as capture. Plus uses ×2/×4 packing; the U3Pro16's
 fixed 500 MHz ADF4360 clock uses ×1/×2. USB high U3Pro16 stream modes have a
 100 kHz minimum and the same count limits as Plus. At SuperSpeed its limits
@@ -236,6 +238,57 @@ claims pins/clocks and generally requires a reboot. Kernel PWM would claim
 pinmux/PWM resources (including W1-capable GPIO13/19) and may require an
 overlay; available frequencies differ from GPCLK. All require separate
 system/ownership approval and are outside this implementation.
+
+## U3Pro16 untriggered buffer capture (Phase 3a)
+
+Use `--model u3pro16 --mode buffer --samples N` (or `--time T`) without a
+trigger. At up to 500M the mode exposes CH0–15 with up to 16 enabled lanes;
+at 1G it exposes CH0–7 with up to eight. The exact accepted rates and DSView
+LOGIC divider registers are:
+
+| Rate | div_h | div_l |
+|---|---|---|
+| 1M | 0x0400 | 100 |
+| 2M | 0x0400 | 50 |
+| 4M | 0x0400 | 25 |
+| 5M | 0x0400 | 20 |
+| 10M | 0x0400 | 10 |
+| 20M | 0x0400 | 5 |
+| 25M | 0x0400 | 4 |
+| 50M | 0x0400 | 2 |
+| 100M | 0x0400 | 1 |
+| 125M | 0x0300 | 1 |
+| 250M | 0x0100 | 1 |
+| 500M | 0x0000 | 1 |
+| 1G | 0x0000 | 1 |
+
+These follow DSView 1.3.2 `dsl.c:1065–1085`, `dsl.h:425–428` and the
+U3Pro16 profiles at `dsl.h:589–642`: the ADF4360 runs a 500M clock
+(`dslogic.c:1289–1290`). 500M sets HALF with factor ×1; 1G sets QUAR with
+factor ×2. The driver still emits `LA_CROSS_DATA`: eight bytes of lane bits
+per 64 time samples per enabled lane, in ascending physical lane order
+(`dsl.c:2340–2346`, `dslogic.c:1436–1437`). The existing converter preserves
+that time/lane packing; no alternate host demultiplexing is introduced.
+
+Depth is the selected profile's 2 Gibit divided by enabled lane count,
+rounded down to a 1024-sample boundary. Requests are rounded up for arming
+and trimmed to the requested count. Full depth is 134,217,728 samples ×16
+or 268,435,456 samples ×8, both 256 MiB over USB. Over-depth requests fail
+with exit 8. Sparse masks can expand physical-bit output beyond the USB
+payload: one high lane at full depth needs about 4 GiB of host output/ring
+memory. Allocation and size overflow failures return nonzero; there is no
+fixed Plus-depth clamp. Continuous buffer mode is unsupported (exit 2).
+
+Untriggered U3Pro16 acquisition budgets the requested sampling duration,
+30 s startup/collection headroom, and `ceil(host_output_bytes / 4 MB/s) + 10 s`
+upload allowance. A full ×16/×8 buffer gets 108 s plus the integer sampling
+duration; actual USB3 upload at 100–400 MB/s would take about 0.7–2.7 s,
+subject to live measurement. Driver buffer transfers are 1 MiB with timeout 0
+and a 20 ms event poll (`dsl.c:2099–2155,2510–2540`). Output drain still
+allows 30 s without progress by default and refreshes while writes progress;
+`--drain-timeout` changes the stall limit, not the total upload time. The Plus
+watchdog policy is unchanged. Phase 3a live gates remain pending; simple and
+serial triggers and internal-pattern mode remain fenced for Phase 3b/3c.
 
 ## Simple buffer triggers
 
@@ -375,8 +428,9 @@ Firmware validation checks only the selected model's bitstream after enumeration
 and before activation; invalid firmware directories fail before initialization.
 
 The U3Pro16 (`2a0e:002a`) supports streaming in Phase 2, pending live U2–U5
-gates. Buffer, simple/serial trigger and internal-pattern capture are rejected
-with exit 8 (`not validated on U3Pro16 (Phase 3)`). Its profile follows negotiated USB
+gates. Phase 3a adds finite untriggered buffer capture; simple/serial triggers
+and internal-pattern capture remain rejected with exit 8
+(`not validated on U3Pro16 (Phase 3b/3c)`). Its profile follows negotiated USB
 speed (`super` or `high`), and its scan line is, for example:
 
 ```text

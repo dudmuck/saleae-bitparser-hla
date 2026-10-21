@@ -79,9 +79,16 @@ authority. Replay needs no dslcap executable or mode query.
 
 U3Pro16 SuperSpeed streaming supports up to 125M×16, 250M×12, 500M×6 and
 1G×3 (CH0–7 only at 1G), with a 1 MHz minimum. USB high has a 100 kHz minimum
-and the Plus-style 20M×16 / 25M×12 / 50M×6 / 100M×3 modes. The U3Pro16's
-buffer, simple trigger, serial trigger and internal-pattern paths are fenced
-until Phase 3; the producer rejects them before activation. Plus buffer and
+and the Plus-style 20M×16 / 25M×12 / 50M×6 / 100M×3 modes. The U3Pro16 now accepts finite untriggered buffer capture
+(`--dsl-model u3pro16 --dsl-mode buffer --samples N` or `--time T`): up to
+500M×16, or 1G×8 on CH0–7. Its exact rates, counts and physical lanes come
+from `--list-modes`. SuperSpeed buffer entries are `validated=true` after the
+2026-10-21 live gates; USB high U3Pro16 buffer entries stay `false` and are
+rejected. Depth is 2 Gibit / enabled lanes, aligned to 1024
+samples (134,217,728 at ×16; 268,435,456 at ×8); dslcap rejects excess depth.
+Continuous buffer mode is unsupported. Simple trigger, serial trigger and
+internal-pattern paths remain fenced until Phase 3b/3c; the producer rejects
+them before activation. Plus buffer and
 trigger behavior is unchanged. Live U3Pro16 gates are tracked separately.
 
 Live decoding sustains about 100–130 MB/s in the measured workload. Use

@@ -321,6 +321,13 @@ static void *collect(void *unused)
     for (unsigned i = 0; i < count; i++) memset(data + i * 8, (i & 1) ? 0xaa : 0x55, 8);
     uint64_t actual = sample_limit;
     int send_logic = 1;
+    if (u3_only() && operation == LO_OP_BUFFER && !trigger_enabled) {
+        // DSView forwards the upload position header even without a trigger;
+        // the untriggered frontend ignores it and retains one META line.
+        struct ds_trigger_pos header = {.check_id = 0x55555555};
+        struct sr_datafeed_packet packet = {.type = SR_DF_TRIGGER, .status = SR_PKT_OK, .payload = &header};
+        feed_callback(NULL, &packet);
+    }
     if (trigger_enabled) {
         const char *specified = getenv("DSLCAP_TEST_ACTUAL");
         if (specified) actual = strtoull(specified, NULL, 10);

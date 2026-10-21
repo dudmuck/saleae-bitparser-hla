@@ -254,7 +254,7 @@ SHA-256 lists `plus-regression-20261020{,.raw}.sha256`. The run script
 - **Pins.** After every run, both Pis' `pinctrl get 0-27` was identical to
   the baseline.
 
-**Still open:** Phase 3 (buffer and triggers on the U3Pro16). W2 is
+**Still open:** Phase 3 (buffer and triggers on the U3Pro16); 3a is below. W2 is
 recorded below.
 
 ## W2 real radio traffic on the U3Pro16 — PASS
@@ -320,3 +320,61 @@ Evidence (git-ignored): `dslcap/local-evidence/u3pro16-w2-20261020/`,
 hashed in `u3pro16-w2-20261020.sha256` and `.raw.sha256`. The raw-file
 SHA-256 for `b-125m.raw` is `8aa379a7…6cdf`. It includes the peer logs,
 `Txn2Hla.py`, `w2cmp.py` and `sclk_stats.py`.
+
+## Phase 3a: untriggered buffer mode on the U3Pro16 — PASS
+
+2026-10-21 04:05–04:40 PDT. ds-worker implemented 3a offline
+(`dslcap-u3pro16-p3a-20261021`, Part A only; Part B `pi_pattern --lanes`
+was withdrawn once the radio boards came off).
+
+**Implementation:**
+- The U3Pro16 fence now covers only trigger, serial trigger and test
+  pattern (exit 8, "Phase 3b/3c").
+- The new helpers `dsl_buffer_depth`/`dsl_buffer_fits` apply
+  2 Gibit / enabled lanes, aligned to 1024.
+- `dsl_capture_budget` gives U3 buffer captures an upload allowance of
+  host output bytes at 4 MB/s plus 10 s; Plus and stream budgets are
+  unchanged.
+- Continuous buffer stays unsupported (exit 2).
+
+ds-worker derived the 13 buffer rates, from 1M to 1G, with their
+dividers from `dsl.c:1065–1085`. 200M and 400M are not U3Pro16 rates.
+
+The lead reviewed the diff and built it (`lead-build-p3a`). After the gates
+below, the lead set `validated=true` for SuperSpeed U3Pro16 buffer modes in
+`--list-modes`; USB high buffer entries stay `false`. The lead also removed
+the `sigrok_hla.py` exception for unvalidated U3 buffer modes. ctest 8/8 and
+the Python suite (100 tests, 8 skipped) pass.
+
+**Wiring.** Before the gates, the user removed the radio boards from both
+Pis; see the W1 isolation note in the plan. The W1 idle capture read
+`0x2020` again, and a walk at 25M×16 passed on both groups.
+
+| Gate | Capture | Result |
+|---|---|---|
+| PRBS 500M×16 | 16,777,216 samples, both groups | PASS |
+| PRBS 500M×16 full depth | 134,217,728 samples (268,435,483 bytes), 1.6 s wall including upload | PASS both groups; max skew dwell 1 sample |
+| PRBS 1G×8 | 16,777,216 samples, CH0–7, unitsize 1 | PASS |
+| PRBS 1G×8 full depth | 268,435,456 samples (268,435,484 bytes), 1.7 s wall | PASS; max skew dwell 2 samples |
+| GPCLK 27 MHz, pi133 CH2 | 500M×16 and 1G×8 modes, full depth | +22.536 ppm at both rates (identical to 0.0001 ppm), duty 0.531, 0 glitches |
+| GPCLK 27 MHz, pi134 CH10 | 500M, full depth | +13.475 ppm, duty 0.528, 0 glitches |
+| SPI decode | `sigrok_hla.py --dsl-mode buffer` at 100M, 67,108,864 samples | 384 / 382 bytes on SPI / SPI_B, each one contiguous byte-exact window of its Pi's manifest |
+| Refusals | over depth; 1G with CH8; 200M; `--trigger`; continuous | exit 8, 8, 8, 8, 2; no output |
+| SIGINT | 1G×8 full depth, signal after 0.6 s and 1.0 s | exit 130 within about 0.1 s, partial output; reopen scan 0.2 s; next capture exit 0 |
+
+- **Timebase.** PRBS transitions per nominal second agree within 2%
+  across 500M and 1G (Pi CPU jitter), so the 1G factor is not off by ×2.
+  GPCLK pins it at the ppm level.
+- **Pi clocks.** In U4 (stream, 2026-10-20) the same pi133/pi134 clocks
+  read +23.6/+14.2 ppm. Today they read +22.5/+13.5 ppm; the two Pis
+  differ by 9.1 ppm, against 9.4 ppm then.
+- **Pins.** Both `pi_gpclk` runs read back restored (GP0CTL `0x200`,
+  DIV 0, GPIO20 input / pull-down / low). After all runs, both Pis'
+  `pinctrl get 0-27` matched the no-radio baseline.
+
+Evidence (git-ignored): `dslcap/local-evidence/u3pro16-phase3-20261021/`,
+hashed in `u3pro16-phase3-20261021.sha256` and `.raw.sha256`.
+
+**Still open:** 3b simple triggers (needs DSView reference register images
+for the U3Pro16), 3c serial triggers, and a Plus buffer regression on this
+build before merge.

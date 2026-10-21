@@ -252,6 +252,24 @@ Plus, and add them as separate goldens. Live gates U7–U9 on W1: simple
 trigger position at 100M/500M/1G on a P1 step; timeout, upload, cancel and
 reopen; serial trigger bit order and an opcode spot check on P4 frames.
 
+**Phase 3 started 2026-10-21 04:05 PDT** ("you can start phase three"),
+with W1 rewired and `mcp_radio` stopped on both Pis. It is split into:
+- **3a:** untriggered buffer mode, 500M×16 and 1G×8, assigned to ds-worker
+  as `dslcap-u3pro16-p3a-20261021`.
+- **3b:** simple triggers, after DSView reference images for the U3Pro16.
+- **3c:** serial triggers.
+
+**W1 isolation finding, same date.** Since the reboot into `mcp_radio`
+(~19:20 PDT on 2026-10-20), GPIO22 and GPIO25 (CH6/CH7, CH14/CH15) read high
+with pull-down enabled on both Pis, so something off-Pi drives them. They
+were low on all earlier W1 baselines. The W1 idle capture now reads `0xa0a0`
+(CH5/CH7/CH13/CH15 high), not `0x2020`; CH6/CH14 read low on the analyzer
+although the Pis read GPIO22 high. **Resolved at 04:08 PDT:** the user removed the radio boards from both Pis
+(with the Pis still running). GPIO22/25 then read low, the idle capture was
+`0x2020` again, and a W1 walk at 25M×16 passed on both groups with pins
+restored. All eight W1 lines per Pi are back in use; the planned
+`pi_pattern --lanes` was withdrawn from 3a.
+
 Phase 3 can be deferred; Phases 1–2 stand alone. A Plus-attached
 regression scan and a short 25M×12 stream before merging are required, once
 the user reconnects it.

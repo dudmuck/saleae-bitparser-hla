@@ -81,7 +81,7 @@ int dsl_list_modes(int model, int speed)
                        "\"rates\":[", first_mode ? "" : ",", i, name,
                        mode->stream ? "true" : "false", mode->min_samplerate,
                        mode->max_samplerate, mode->vld_num, mode->num,
-                       m == 0 || mode->stream ? "true" : "false");
+                       m == 0 || mode->stream || speeds[j] == LIBUSB_SPEED_SUPER ? "true" : "false");
                 g_free(name);
                 first_mode = 0;
                 // Per-mode exact rates keep callers independent of divider and
@@ -123,6 +123,34 @@ int dsl_choose_mode(const struct DSL_profile *p, int stream, uint64_t rate, uint
         if (chosen < 0 || mode->vld_num > channel_modes[chosen].vld_num) chosen = (int)i;
     }
     return chosen;
+}
+
+uint64_t dsl_buffer_depth(const struct DSL_profile *p, uint16_t mask)
+{
+    unsigned count = 0;
+    for (unsigned i = 0; i < 16; i++) if (mask & (1u << i)) count++;
+    return p && count ? (p->dev_caps.hw_depth / count) & ~SAMPLES_ALIGN : 0;
+}
+
+int dsl_buffer_fits(const struct DSL_profile *p, uint16_t mask, uint64_t samples)
+{
+    if (!samples || samples > UINT64_MAX - SAMPLES_ALIGN) return 0;
+    return ((samples + SAMPLES_ALIGN) & ~SAMPLES_ALIGN) <= dsl_buffer_depth(p, mask);
+}
+
+uint64_t dsl_capture_budget(const struct dsl_options *o)
+{
+    if (o->continuous) return 0;
+    uint64_t seconds = o->samples / o->rate + 30;
+    if (!o->stream && o->profile && o->profile->pid == models[1].pid) {
+        // Keep the Plus watchdog unchanged. U3 buffers can upload 256 MiB
+        // over USB and expand further in host physical-bit format. Budget
+        // output bytes at 4 MB/s plus 10 s, as wait_trigger's upload policy.
+        // samples are bounded by the profile depth before this is called.
+        uint64_t bytes = o->samples * (o->channels & 0xff00 ? 2u : 1u);
+        seconds += bytes / 4000000 + (bytes % 4000000 != 0) + 10;
+    }
+    return seconds;
 }
 
 static int set(int key, GVariant *value)
@@ -188,10 +216,7 @@ int dsl_configure(struct dsl_options *o)
         return DSL_CONFIG_ERROR;
     }
     if (!o->stream && !o->pattern) {
-        unsigned count = 0;
-        for (unsigned i = 0; i < 16; i++) if (o->channels & (1u << i)) count++;
-        uint64_t aligned = (o->samples + SAMPLES_ALIGN) & ~SAMPLES_ALIGN;
-        if (aligned > p->dev_caps.hw_depth / count) {
+        if (!dsl_buffer_fits(p, o->channels, o->samples)) {
             fprintf(stderr, "dslcap: finite buffer limit exceeds channel hardware depth\n");
             return DSL_CONFIG_ERROR;
         }

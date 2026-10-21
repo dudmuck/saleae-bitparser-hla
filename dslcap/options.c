@@ -309,8 +309,8 @@ int dsl_parse_options(int argc, char **argv, struct dsl_options *o)
         }
     }
     if (optind == argc && !o->scan && !o->list_modes && o->model == 1 && o->capture &&
-        (!o->stream || o->trigger || o->serial || o->pattern)) {
-        fprintf(stderr, "dslcap: buffer/trigger/test-pattern not validated on U3Pro16 (Phase 3)\n");
+        (o->trigger || o->serial || o->pattern)) {
+        fprintf(stderr, "dslcap: trigger/serial/test-pattern not validated on U3Pro16 (Phase 3b/3c)\n");
         return DSL_CONFIG_ERROR;
     }
     if ((o->speed && !o->list_modes) || (o->list_modes && (o->scan || o->capture)) ||
@@ -325,7 +325,10 @@ int dsl_parse_options(int argc, char **argv, struct dsl_options *o)
         o->channels = 0xffff; o->stream = 0; o->continuous = 0;
     } else {
         if (o->capture && !duration_seen) goto invalid;
-        if (o->continuous && !o->stream) goto invalid;
+        if (o->continuous && !o->stream) {
+            if (o->model == 1) fprintf(stderr, "dslcap: continuous buffer mode is unsupported\n");
+            goto invalid;
+        }
         if (seconds) {
             long double samples = ceill(seconds * o->rate);
             if (!isfinite(samples) || samples < 1 || samples > UINT64_MAX - 4096) goto invalid;
