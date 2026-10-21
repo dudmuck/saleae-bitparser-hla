@@ -259,6 +259,10 @@ with W1 rewired and `mcp_radio` stopped on both Pis. It is split into:
 - **3b:** simple triggers, after DSView reference images for the U3Pro16.
 - **3c:** serial triggers.
 
+**Phase 3 complete, 2026-10-21 10:33 PDT:** 3a `153a7fc`, 3b `5f99c2a`, 3c
+`096e1d1`, each with live gates in `U3PRO16_VALIDATION.md`, plus a Plus
+regression on the 3c build (all six Plus register goldens identical).
+
 **W1 isolation finding, same date.** Since the reboot into `mcp_radio`
 (~19:20 PDT on 2026-10-20), GPIO22 and GPIO25 (CH6/CH7, CH14/CH15) read high
 with pull-down enabled on both Pis, so something off-Pi drives them. They

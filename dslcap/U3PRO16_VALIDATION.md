@@ -496,4 +496,29 @@ and the `bits` count on the U3Pro16 at 100M, 500M and 1G. Non-aligned words
 is established.
 
 **Still open:** a Plus buffer/trigger/serial regression on this build before
-merge.
+merge (done below).
+
+## Plus regression on the Phase 3 build — PASS (2026-10-21)
+
+10:31–10:33 PDT. The U3Pro16 was unplugged and the Plus (`2a0e:0034`, bus 1
+address 64, high speed) connected with the same W1 wiring. Build: the
+`096e1d1` tree (dslcap sha256 prefix `5ebe07b65f988c0d`), `--model plus`.
+Pins matched the baseline before and after. Evidence:
+`local-evidence/plus-regression-p3-20261021/` (hashed in
+`plus-regression-p3-20261021.sha256`).
+
+| Gate | Result |
+|---|---|
+| Scan | activated, security pass, HDL checked |
+| Idle 20M×16 | all 2,000,000 samples `0x2020` |
+| Register images through the shim vs `TRIGGER_GOLDEN.json` (100M/200M ×8, 400M ×4, `3:f`) | all three identical |
+| Register images vs `SERIAL_GOLDEN.json` (`0x1c35`/16 at 100M/200M/400M) | all three identical |
+| PRBS stream 50M×6, buffer 100M×16, 200M×8, 400M×4 | full counts; `check_pattern.py` PASS on every group |
+| Simple-trigger placement, walk, N=65536, `3:f`, 0/10/50/90% at 100M×16, 200M×8, 400M×4 | condition exact at META index in all 12; 10 inside the 64-sample block, 2 early (200M 10%, 50%) |
+| AND `0:1,11:r` at 100M, 50% | condition exact at META index |
+| Serial `0x8461`/16 and `0x211`/10 at 100M/200M/400M (8-frame trains) | hit; K = 16th / 10th SCLK rise, Δ0, MOSI decode `0x8461` |
+| Serial bit-reversed, byte-swapped and `0x000`/10 | exit 16 at every rate |
+| Timeout fail / upload | 16 / 0 with `META trigger: none` |
+| Ctrl-C while waiting, then reopen | 130, then exit 0 with a full capture |
+
+**Phase 3 complete.** No Plus behavior changed on this build.
