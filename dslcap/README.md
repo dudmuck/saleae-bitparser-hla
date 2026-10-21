@@ -152,8 +152,8 @@ Schema version 1 is `{ "schema": 1, "profiles": [...] }`. Each profile has:
 
 U3Pro16 SuperSpeed buffer entries are `validated=true` after the
 2026-10-21 Phase 3a live gates (untriggered only); its USB high buffer entries
-stay `false`. Simple buffer triggers are implemented in Phase 3b; serial
-triggers and internal patterns remain fenced for Phase 3c. Rates use the same
+stay `false`. Simple and serial buffer triggers are implemented;
+internal patterns remain fenced. Rates use the same
 HALF/QUAR and divider rules as capture. Plus uses ×2/×4 packing; the U3Pro16's
 fixed 500 MHz ADF4360 clock uses ×1/×2. USB high U3Pro16 stream modes have a
 100 kHz minimum and the same count limits as Plus. At SuperSpeed its limits
@@ -289,7 +289,7 @@ allows 30 s without progress by default and refreshes while writes progress;
 `--drain-timeout` changes the stall limit, not the total upload time. The Plus
 watchdog policy is unchanged. Phase 3a live gates passed; simple buffer
 triggers are implemented in Phase 3b, with live trigger gates tracked separately.
-Serial triggers and internal-pattern mode remain fenced for Phase 3c.
+Serial buffer triggers are implemented in Phase 3c; internal patterns remain fenced.
 
 ## Simple buffer triggers
 
@@ -311,7 +311,7 @@ channels, stream or continuous triggers, and triggers with `--test-pattern`
 are rejected. Plus trigger channels obey its fast buffer lane limits: 0..15 at
 100M, 0..7 at 200M, and 0..3 at 400M. U3Pro16 simple triggers use CH0..15 at
 up to 500M, or CH0..7 at 1G; add `--model u3pro16` to select it explicitly.
-Serial triggers and internal patterns on U3Pro16 still return exit 8 (Phase 3c).
+Internal patterns on U3Pro16 still return exit 8.
 
 `--trigger-pos` is an integer percent from 0 to 90, default 10. The driver
 arms N rounded up to 1024 samples. The effective pre-trigger position uses
@@ -364,7 +364,8 @@ described below. Trigger-relative `--t0` remains unsupported and is rejected.
 
 ## Serial buffer triggers
 
-`--serial-trigger` selects a serial trigger instead of a simple AND trigger:
+`--serial-trigger` selects a serial trigger instead of a simple AND trigger
+on the Plus or U3Pro16:
 
 ```sh
 /tmp/dslcap-build/dslcap --mode buffer --samplerate 400M --channels 0-3 \
@@ -380,7 +381,11 @@ work). All four role channels must be captured and fit the physical rate lanes.
 Roles may share a channel, as start/stop normally share nSS. Serial and simple
 triggers are mutually exclusive; serial capture requires finite buffer mode
 and rejects test patterns. Existing trigger-position, timeout/action, drain,
-exact two-line META and exit-status rules apply unchanged.
+exact two-line META and exit-status rules apply unchanged. U3Pro16 role lanes
+are CH0–15 at up to 500M or CH0–7 at 1G; select it with `--model u3pro16`.
+The Phase 3b upload allowances also cover serial captures at full depth.
+U3Pro16 serial arm images match DSView at 100M and 1G; live shift order,
+word alignment and width/clock coverage remain separate U3Pro16 gates.
 
 Configuration follows DSView 1.3.2's serial template: global stage selector0
 (default UI stage count1); stage0=start/stop, stage1=clock/all-X,
@@ -389,13 +394,16 @@ non-contiguous, with no inversion; stage1 count1 and stage3 count(bits-1).
 The trigger is enabled last. Fixed sixteen-probe strings put the value LSB in
 probe0 and unused upper16-bits positions at X. For bits<16 the matching DSView
 reference is the bit editor with upper X positions; its hex helper instead
-zero-pads all16 positions.
+zero-pads all16 positions. At U3Pro16 1G, the real driver duplicates the low
+byte of role stages 0–2 into the upper byte; stage3's comparison word stays
+unreplicated, preserving the full 1..16-bit width.
 
 MSB-first serial order is used: the most recently shifted bit is the value
 LSB. The asymmetric16-bit value0x1c35 distinguishes bit reversal0xac38,
 byte swap0x351c, and both0x38ac. Offline tests pin the parsed value and generated
 stage state; they do not prove hardware shift order or constitute a real DSView
-register golden. Actual register comparison passed at 100/200/400 MS/s, and
+register golden by themselves. On the Plus, actual register comparison passed
+at 100/200/400 MS/s, and
 native aligned bit-order validation passed at 100 MS/s on CH0–7. C.3 opcode
 validation also passed there for LR2021 opcodes `0x0101` and `0x0002`; see
 [OPCODE_VALIDATION.md](OPCODE_VALIDATION.md). Live bit order also passed at
@@ -444,8 +452,8 @@ and before activation; invalid firmware directories fail before initialization.
 
 The U3Pro16 (`2a0e:002a`) supports streaming in Phase 2, pending live U2–U5
 gates. Phase 3a adds finite untriggered buffer capture; Phase 3b adds simple
-buffer triggers. Serial triggers and internal-pattern capture remain rejected
-with exit 8 (`not validated on U3Pro16 (Phase 3c)`). Its profile follows negotiated USB
+buffer triggers; Phase 3c adds serial buffer triggers. Internal-pattern capture
+remains rejected with exit 8 (`test-pattern not validated on U3Pro16`). Its profile follows negotiated USB
 speed (`super` or `high`), and its scan line is, for example:
 
 ```text

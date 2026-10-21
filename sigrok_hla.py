@@ -12,7 +12,7 @@ Examples:
   # U3Pro16/super streams 125M x16, 250M x12, 500M x6, 1G x3 (CH0-7).
   # Above ~100-130 MB/s use --raw-out then replay; 250M x12 is ~500 MB/s.
   # U3Pro16 finite untriggered buffer capture is enabled in Phase 3a;
-  # trigger/serial/internal-pattern capture remains fenced for Phase 3b/3c.
+  # Simple and serial buffer triggers supported; internal pattern stays fenced.
   # DSLogic Plus PGL12 - pi133/pi134 dual SPI, streaming at 25M
   ./sigrok_hla.py --hla-path ~/HLA/saleae_lr2021 --dslogic \\
       --dslcap /tmp/dslcap-build/dslcap --spi 0,1,2,3 --spi 8,9,10,11 \\
@@ -717,8 +717,6 @@ def validate_backend_args(args, spi_ports):
     model = getattr(args, 'dsl_model', 'auto')
     if model not in ('auto', 'plus', 'u3pro16'):
         raise SystemExit('--dsl-model must be plus, u3pro16 or auto.')
-    if model == 'u3pro16' and getattr(args, 'serial_trigger', None):
-        raise SystemExit('Serial capture not validated on U3Pro16 (Phase 3c).')
     profiles = dslcap_mode_profiles(args)
     eligible = [p for p in profiles if model == 'auto' or p['model'] == model]
     candidates = [m for p in eligible for m in p['modes']

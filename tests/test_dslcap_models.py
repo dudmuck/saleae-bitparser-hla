@@ -64,9 +64,6 @@ class ModelTests(unittest.TestCase):
             with self.subTest(rate=rate), self.assertRaises(SystemExit):
                 hla.build_dslcap_cmd(self.args(dsl_model='u3pro16', dsl_mode='buffer', samplerate=rate), mapping)
         hla.build_dslcap_cmd(self.args(dsl_model='u3pro16', dsl_mode='buffer', trigger='3:f'), low)
-        for extra in (dict(serial_trigger='start=3:f,stop=3:r,clock=0:r,data=2,value=0x55,bits=8'),):
-            with self.assertRaisesRegex(SystemExit, 'Phase 3c'):
-                hla.build_dslcap_cmd(self.args(dsl_model='u3pro16', dsl_mode='buffer', **extra), low)
 
     def test_u3_simple_trigger_forwarding_and_rate_lanes(self):
         ports = [hla.parse_spi_port('0,1,2,3')]
@@ -82,6 +79,23 @@ class ModelTests(unittest.TestCase):
                     samplerate='1G', trigger=f'{lane}:r'), ports)
         with self.assertRaisesRegex(SystemExit, 'buffer'):
             hla.build_dslcap_cmd(self.args(dsl_model='u3pro16', trigger='3:f'), ports)
+
+    def test_u3_serial_forwarding_and_rate_lanes(self):
+        ports = [hla.parse_spi_port('0,1,2,3')]
+        spec = 'start=3:f,stop=3:r,clock=0:r,data=2,value=0x1c35,bits=16'
+        for rate in ('100M', '500M', '1G'):
+            cmd = hla.build_dslcap_cmd(self.args(dsl_model='u3pro16', dsl_mode='buffer',
+                samplerate=rate, serial_trigger=spec), ports)
+            self.assertEqual(cmd[cmd.index('--serial-trigger') + 1], spec)
+        for role in ('start', 'stop', 'clock', 'data'):
+            parts = dict(term.split('=') for term in spec.split(','))
+            parts[role] = '8' + (':r' if role != 'data' else '')
+            bad = ','.join(f'{key}={value}' for key, value in parts.items())
+            with self.subTest(role=role), self.assertRaises(SystemExit):
+                hla.build_dslcap_cmd(self.args(dsl_model='u3pro16', dsl_mode='buffer',
+                    samplerate='1G', serial_trigger=bad), ports)
+        with self.assertRaisesRegex(SystemExit, 'buffer'):
+            hla.build_dslcap_cmd(self.args(dsl_model='u3pro16', serial_trigger=spec), ports)
 
     def test_query_failure_and_bad_schema(self):
         from test_dslcap_backend import PORTS

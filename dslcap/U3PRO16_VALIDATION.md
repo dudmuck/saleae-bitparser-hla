@@ -448,3 +448,52 @@ at arm (`5:1`) reports 0.
 
 **Still open:** 3c serial triggers (references: golden cases 5–6), and a
 Plus buffer/trigger regression on this build before merge.
+
+## Phase 3c: serial buffer triggers on the U3Pro16 — PASS (2026-10-21)
+
+ds-worker task `dslcap-u3pro16-p3c-20261021` (report `codex-p3c-report-01`):
+the U3Pro16 serial fence is removed (dslcap and `sigrok_hla.py`); the test
+pattern stays refused (exit 8). No driver or timing change: serial shares
+the simple-trigger API path and the 3b `wait_trigger` allowances. At 1G,
+libsigrok4DSL replicates role stages 0–2 into the upper byte but not the
+compare stage 3 (`dsl.c:1176-1208`), as golden case 6 shows. Lead build:
+warning-free, ctest 8/8 (offline real-`dsl_fpga_arm` images match all six
+U3 and six Plus goldens), Python 102 OK, 8 skipped.
+
+Live, SuperSpeed, VTH 1.6 V, position 10%, `--trigger-timeout 5s`,
+`start=3:f,stop=3:r,clock=0:r,data=2`. Each trial armed dslcap first,
+then pi133 emitted one finite 8-frame `pi_pattern spi --states 3216`
+train (manifest sha256 prefix `d2d12f7bdc2b12d9` in every trial; frame 0
+MOSI `8461 3956 …`). pi134 idle. Pins matched the baseline before and after.
+Evidence: `local-evidence/u3pro16-phase3c-live-20261021/` (hashed in
+`u3pro16-phase3c-live-20261021.sha256`); register logs in
+`local-evidence/u3pro16-phase3b-golden-20261021/live5.log`, `live6.log`.
+
+| Gate | 100M×16 | 500M×16 | 1G×8 |
+|---|---|---|---|
+| Register image vs DSView (cases 5, 6) | identical | — | identical |
+| `0x8461`/16 (frame-start word), twice | hit; K = 16th SCLK rise, Δ0 | hit, Δ0 | hit, Δ0 |
+| Bit-reversed `0x8621`, byte-swapped `0x6184`, both `0x2186`, `0x0000` | all exit 16 | all exit 16 | all exit 16 |
+| `0x211`/10 | hit; K = 10th SCLK rise, Δ0 | hit, Δ0 | hit, Δ0 |
+| `0x000`/10 | exit 16 | exit 16 | exit 16 |
+
+Every hit's MOSI decode from the capture starts `0x8461`, and the full
+requested sample count was returned. Also:
+- Full depth 500M×16 (134,217,728) and 1G×8 (268,435,456): hit, K = 16th
+  SCLK rise, Δ0, full count.
+- `--on-timeout upload` with absent `0x0000`: exit 0, `META trigger: none`,
+  3,354,624 samples.
+- Ctrl-C while waiting: exit 130; immediate reopen and a hit, Δ0.
+- Refusals: role on an uncaptured channel and value wider than `bits` exit 2
+  (usage, as on the Plus); 1G with CH8 enabled exit 8; stream exit 2; test
+  pattern exit 8. A first refusal set used an unprefixed `value=1` and was
+  rejected as a parse error; it was rerun with `value=0x1`.
+
+This confirms MSB-first shift order, matching of a word at the frame start,
+and the `bits` count on the U3Pro16 at 100M, 500M and 1G. Non-aligned words
+(rolling-window behavior) were not tested. SCLK was ~5 kHz (about
+202 µs per bit from the Pi's real step time); no upper serial clock limit
+is established.
+
+**Still open:** a Plus buffer/trigger/serial regression on this build before
+merge.

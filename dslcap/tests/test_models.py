@@ -46,26 +46,25 @@ class Models(unittest.TestCase):
 
     def test_phase3_fences(self):
         for model in ([], ['--model', 'u3pro16']):
-            for extra in (['--mode', 'buffer', '--samples', '2048', '--serial-trigger',
-                           'start=3:f,stop=3:r,clock=0:r,data=2,value=0x55,bits=8'],
-                          ['--test-pattern'], ['--pattern']):
+            for extra in (['--test-pattern'], ['--pattern']):
                 with self.subTest(model=model, extra=extra):
                     r = run(*model, *extra)
                     self.assertEqual(r.returncode, 8, r.stderr)
-                    self.assertIn('not validated on U3Pro16 (Phase 3c)', r.stderr)
+                    self.assertIn('test-pattern not validated on U3Pro16', r.stderr)
                     self.assertNotIn('FAKE activation', r.stderr)
 
     def test_real_driver_trigger_images(self):
         golden = json.loads((Path(__file__).resolve().parents[1] /
                              'U3PRO16_TRIGGER_GOLDEN.json').read_text())
         program = str(Path(PROGRAM).with_name('dslcap_config_tests'))
-        for case in golden['captures'][:4]:
-            trigger = '0:1,11:r' if case['case'] == '4' else '3:f'
-            # count is in units of 16 samples; all four are 1,000,448.
+        for case in golden['captures']:
+            serial = case['kind'] == 'serial'
+            trigger = case['trigger'] if serial else ('0:1,11:r' if case['case'] == '4' else '3:f')
+            # Driver count is in units of 16 samples.
             samples = case['fields']['count'] * 16
             cmd = [program, '--model', 'u3pro16', '--mode', 'buffer',
                    '--samplerate', case['rate'], '--channels', case['channels'],
-                   '--samples', str(samples), '--trigger', trigger,
+                   '--samples', str(samples), '--serial-trigger' if serial else '--trigger', trigger,
                    '--trigger-pos', str(case['position_percent']), '--vth', '1.6']
             with self.subTest(case=case['case']):
                 result = subprocess.run(cmd, capture_output=True, timeout=5)
@@ -111,6 +110,31 @@ class Models(unittest.TestCase):
             self.assertEqual(r.returncode, 8, r.stderr)
             self.assertNotIn('FAKE activation', r.stderr)
 
+    def test_u3_serial_limits(self):
+        spec = 'start=3:f,stop=3:r,clock=0:r,data=2,value=0x1c35,bits=16'
+        for rate, channels in [('100M', '0-15'), ('500M', '0-15'), ('1G', '0-7')]:
+            r = run('--model', 'u3pro16', '--mode', 'buffer', '--samplerate', rate,
+                    '--channels', channels, '--samples', '2048', '--serial-trigger', spec)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn('META trigger: 8', r.stdout)
+        for role in ('start', 'stop', 'clock', 'data'):
+            for lane in range(8, 16):
+                parts = dict(term.split('=') for term in spec.split(','))
+                parts[role] = str(lane) + (':r' if role != 'data' else '')
+                bad = ','.join(f'{key}={value}' for key, value in parts.items())
+                with self.subTest(role=role, lane=lane):
+                    r = run('--model', 'u3pro16', '--mode', 'buffer', '--samplerate', '1G',
+                            '--channels', f'0-7,{lane}', '--samples', '2048', '--serial-trigger', bad)
+                    self.assertEqual(r.returncode, 8, r.stderr)
+                    self.assertNotIn('FAKE activation', r.stderr)
+                    r = run('--model', 'u3pro16', '--mode', 'buffer', '--samplerate', '100M',
+                            '--channels', '0-7', '--samples', '2048', '--serial-trigger', bad)
+                    self.assertEqual(r.returncode, 2, r.stderr)
+                    self.assertNotIn('FAKE init', r.stderr)
+        r = run('--model', 'u3pro16', '--mode', 'stream', '--samples', '2048', '--serial-trigger', spec)
+        self.assertEqual(r.returncode, 2, r.stderr)
+        self.assertNotIn('FAKE init', r.stderr)
+
     def test_u3_timeout_fail_and_short_forced_upload(self):
         args = ['--model', 'u3pro16', '--mode', 'buffer', '--samplerate', '500M',
                 '--channels', '0-7', '--samples', '2048', '--trigger', '3:f',
@@ -124,6 +148,37 @@ class Models(unittest.TestCase):
         self.assertEqual(uploaded.returncode, 0, uploaded.stderr)
         header = b'META samplerate: 500000000\nMETA trigger: none\n'
         self.assertEqual(uploaded.stdout, header + bytes([0x55, 0xaa]) * 512)
+
+    def test_u3_serial_timeout_upload_and_full_depth_interrupt(self):
+        spec = 'start=3:f,stop=3:r,clock=0:r,data=2,value=0x1c35,bits=16'
+        args = ['--model', 'u3pro16', '--mode', 'buffer', '--samplerate', '500M',
+                '--channels', '0-7', '--samples', '2048', '--serial-trigger', spec,
+                '--trigger-timeout', '0.1s']
+        failed = run(*args, scenario='u3-trigger-timeout')
+        self.assertEqual(failed.returncode, 16, failed.stderr)
+        self.assertNotIn('META trigger:', failed.stdout)
+        uploaded = subprocess.run([PROGRAM, '--fw-dir', FIRMWARE, *args, '--on-timeout', 'upload'],
+            env=dict(os.environ, DSLCAP_TEST_SCENARIO='u3-trigger-force', DSLCAP_TEST_ACTUAL='1024'),
+            capture_output=True, timeout=5)
+        self.assertEqual(uploaded.returncode, 0, uploaded.stderr)
+        self.assertEqual(uploaded.stdout, b'META samplerate: 500000000\nMETA trigger: none\n' +
+                         bytes([0x55, 0xaa]) * 512)
+        args[args.index('--channels') + 1] = '0-15'
+        args[args.index('--samples') + 1] = '134217728'
+        proc = subprocess.Popen([PROGRAM, '--fw-dir', FIRMWARE, *args, '--on-timeout', 'upload'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            env=dict(os.environ, DSLCAP_TEST_SCENARIO='u3-trigger-forced-hang'))
+        try:
+            time.sleep(.4)  # Past the old full-depth forced-upload bound.
+            self.assertIsNone(proc.poll())
+            proc.send_signal(signal.SIGINT)
+            _, err = proc.communicate(timeout=3)
+            self.assertEqual(proc.returncode, 130, err)
+            self.assertIn(b'FAKE cleanup', err)
+        finally:
+            if proc.poll() is None:
+                proc.kill()
+                proc.communicate()
 
     def test_u3_full_depth_pre_header_budgets_and_interrupt(self):
         for scenario in ('u3-trigger-post-hang', 'u3-trigger-forced-hang', 'u3-trigger-false-none'):

@@ -89,8 +89,8 @@ samples (134,217,728 at ×16; 268,435,456 at ×8); dslcap rejects excess depth.
 Continuous buffer mode is unsupported. Simple AND buffer triggers are supported
 on U3Pro16: trigger lanes CH0–15 at up to 500M, or CH0–7 at 1G. Trigger lanes
 join the captured channel union and obey the same profile limits. Serial
-triggers and internal patterns remain fenced for Phase 3c (producer exit 8
-before activation). Plus buffer and trigger behavior is unchanged. Live U3Pro16 gates are tracked separately.
+buffer triggers are also supported with those limits. Internal patterns remain
+fenced (producer exit 8 before activation). Plus buffer and trigger behavior is unchanged. Live U3Pro16 gates are tracked separately.
 
 Live decoding sustains about 100–130 MB/s in the measured workload. Use
 `--raw-out` and replay above that rate: 125M×16 is 250 MB/s and 250M×12 is
@@ -140,7 +140,8 @@ successful producer missing that line is a protocol error. Trigger-relative
 
 ### DSLogic serial triggers
 
-Use `--serial-trigger` instead of `--trigger` to match a clocked bit value:
+Use `--serial-trigger` instead of `--trigger` to match a clocked bit value
+on the Plus or U3Pro16:
 
 ```bash
 ./sigrok_hla.py --dslogic --dslcap /tmp/dslcap-build/dslcap \
@@ -159,8 +160,13 @@ are permitted; simple and serial specifications are mutually exclusive.
 Resolved start/stop/clock/data join the same producer/width channel union,
 including inputs not used by SPI decoding or pin logging. All normal buffer
 lane, explicit finite-duration, timeout/action, metadata and drain rules apply.
+For U3Pro16, add `--dsl-model u3pro16`; all serial role lanes must be CH0–15
+at up to 500M or CH0–7 at 1G. The comparison width remains 1..16 bits at 1G.
+Its DSView arm images match offline at 100M and 1G; live serial behavior is
+tracked separately from the Plus validation below.
 
-MSB-first shift order passed native hardware comparison at 100 MS/s on CH0–7:
+On the Plus, MSB-first shift order passed native hardware comparison at
+100 MS/s on CH0–7:
 the most recent bit is the value LSB. Generated stage3 compares the low N bits;
 unused upper bits are X (use DSView's bit editor with upper X for a short-width comparison).
 Treat matches as N-bit words aligned from the start condition. Real DSView
