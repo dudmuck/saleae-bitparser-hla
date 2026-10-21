@@ -204,5 +204,119 @@ i.e. the 54 MHz crystal ÷ 2 = 27 MHz on GPIO20, for 45 s (pi133) / 35 s
 Raw captures and checker JSON are in the evidence directory, with SHA-256
 lists `u3pro16-phase2-20261020.u4c{,.raw}.sha256`.
 
-**Still open:** the Plus regression scan, W2 real radio traffic, and
-Phase 3 (buffer and triggers on the U3Pro16).
+## Plus regression on the same W1 wiring — PASS
+
+2026-10-20 16:59–17:02 PDT. The U3Pro16 was unplugged and the Plus
+(`2a0e:0034`) connected with the same W1 wiring. Its first plug-in on port
+1-1 failed USB enumeration (descriptor reads timed out with `-110`); after
+the user replugged it, it came up as bus 1 address 63, high speed. Same
+production `dslcap` as the Phase 2 gates (SHA-256 `fd8252df…1160`). Both
+Pis' `pinctrl get 0-27` baselines were unchanged since the U3Pro16 gates.
+Evidence is in `dslcap/local-evidence/plus-regression-20261020/`, with
+SHA-256 lists `plus-regression-20261020{,.raw}.sha256`. The run script
+`plus_regress.sh` is saved there.
+
+- **Scans.** Automatic and `--model plus` both exit 0:
+  `2a0e:0034 DSLogic PLus bus=1 address=63 speed=high activated
+  security=pass hdl=checked`. There was a cold FPGA load of
+  `DSLogicPlus-pgl12-2.bin` (530 620 bytes), "Security check pass!" on both
+  opens, and HDL 0x0e. `--model u3pro16` exits 4 and lists the Plus.
+- **Idle baseline.** 20M ×16: every sample `0x2020`, the same mapping as
+  on the U3Pro16.
+- **Walk.** 20M ×16, 2 s: PASS on both groups, with 0 Gray-section gaps.
+- **PRBS** (`check_pattern.py`, all exit 0):
+
+  | Capture | Mode | Lanes | Result |
+  |---|---|---|---|
+  | 50M ×6, CH0–5 / CH8–13 | stream | 0x3f, both Pis | PASS |
+  | 100M ×3, CH0–2 | stream | 0x07 | PASS |
+  | 100M ×16, 16 M samples | buffer | 0xff, both groups | PASS |
+  | 200M ×8, CH0–7, 16 M samples | buffer (×2) | 0xff | PASS |
+  | 400M ×4, CH0–3, 32 M samples | buffer (×4) | 0x0f | PASS |
+
+- **GPCLK0** on pi133, 27 MHz (osc ÷ 2), on CH2:
+
+  | Mode | Measured | Error | Duty | Glitches / missing |
+  |---|---|---|---|---|
+  | stream 100M | 27 000 378.620 Hz | +14.023 ppm | 52.76% | 0 / 0 |
+  | buffer 100M | 27 000 379.391 Hz | +14.052 ppm | 52.81% | 0 / 0 |
+  | buffer 200M (half, ×2) | 27 000 379.641 Hz | +14.061 ppm | 52.80% | 0 / 0 |
+  | buffer 400M (quarter, ×4) | 27 000 379.641 Hz | +14.061 ppm | 52.81% | 0 / 0 |
+
+  The readings agree within 0.04 ppm, so the rewritten chooser keeps the
+  Plus's ×2/×4 factors exact. The same pi133 crystal read +23.6 ppm on the
+  U3Pro16, so the two analyzers' timebases differ by about 9.6 ppm. The
+  `pi_gpclk` restore readback matched (GP0CTL `0x200`, DIV 0, GPIO20
+  input / pull-down / low).
+- **SPI.** Live `sigrok_hla.py` at 25M on both buses, which selected the
+  Plus: 100/100 frames byte-exact on `[SPI]` (pi133) and `[SPI_B]`
+  (pi134).
+- **Pins.** After every run, both Pis' `pinctrl get 0-27` was identical to
+  the baseline.
+
+**Still open:** Phase 3 (buffer and triggers on the U3Pro16). W2 is
+recorded below.
+
+## W2 real radio traffic on the U3Pro16 — PASS
+
+2026-10-20 19:14–19:32 PDT. The user rewired the analyzer passively to
+both Pis' radio lines (CH0–7 pi133, CH8–15 pi134, same order per Pi):
+
+| CH | Signal | GPIO | Header pin |
+|---|---|---|---|
+| 0 / 8 | SCLK | 11 | 23 |
+| 1 / 9 | MISO | 9 | 21 |
+| 2 / 10 | MOSI | 10 | 19 |
+| 3 / 11 | NSS (`spi0-cs,cs0_pin=23`) | 23 | 16 |
+| 4 / 12 | BUSY | 18 | 12 |
+| 5 / 13 | DIO8 | 5 | 29 |
+| 6 / 14 | DIO11 | 24 | 18 |
+| 7 / 15 | DIO7 | 12 | 32 |
+
+Ground stays on pin 39. No pin was driven from this host. The user rebooted
+both Pis into `mcp_radio` with spidev, so the radio traffic came from
+another session (xiao_phy_throughput), at the user's direction. It ran
+bounded command bursts with no RF: GetErrors, GetVersion, ClearTxFifo,
+WriteTxFifo with an incrementing payload of L bytes, and GetTxLevel. That
+is spidev mode 0 at 8 MHz requested, 7.8125 MHz on the bus. Its log has
+one line per transfer, and it reported every server result matching
+(version 0x0118, TX level = L, no errors).
+
+- **Idle.** 25M×16, 10 s, before traffic: every sample `0x2828` (NSS and
+  DIO8 high on both Pis), with no edges on any channel.
+- **Window A, live decode.** `sigrok_hla.py --dslogic --dsl-model u3pro16`
+  at 25M with all 16 channels, plus a scratch HLA that prints each
+  transaction's MOSI and MISO (the LR2021 HLA is no longer on this host).
+  pi133 used L=250/64 and pi134 L=200/100.
+- **Window B, raw.** `--raw-out` at 125M (`mask=0x0f0f`; raw mode captures
+  the SPI channels only), 60 s, 15 GB, then offline replay. pi133 used
+  L=180 and pi134 L=240. The ring high-water was 25.8 MB.
+
+| Window | Pi | Transfers decoded / logged | MOSI bytes | MISO read-data fields | Mismatches |
+|---|---|---|---|---|---|
+| A 25M live | pi133 | 358 / 358 | 8774 | 104 | 0 |
+| A 25M live | pi134 | 358 / 358 | 8424 | 104 | 0 |
+| B 125M raw | pi133 | 179 / 179 | 4962 | 52 | 0 |
+| B 125M raw | pi134 | 179 / 179 | 6462 | 52 | 0 |
+
+- **Order.** Transfers matched in order, with the log's `seq` contiguous.
+  MISO matched on the read-data bytes. The log has no command-phase MISO
+  or stat bytes; the decode shows those as `0521`, `0721` and `0321`.
+- **Timing at 125M.** SCLK rising edges are exactly 8 × the MOSI bytes on
+  both Pis (39696 and 51696), so no clock edges were lost. The median
+  period is 16 samples (7.8125 MHz), the minimum high phase 64 ns and the
+  minimum low phase 56 ns.
+- **Window A status lines.** 716 BUSY edges per Pi were decoded live.
+- **Limits.**
+  - The peer's log was generated from the script it ran plus the server's
+    results, not from an independent bus trace.
+  - Its timestamps are per burst, so the matching is by order.
+  - In both windows, pi134's burst started about 2–10 s after pi133's, so
+    the two buses were active one after the other, not concurrently.
+  - DIO8, DIO11 and DIO7 did not toggle in this workload.
+- **Pins.** `pinctrl get 0-27` on both Pis was identical before and after.
+
+Evidence (git-ignored): `dslcap/local-evidence/u3pro16-w2-20261020/`,
+hashed in `u3pro16-w2-20261020.sha256` and `.raw.sha256`. The raw-file
+SHA-256 for `b-125m.raw` is `8aa379a7…6cdf`. It includes the peer logs,
+`Txn2Hla.py`, `w2cmp.py` and `sclk_stats.py`.
