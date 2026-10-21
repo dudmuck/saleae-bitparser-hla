@@ -90,21 +90,26 @@ Continuous buffer mode is unsupported. Simple AND buffer triggers are supported
 on U3Pro16: trigger lanes CH0–15 at up to 500M, or CH0–7 at 1G. Trigger lanes
 join the captured channel union and obey the same profile limits. Serial
 buffer triggers are also supported with those limits. Internal patterns remain
-fenced (producer exit 8 before activation). Plus buffer and trigger behavior is unchanged. Live U3Pro16 gates are tracked separately.
+fenced (producer exit 8 before activation). Plus buffer and trigger behavior is unchanged. The U3Pro16 live gates
+(streaming, buffer, simple and serial triggers, and real LR2021 traffic) are
+recorded in [dslcap/U3PRO16_VALIDATION.md](dslcap/U3PRO16_VALIDATION.md).
 
 Live decoding sustains about 100–130 MB/s in the measured workload. Use
 `--raw-out` and replay above that rate: 125M×16 is 250 MB/s and 250M×12 is
 about 500 MB/s. Sustained disk bandwidth and the producer's 256 MiB ring
-must accommodate the capture.
+must accommodate the capture. 25M×16 (50 MB/s) decodes live; see
+[U3Pro16 dual-radio wiring](#u3pro16-dual-radio-wiring-all-16-inputs).
 
 ### DSLogic buffer triggers
 
 Streaming remains the default. Use `--dsl-mode buffer` with an explicit
-`--samples` or `--time` for finite captures at up to 100M on physical lanes
-0..15, 200M on 0..7, or 400M on 0..3. Buffer mode rejects `--continuous`.
+`--samples` or `--time` for finite captures. On the Plus that is up to 100M on
+physical lanes 0..15, 200M on 0..7, or 400M on 0..3; on the U3Pro16, up to
+500M on 0..15 or 1G on 0..7 (add `--dsl-model u3pro16`). Buffer mode rejects
+`--continuous`.
 
 ```bash
-./sigrok_hla.py --dslogic --dslcap /tmp/dslcap-build/dslcap \
+./sigrok_hla.py --dslogic --dslcap dslcap/build/dslcap \
   --dsl-mode buffer --samplerate 100M --samples 1M \
   --spi SCLK,MISO,MOSI,nSS -C 0=SCLK,1=MISO,2=MOSI,3=nSS,15=IRQ \
   --trigger nSS:f,IRQ:h --trigger-pos 10 \
@@ -144,7 +149,7 @@ Use `--serial-trigger` instead of `--trigger` to match a clocked bit value
 on the Plus or U3Pro16:
 
 ```bash
-./sigrok_hla.py --dslogic --dslcap /tmp/dslcap-build/dslcap \
+./sigrok_hla.py --dslogic --dslcap dslcap/build/dslcap \
   --dsl-mode buffer --samplerate 400M --samples 1M \
   --spi CLK,MISO,MOSI,nSS -C 0=CLK,1=MISO,2=MOSI,3=nSS \
   --serial-trigger 'start=nSS:f,stop=nSS:r,clock=CLK:r,data=MOSI,value=0x1c35,bits=16' \
@@ -162,8 +167,9 @@ including inputs not used by SPI decoding or pin logging. All normal buffer
 lane, explicit finite-duration, timeout/action, metadata and drain rules apply.
 For U3Pro16, add `--dsl-model u3pro16`; all serial role lanes must be CH0–15
 at up to 500M or CH0–7 at 1G. The comparison width remains 1..16 bits at 1G.
-Its DSView arm images match offline at 100M and 1G; live serial behavior is
-tracked separately from the Plus validation below.
+Its DSView arm images match offline at 100M and 1G, and live bit order and
+widths passed at 100M, 500M and 1G
+([U3Pro16 Phase 3c](dslcap/U3PRO16_VALIDATION.md)).
 
 On the Plus, MSB-first shift order passed native hardware comparison at
 100 MS/s on CH0–7:
@@ -207,14 +213,14 @@ Specified as `--spi CLK,MISO,MOSI,CS` (channel numbers for Saleae, channel names
 Single SPI port:
 
 ```bash
-./sigrok_hla.py --dslogic --dslcap /tmp/dslcap-build/dslcap \
+./sigrok_hla.py --dslogic --dslcap dslcap/build/dslcap \
     --hla-path ~/HLA/saleae_lr2021 --spi 0,1,2,3 --samplerate 25M --time 5s
 ```
 
 Dual-radio wiring, continuous capture with producer debug diagnostics:
 
 ```bash
-./sigrok_hla.py --dslogic --dslcap /tmp/dslcap-build/dslcap -vv \
+./sigrok_hla.py --dslogic --dslcap dslcap/build/dslcap -vv \
     --hla-path ~/HLA/saleae_lr2021 --spi 0,1,2,3 --spi 8,9,10,11 \
     --samplerate 25M --continuous --hex
 ```
@@ -224,12 +230,14 @@ The producer captures only these eight physical inputs (`0,1,2,3,8,9,10,11`)
 and outputs two bytes per sample, preserving physical bit positions. It keeps
 the 12-channel-capable 25M stream profile; it does not lower the requested
 rate. Up to four additional selected inputs can fit this profile, subject to
-wiring and decoder requirements. Selecting all 16 at 25M fails.
+wiring and decoder requirements. On the Plus, selecting all 16 at 25M fails
+(its 16-channel limit is 20M); the U3Pro16 on USB 3 accepts 25M×16 (see
+[below](#u3pro16-dual-radio-wiring-all-16-inputs)).
 
 With the bench's status connections, log all four status inputs:
 
 ```bash
-./sigrok_hla.py --dslogic --dslcap /tmp/dslcap-build/dslcap \
+./sigrok_hla.py --dslogic --dslcap dslcap/build/dslcap \
     --hla-path ~/HLA/saleae_lr2021 --spi 0,1,2,3 --spi 8,9,10,11 \
     -C 4=pi134_dio11,5=pi133_dio8,12=pi134_busy,13=pi134_dio8 \
     --int-pin pi133_dio8 --extra-pin pi134_dio8 \
@@ -255,10 +263,56 @@ For pi134, DIO8 transitions were confirmed after the application configured
 IRQ routing and calibrated a 915 MHz LoRa RX-timeout test. Those radio settings
 remain on pi134; see [validation details](dslcap/VALIDATION.md#pi134-configured-rx-timeout--dio8--2026-10-07).
 
+#### U3Pro16 dual-radio wiring (all 16 inputs)
+
+With the U3Pro16, the bench wiring has each Pi's four SPI lines and four
+status lines, CH0–7 for pi133 and CH8–15 for pi134 (same order per Pi):
+
+| CH | Signal | GPIO | Header pin |
+|---|---|---|---|
+| 0 / 8 | SCLK | 11 | 23 |
+| 1 / 9 | MISO | 9 | 21 |
+| 2 / 10 | MOSI | 10 | 19 |
+| 3 / 11 | NSS | 23 | 16 |
+| 4 / 12 | BUSY | 18 | 12 |
+| 5 / 13 | DIO8 | 5 | 29 |
+| 6 / 14 | DIO11 | 24 | 18 |
+| 7 / 15 | DIO7 | 12 | 32 |
+
+Live decode of all 16 inputs at 25M:
+
+```bash
+./sigrok_hla.py --dslogic --dsl-model u3pro16 --dslcap dslcap/build/dslcap \
+    --hla-path ~/HLA/saleae_lr2021 --spi 0,1,2,3 --spi 8,9,10,11 \
+    -C 4=pi133_busy,5=pi133_dio8,6=pi133_dio11,7=pi133_dio7,12=pi134_busy,13=pi134_dio8,14=pi134_dio11,15=pi134_dio7 \
+    --int-pin pi133_dio8 --extra-pin pi133_busy --extra-pin pi133_dio11 --extra-pin pi133_dio7 \
+    --extra-pin pi134_busy --extra-pin pi134_dio8 --extra-pin pi134_dio11 --extra-pin pi134_dio7 \
+    --samplerate 25M --continuous --hex
+```
+
+For a recording, replace `--continuous` with `--time T --raw-out FILE`, at
+up to 125M, and replay with `-i FILE` and the same `--spi`/`-C`/pin options
+([capture first, decode after](#dslogic-capture-first-decode-after)).
+
+- 25M×16 is 50 MB/s. It needs the U3Pro16 on USB 3; USB high and the Plus
+  stop at 20M×16. Live decode keeps up for the light command traffic below;
+  heavy sustained FIFO traffic needs `--raw-out` (see the sustained decode
+  rate table).
+- The bench SPI runs at 7.8125 MHz (spidev asks for 8 MHz), so 25M gives
+  3.2 samples per clock and each 64 ns clock phase spans at least one 40 ns
+  sample. `-T deglitch` is not needed: on copies of a 125M capture reduced to
+  25M, 20.8M and 17.9M it made 0 corrections, and decoding matched with or
+  without it. Without numba, deglitch runs at about 6 MB/s, too slow for a
+  50 MB/s live stream.
+- Validated with real LR2021 traffic (2026-10-20/21): every transfer matched
+  the traffic source's log, live at 25M and through the LR2021 HLA from a
+  125M recording, with BUSY edges logged on both Pis; see
+  [dslcap/U3PRO16_VALIDATION.md](dslcap/U3PRO16_VALIDATION.md#w2-real-radio-traffic-on-the-u3pro16--pass).
+
 Named channels and a logged interrupt:
 
 ```bash
-./sigrok_hla.py --dslogic --dslcap /tmp/dslcap-build/dslcap \
+./sigrok_hla.py --dslogic --dslcap dslcap/build/dslcap \
     --hla-path ~/HLA/saleae_lr2021 \
     -C 0=SCLK,1=MISO,2=MOSI,3=nSS,4=INT \
     --spi SCLK,MISO,MOSI,nSS --int-pin INT --samplerate 25M --samples 1M
@@ -329,7 +383,7 @@ after 20 s. Decode with `--dslogic -i FILE` and the same `-C`/`--spi`/pin option
 line you want in the file with `--int-pin` or `--extra-pin`:
 
 ```bash
-./sigrok_hla.py --dslogic --dslcap /tmp/dslcap-build/dslcap \
+./sigrok_hla.py --dslogic --dslcap dslcap/build/dslcap \
     --hla-path ~/HLA/saleae_lr2021 --spi 0,1,2,3 --spi 8,9,10,11 \
     -C 4=pi134_dio11,5=pi133_dio8,12=pi134_busy,13=pi134_dio8 \
     --extra-pin pi134_dio11 --extra-pin pi134_busy \

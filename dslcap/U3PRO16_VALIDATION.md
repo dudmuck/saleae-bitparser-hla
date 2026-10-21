@@ -572,3 +572,33 @@ DIO8/DIO11/DIO7 stayed static on both Pis (no IRQ-raising operations, no
 RF), with 0 edges and 0 events. Read-only `pinctrl` on the W2 GPIOs was
 unchanged before and after. Evidence: `local-evidence/u3pro16-w2b-20261021/`
 (hashed in `u3pro16-w2b-20261021.sha256` and `.raw.sha256`).
+
+## 25M live decode through the LR2021 HLA, and deglitch at reduced rates (2026-10-21)
+
+- **Live 25M×16.** On the same wiring and traffic source, the user ran the
+  live command now in `sigrok_hla_readme.md` ("U3Pro16 dual-radio wiring"):
+  25M, all 16 inputs, `--continuous`, real `~/HLA/saleae_lr2021`, `--hex`.
+  The user reported that it worked; no log from that run is kept here.
+  Window A (above) had already matched 358/358 transfers per Pi live at 25M
+  with a scratch HLA.
+- **Deglitch.** The window C capture (125M, 7.8125 MHz SCLK) was reduced by
+  keeping every 5th, 6th or 7th sample over +7.0–28.5 s, giving 25M (two
+  sampling offsets), 20.8M and 17.9M copies at 3.2, 2.67 and 2.29 samples
+  per clock. Each was replayed through the LR2021 HLA with and without
+  `-T deglitch:channels=0,8:clock_period=P:frame_pulses=8`:
+
+  | Copy | Without deglitch | With deglitch | Corrections (bits 0 and 8) |
+  |---|---|---|---|
+  | 25M, offset 0 | 179/179 per Pi, 0 mismatches | same | 0 |
+  | 25M, offset 2 | 179/179, 0 | same | 0 |
+  | 20.8M | 179/179, 0 | same | 0 |
+  | 17.9M | 179/179, 0 | same | 0 |
+
+  BUSY gave 358 events per Pi in every run. Deglitch runs on U3Pro16
+  16-channel uint16 data and leaves a clean signal unchanged. Its repair
+  path was not exercised: each 64 ns clock phase is longer than one sample
+  down to about 15.6M. These copies come from the same sampling clock, so
+  they approximate, rather than reproduce, a native low-rate capture.
+  numba is not installed on this host; deglitch replay ran at about
+  6 MB/s (295 s for the 25M copy), against 8 s without it. The copies were
+  deleted after the runs.

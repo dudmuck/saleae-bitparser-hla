@@ -14,10 +14,13 @@ library and common C sources directly, without modifying or copying them.
 The production binary needs neither Qt nor Python; offline contract tests use Python 3.
 
 ```sh
-cmake -S dslcap -B /tmp/dslcap-build -DDSVIEW_SRC=/home/wroberts/DSView-1.3.2
-cmake --build /tmp/dslcap-build
-ctest --test-dir /tmp/dslcap-build --output-on-failure
+cmake -S dslcap -B dslcap/build -DDSVIEW_SRC=/home/wroberts/DSView-1.3.2
+cmake --build dslcap/build
+ctest --test-dir dslcap/build --output-on-failure
 ```
+
+Run these from the repository root. `dslcap/build/` is git-ignored, and the
+examples here and in `sigrok_hla_readme.md` use `dslcap/build/dslcap`.
 
 `DSVIEW_SRC` defaults to `/home/wroberts/DSView-1.3.2`. The implementation
 uses this version's device-handle representation, logger ownership and
@@ -29,7 +32,7 @@ data for tests only; never use it with a real analyzer.
 New single-configuration builds default to `RelWithDebInfo` for optimized
 conversion. An explicitly selected build type is preserved. The converter
 uses batches of about 16 KiB per ring push. Measure conversion locally with
-`/tmp/dslcap-build/dslcap_core_tests --benchmark`; one observed 8-channel
+`dslcap/build/dslcap_core_tests --benchmark`; one observed 8-channel
 run processed 714 MB/s in memory (not a USB throughput measurement).
 
 The contract test exercises the real frontend and DSView logger with fake
@@ -52,12 +55,12 @@ consumer that outlives its watchdog margin. Production timing is unchanged.
 Close DSView before capture. These examples were exercised with the analyzer:
 
 ```sh
-timeout 40s /tmp/dslcap-build/dslcap --samplerate 25M --channels 0-7 --samples 100001 > /tmp/capture.raw
-timeout 40s /tmp/dslcap-build/dslcap --samplerate 25M --channels 0-11 --time 200ms > /tmp/capture12.raw
-timeout 40s /tmp/dslcap-build/dslcap --samplerate 20M --channels 0-15 --samples 100005 > /tmp/capture16.raw
-timeout 40s /tmp/dslcap-build/dslcap --samplerate 25M --channels 0,3,9,15 --samples 100007 > /tmp/sparse.raw
-timeout 40s /tmp/dslcap-build/dslcap --mode buffer --samplerate 100M --channels 0-7 --samples 100001 > /tmp/buffer.raw
-timeout 40s /tmp/dslcap-build/dslcap --test-pattern > /tmp/pattern.raw
+timeout 40s dslcap/build/dslcap --samplerate 25M --channels 0-7 --samples 100001 > /tmp/capture.raw
+timeout 40s dslcap/build/dslcap --samplerate 25M --channels 0-11 --time 200ms > /tmp/capture12.raw
+timeout 40s dslcap/build/dslcap --samplerate 20M --channels 0-15 --samples 100005 > /tmp/capture16.raw
+timeout 40s dslcap/build/dslcap --samplerate 25M --channels 0,3,9,15 --samples 100007 > /tmp/sparse.raw
+timeout 40s dslcap/build/dslcap --mode buffer --samplerate 100M --channels 0-7 --samples 100001 > /tmp/buffer.raw
+timeout 40s dslcap/build/dslcap --test-pattern > /tmp/pattern.raw
 ```
 
 Exactly one of `--samples N`, `--time T`, or `--continuous` is required for
@@ -299,7 +302,7 @@ and covered by offline contracts; live validation is tracked by the lead in
 [TRIGGER_PLAN.md](TRIGGER_PLAN.md) and [TRIGGER_TASKS.md](TRIGGER_TASKS.md).
 
 ```sh
-/tmp/dslcap-build/dslcap --mode buffer --samplerate 100M --channels 0-7 \
+dslcap/build/dslcap --mode buffer --samplerate 100M --channels 0-7 \
   --samples 1000000 --trigger 3:f --trigger-pos 10 \
   --trigger-timeout 5s --on-timeout fail > /tmp/trigger.raw
 ```
@@ -368,7 +371,7 @@ described below. Trigger-relative `--t0` remains unsupported and is rejected.
 on the Plus or U3Pro16:
 
 ```sh
-/tmp/dslcap-build/dslcap --mode buffer --samplerate 400M --channels 0-3 \
+dslcap/build/dslcap --mode buffer --samplerate 400M --channels 0-3 \
   --samples 1M --serial-trigger 'start=3:f,stop=3:r,clock=0:r,data=2,value=0x1c35,bits=16' \
   --trigger-pos 10 --trigger-timeout 5s > /tmp/serial.raw
 ```
@@ -426,9 +429,9 @@ program can claim the analyzer. In a sandbox, the authorized USB operation
 may need to run outside it to access `/dev/bus/usb` and see host processes.
 
 ```sh
-timeout 30s /tmp/dslcap-build/dslcap --scan -v
-timeout 30s /tmp/dslcap-build/dslcap
-timeout 30s /tmp/dslcap-build/dslcap --scan --fw-dir /tmp/dslcap-missing-firmware
+timeout 30s dslcap/build/dslcap --scan -v
+timeout 30s dslcap/build/dslcap
+timeout 30s dslcap/build/dslcap --scan --fw-dir /tmp/dslcap-missing-firmware
 ```
 
 The last command is an intentional failure check and must exit 3. All
@@ -496,9 +499,9 @@ reopens the analyzer, requires a new security-pass log, explicitly checks
 HDL `0x0e`, and cleans up. It performs no NVM writes. Close DSView first.
 
 ```sh
-cmake -S dslcap -B /tmp/dslcap-build -DDSLCAP_BUILD_USB_TESTS=ON
-cmake --build /tmp/dslcap-build --target dslcap_reload_fpga
-timeout 30s /tmp/dslcap-build/dslcap_reload_fpga --scan -v
+cmake -S dslcap -B dslcap/build -DDSLCAP_BUILD_USB_TESTS=ON
+cmake --build dslcap/build --target dslcap_reload_fpga
+timeout 30s dslcap/build/dslcap_reload_fpga --scan -v
 ```
 
 **Plus only.** On the U3Pro16 this forced reload stalled and left the
